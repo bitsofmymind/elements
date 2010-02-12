@@ -36,8 +36,7 @@ void Processing::start(void)
 {
 	Resource* current = this;
 	Resource* next;
-        e_time_t asd = e_time_t::MIN;
-        asd++;
+
 	while(true)
 	{
 		next = step(current);

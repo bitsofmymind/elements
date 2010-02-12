@@ -25,14 +25,15 @@ using namespace Elements;
 Authority::Authority(void):Resource()
 {
 	last_resource_visited = 0;
+	message_queue = new Queue<Message>();
 }
 
 Authority::~Authority(void)
 {
-	for( uint8_t i = 0; i < message_queue.items ; i++ )
+	/*for( uint8_t i = 0; i < message_queue->items ; i++ )
 	{
 		delete message_queue[i];
-	}
+	}*/
 
 }
 
@@ -44,7 +45,7 @@ void Authority::visit(void)
 
 Message* Authority::dispatch(Message* message)
 {
-	message_queue.queue(message);
+	message_queue->queue(message);
 	schedule(NULL, Elements::e_time_t::MIN);
 	return NULL;
 }
@@ -54,13 +55,13 @@ constitutes the entry point of a thread.*/
 void Authority::process_queue(void)
 {
 	Message* message;
-	while(message_queue.items && message_queue.items < message_queue.capacity)
+	while(message_queue->items && message_queue->items < message_queue->capacity)
 	{
-		message = message_queue.dequeue();
+		message = message_queue->dequeue();
                 if(message->to_url_resource_index > 0 || !message->to_url->is_absolute_path)
                 {
                     message = Resource::dispatch(message);
-                    if(message){ message_queue.queue( message ); }
+                    if(message){ message_queue->queue( message ); }
                 }
                 else
                 {
@@ -78,7 +79,7 @@ void Authority::process_queue(void)
 
 uint8_t Authority::send(Message* message)
 {
-    uint8_t result = message_queue.queue(message);
+    uint8_t result = message_queue->queue(message);
     if(!result)
     {
         schedule(NULL, Elements::e_time_t::MIN);
@@ -88,7 +89,7 @@ uint8_t Authority::send(Message* message)
 
 Elements::e_time_t Authority::get_sleep_clock(void)
 {
-    if(message_queue.items)
+    if(message_queue->items)
     {
         return Elements::e_time_t::MIN;
     }

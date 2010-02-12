@@ -22,10 +22,10 @@
 class Authority: public Resource
 {
 	private:
-                uint8_t last_resource_visited;
+        uint8_t last_resource_visited;
 
 	protected:
-		Queue<Message> message_queue;
+		Queue<Message>* message_queue;
 
 	public:
 		Authority(void);

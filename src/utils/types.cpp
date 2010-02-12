@@ -21,7 +21,13 @@ e_time_t::e_time_t(uint32_t seconds, uint16_t milliseconds):
 
 }
 
-
+e_time_t::e_time_t(uint32_t milliseconds):
+	milliseconds(0),
+	seconds(0)
+{
+	seconds = milliseconds / 1000;
+	this->milliseconds = milliseconds % 1000;
+}
 
 e_time_t e_time_t::operator+(e_time_t rhs)
 {

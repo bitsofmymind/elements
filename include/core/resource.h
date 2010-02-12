@@ -34,6 +34,11 @@ class Resource
 		uint8_t child_to_visit;
 
 	public:
+		#ifdef DEBUG
+			char* id;
+		#endif
+
+	public:
 		Resource(void);
 		virtual ~Resource(void);
 
@@ -46,10 +51,10 @@ class Resource
 		virtual void visit(void);
 		virtual Message* dispatch(Message* message);
 		virtual void run( void );
-                virtual uint8_t send(Message* message);
+        virtual uint8_t send(Message* message);
 
 		virtual Elements::e_time_t get_sleep_clock( void );
-                string<uint8_t>* get_name(Resource* resource);
+        string<uint8_t>* get_name(Resource* resource);
 
 		Resource* find_resource( Elements::string<uint8_t>* name );
 
@@ -61,7 +66,7 @@ class Resource
 		Response* http_trace(Request* request);
 
 		void schedule(Elements::e_time_t* timer, Elements::e_time_t time );
-                void schedule(Elements::e_time_t time);
+        void schedule(Elements::e_time_t time);
 
 		virtual Elements::string<uint32_t> render( Request* request );
 

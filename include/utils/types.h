@@ -29,31 +29,32 @@ namespace Elements
 		U value;
 	};
 
-        struct e_time_t
-        {
-            static const e_time_t MAX;
-            static const e_time_t MIN;
+	struct e_time_t
+	{
+		static const e_time_t MAX;
+		static const e_time_t MIN;
 
-            uint32_t seconds;
-            uint16_t milliseconds;
+		uint32_t seconds;
+		uint16_t milliseconds;
 
-            e_time_t(void);
-            e_time_t(uint32_t seconds, uint16_t milliseconds);
+		e_time_t(void);
+		e_time_t(uint32_t seconds, uint16_t milliseconds);
+		e_time_t(uint32_t milliseconds);
 
-            e_time_t operator+(e_time_t rhs);
-            e_time_t operator-(e_time_t rhs);
-            void operator++(void);
-            void operator++(int);
-            void operator--(void);
-            bool operator==(e_time_t rhs);
-            bool operator>=(e_time_t rhs);
-            bool operator<=(e_time_t rhs);
-            bool operator>(e_time_t rhs);
-            bool operator<(e_time_t rhs);
-            e_time_t operator+=(e_time_t rhs);
-            e_time_t operator-=(e_time_t rhs);
-            void increase_ms(uint16_t amount);
-        };
+		e_time_t operator+(e_time_t rhs);
+		e_time_t operator-(e_time_t rhs);
+		void operator++(void);
+		void operator++(int);
+		void operator--(void);
+		bool operator==(e_time_t rhs);
+		bool operator>=(e_time_t rhs);
+		bool operator<=(e_time_t rhs);
+		bool operator>(e_time_t rhs);
+		bool operator<(e_time_t rhs);
+		e_time_t operator+=(e_time_t rhs);
+		e_time_t operator-=(e_time_t rhs);
+		void increase_ms(uint16_t amount);
+	};
 
 	template<class T>
 	T string<T>::copy(char* destination )
