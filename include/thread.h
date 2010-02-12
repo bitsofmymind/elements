@@ -8,8 +8,8 @@
 #ifndef THREAD_H_
 #define THREAD_H_
 
-#include "../elements/core/processing.h"
-#include "../elements/utils/utils.h"
+#include <core/processing.h>
+#include <utils/utils.h>
 #include <pthread.h>
 #include "root.h"
 #include <time.h>

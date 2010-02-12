@@ -39,7 +39,7 @@ class PosixSocketInterface: public Authority
 
 		static void* dispatch( void* args );
 
-                virtual void run(void);
+        virtual void run(void);
 		virtual Message* process(Response*);
 		virtual Response* process(Request*);
 

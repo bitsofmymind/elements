@@ -7,9 +7,9 @@
 
 
 #include "thread.h"
-#include "../elements/pal/pal.h"
-#include "../elements/utils/types.h"
-#include "../elements/core/representation.h"
+//#include <pal/pal.h>
+#include <utils/types.h>
+#include <core/representation.h>
 #include <sys/types.h>
 #include <time.h>
 #include <iostream>

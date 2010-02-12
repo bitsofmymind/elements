@@ -5,13 +5,13 @@
  *      Author: Antoine
  */
 
-#include "root.h"
+#include <root.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <cstdio>
 #include <cstring>
-#include "../elements/utils/types.h"
-#include "../elements/pal/pal.h"
+#include <utils/types.h>
+#include <pal/pal.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -35,7 +35,7 @@ void* timeout_handler( void* args )
 	while(true)
 	{
 		increase_uptime(time(NULL) - last_timeout);
-		set_time( (uint64_t)time(NULL) );
+		set_time( time(NULL) );
 		last_timeout = time(NULL);
 		usleep(50000);
 	}
@@ -73,11 +73,11 @@ Root::~Root()
 void Root::process_queue(void)
 {
     Message* message;
-    while(message_queue.items && message_queue.items < message_queue.capacity)
+    while(message_queue->items && message_queue->items < message_queue->capacity)
     {
-            message = message_queue.dequeue();
+            message = message_queue->dequeue();
             message = Resource::dispatch(message);
-            if(message){ message_queue.queue( message ); }
+            if(message){ message_queue->queue( message ); }
             
             /*CONCURENCY PROBLEM: there will most likely be a significant delay between the time that its dertemined there is
             enough space on the messages_out queue and the actual queuing of the message. For exampe, collect() might be called in between

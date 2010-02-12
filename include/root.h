@@ -9,9 +9,9 @@
 #define ROOT_H_
 
 #include <sys/types.h>
-#include "../elements/utils/utils.h"
-#include "../elements/core/authority.h"
-#include "../posix_socket_interface/posix_socket_interface.h"
+#include <utils/utils.h>
+#include <core/authority.h>
+#include <posix_socket_interface.h>
 #include <stdint.h>
 #include <signal.h>
 #include <pthread.h>
@@ -28,7 +28,7 @@ class Root: public Authority
 		Root();
 		virtual ~Root();
 
-                virtual void process_queue(void);
+        virtual void process_queue(void);
 
 };
 

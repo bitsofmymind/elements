@@ -9,10 +9,11 @@
 #include <iostream>
 using namespace std;
 #include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
-#include "../elements/utils/types.h"
-#include "../elements/core/request.h"
-#include "../elements/core/response.h"
+#include <utils/types.h>
+#include <core/request.h>
+#include <core/response.h>
 
 Elements::string<uint8_t> make_connection_key(sockaddr_in &address)
 {
@@ -100,6 +101,7 @@ void* PosixSocketInterface::dispatch( void* args )
 }
 
 PosixSocketInterface::PosixSocketInterface( int port_number ):
+	Authority(),
 	port_number(port_number),
 	dispatching_thread(0)
 {
@@ -154,11 +156,13 @@ void PosixSocketInterface::run()
         }
         else
         {
-            if(message_queue.queue(message))
+
+        	if(message_queue->queue(message))
             {
                 interface_out.queue(message);
-                schedule(NULL, ASAP);
             }
+        	schedule(NULL, Elements::e_time_t::MIN);
+
         }
 
     }
@@ -196,7 +200,7 @@ Response* PosixSocketInterface::process(Request* request)
 void PosixSocketInterface::receive(Message* message)
 {
     interface_out.queue(message);
-    schedule(ASAP);
+    schedule(Elements::e_time_t::MIN);
 }
 
 void PosixSocketInterface::send(Request* request)
