@@ -8,19 +8,18 @@
 
 #include <iostream>
 //using namespace std;
-#include <core/resource.h>
-#include <core/authority.h>
-#include <utils/types.h>
 #include <posix_socket_interface.h>
 #include <root.h>
 #include <thread.h>
 #include <pthread.h>
+#include <core/resource.h>
+#include <core/authority.h>
+#include <utils/types.h>
 #include <stdint.h>
 #include <stdio.h>
 
 Root* root;
 PosixThreadManager* thread_manager;
-PosixSocketInterface* posix_socket_interface;
 Authority* auth0, * auth1, * auth2;
 Processing* proc0;
 Resource* res0, * res1, * res2, * res3, * res4, * res5;
@@ -33,6 +32,9 @@ void exit_function( int i )
 
 int main(int argc, char* argv[])
 {
+	PosixSocketInterface* posix_socket_interface;
+
+
 	signal(SIGINT, exit_function);
 	std::cout << "Starting Elements test executable." << std::endl;
 	std::cout << "Creating Resources...";
