@@ -59,11 +59,11 @@ void* PosixSocketInterface::dispatch( void* args )
 		}
 
 		cout << "Accepted connection from client at address " << \
-		(&client_address.sin_addr.s_addr)[3] << '.' << \
-		(&client_address.sin_addr.s_addr)[2] << '.' << \
-		(&client_address.sin_addr.s_addr)[1] << '.' << \
-		(int)((&client_address.sin_addr.s_addr)[0]) \
-		<< " on port " << client_address.sin_port << endl;
+		(uint8_t)((&client_address.sin_addr.s_addr)[3]) << '.' << \
+		(uint8_t)((&client_address.sin_addr.s_addr)[2]) << '.' << \
+		(uint8_t)((&client_address.sin_addr.s_addr)[1]) << '.' << \
+		(uint8_t)((&client_address.sin_addr.s_addr)[0]) \
+		<< " from port " << client_address.sin_port << endl;
 		//((char*)&client_address.sin_addr.s_addr)[3] << "." << \
 		//((char*)&client_address.sin_addr.s_addr)[2] << "." << \
 		//((char*)&client_address.sin_addr.s_addr)[1] << "." << \
@@ -94,8 +94,8 @@ void* PosixSocketInterface::dispatch( void* args )
 		message->message.length = number_of_characters_exchanged;
 		message->fields.add( connection_address_type, &connection_key );
 		message->message.text = buffer;
-                interface->receive(message);
-                cout << "New message has arrived!" << endl;
+        interface->receive(message);
+        cout << "New message has arrived!" << endl;
 	}
 	pthread_exit(NULL);
 }
