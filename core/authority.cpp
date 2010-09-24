@@ -24,7 +24,6 @@ using namespace Elements;
 
 Authority::Authority(void):Resource()
 {
-	last_resource_visited = 0;
 	message_queue = new Queue<Message>();
 }
 

@@ -21,10 +21,8 @@
 
 class Authority: public Resource
 {
-	private:
-        uint8_t last_resource_visited;
 
-	protected:
+	public:
 		Queue<Message>* message_queue;
 
 	public:
@@ -34,9 +32,9 @@ class Authority: public Resource
 	protected:
 		virtual void visit(void);
 		virtual Message* dispatch(Message* message);
-                virtual uint8_t send(Message* message);
+        virtual uint8_t send(Message* message);
 
-                virtual Elements::e_time_t get_sleep_clock( void );
+        virtual Elements::e_time_t get_sleep_clock( void );
 
 		virtual void process_queue(void);
 };
