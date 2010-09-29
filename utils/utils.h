@@ -215,14 +215,14 @@ T* Queue<T>::operator[]( uint8_t index )
 template< class T>
 int8_t Queue<T>::queue(T* object)
 {
-	return GenericQueue::queue( object );
+	return this->GenericQueue::queue( (void*)object );
 }
 
 
 template< class T>
 T* Queue<T>::dequeue(void)
 {
-	return (T*)GenericQueue::dequeue( );
+	return (T*)this->GenericQueue::dequeue( );
 }
 
 #endif /* UTILS_H_ */
