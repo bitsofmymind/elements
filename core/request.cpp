@@ -6,11 +6,11 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-#include <core/message.h>
-#include <core/request.h>
+#include "message.h"
+#include "request.h"
 //#include "../elements.h"
-#include <utils/types.h>
-#include <core/url.h>
+#include "../utils/types.h"
+#include "url.h"
 #include <stdint.h>
 #ifdef DEBUG
 	#include <iostream>

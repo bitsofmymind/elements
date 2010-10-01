@@ -5,10 +5,10 @@
  *      Author: Antoine
  */
 
-#include <utils/buffer.h>
+#include "buffer.h"
 #include <stdlib.h>
 #include <string.h>
-#include <utils/types.h>
+#include "types.h"
 
 Buffer::Buffer( uint32_t size ):
 	size( size )

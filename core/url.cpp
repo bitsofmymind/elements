@@ -6,9 +6,9 @@
  */
 
 #include <stdlib.h>
-#include <elements.h>
-#include <utils/types.h>
-#include <core/url.h>
+#include "../elements.h"
+#include "../utils/types.h"
+#include "url.h"
 #include <stdint.h>
 
 using namespace Elements;

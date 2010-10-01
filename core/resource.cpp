@@ -5,15 +5,15 @@
  *      Author: Antoine
  */
 
-#include <core/message.h>
-#include <core/response.h>
-#include <core/request.h>
-#include <core/resource.h>
+#include "message.h"
+#include "response.h"
+#include "request.h"
+#include "resource.h"
 //#include "../elements.h"
-#include <core/url.h>
-#include <utils/utils.h>
-#include <utils/types.h>
-#include <pal/pal.h>
+#include "url.h"
+#include "../utils/utils.h"
+#include "../utils/types.h"
+#include "../pal/pal.h"
 #include <stdint.h>
 #include <stdlib.h>
 

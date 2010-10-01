@@ -6,15 +6,15 @@
  */
 
 
-#include <core/message.h>
-#include <core/response.h>
-#include <core/request.h>
-#include <core/authority.h>
+#include "message.h"
+#include "response.h"
+#include "request.h"
+#include "authority.h"
 //#include "../elements.h"
-#include <utils/utils.h>
-#include <utils/types.h>
-#include <core/resource.h>
-#include <pal/pal.h>
+#include "../utils/utils.h"
+#include "../utils/types.h"
+#include "resource.h"
+#include "../pal/pal.h"
 #include <stdint.h>
 
 #define OUT_QUEUE_LENGTH 10

@@ -5,7 +5,7 @@
  *      Author: Antoine
  */
 
-#include <pal/pal.h>
+#include "pal.h"
 #include <stdint.h>
 
 /*formatedTime get_formated_time( void )

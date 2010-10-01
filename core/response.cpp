@@ -7,8 +7,8 @@
 //============================================================================
 
 #include <stdlib.h>
-#include <core/message.h>
-#include <core/response.h>
+#include "message.h"
+#include "response.h"
 //#include "../elements.h"
 #include <stdint.h>
 #ifdef DEBUG, VERBOSE

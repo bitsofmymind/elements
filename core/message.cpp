@@ -7,11 +7,11 @@
 //============================================================================
 
 #include <stdlib.h>
-#include <core/message.h>
+#include "message.h"
 //#include "../elements.h"
-#include <utils/utils.h>
-#include <utils/types.h>
-#include <core/url.h>
+#include "../utils/utils.h"
+#include "../utils/types.h"
+#include "url.h"
 #ifdef DEBUG
 	#include <iostream>
 #endif

@@ -5,7 +5,7 @@
  *      Author: Antoine
  */
 
-#include <core/representation.h>
+#include "representation.h"
 #include <stdlib.h>
 
 Representation::Representation( const string< uint32_t > template_data  ):

@@ -5,9 +5,9 @@
  *      Author: Antoine
  */
 
-#include <core/processing.h>
-#include <pal/pal.h>
-#include <utils/types.h>
+#include "processing.h"
+#include "../pal/pal.h"
+#include "../utils/types.h"
 
 Processing::Processing(Resource* bound):
 	bound(bound),

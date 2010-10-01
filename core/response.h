@@ -68,8 +68,8 @@ class Response: public Message
 		//static const string<uint8_t> TEMPORARY_REDIRECT_CODE;
 
 		//Client Error: 4xx
-		static const string<uint8_t> BAD_REQUEST_REASON_PHRASE;
-		static const string<uint8_t> BAD_REQUEST_CODE;
+		static const Elements::string<uint8_t> BAD_REQUEST_REASON_PHRASE;
+		static const Elements::string<uint8_t> BAD_REQUEST_CODE;
 		//static const string<uint8_t> UNAUTHORIZED_REASON_PHRASE;
 		//static const string<uint8_t> UNAUTHORIZED_CODE;
 		//static const string<uint8_t> PAYMENT_REQUIRED_REASON_PHRASE;

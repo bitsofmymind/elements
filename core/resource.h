@@ -43,11 +43,11 @@ class Resource
 		virtual ~Resource(void);
 
 
-		int8_t add_child(string<uint8_t> name, Resource* child);
-		Resource* remove_child(string<uint8_t> name);
+		int8_t add_child(Elements::string<uint8_t> name, Resource* child);
+		Resource* remove_child(Elements::string<uint8_t> name);
 		uint8_t get_number_of_children(void);
 
-	protected:
+	public: //:protected
 		virtual void visit(void);
 		virtual Message* dispatch(Message* message);
 		virtual void run( void );
