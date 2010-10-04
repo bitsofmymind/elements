@@ -29,7 +29,7 @@ int main()
 	root->add_child(Elements::string<uint8_t>::make("res2"), res2);
 	res2->add_child(Elements::string<uint8_t>::make("res3"), res3);
 
-	char* msg = "GET /res1/res3 HTTP/1.1\r\n\
+	const char* msg = "GET /res1/res3 HTTP/1.1\r\n\
 Host: www.example.com";
 	string<uint32_t> str = Elements::string<uint32_t>::make(msg);
 	Request* req = new Request();
