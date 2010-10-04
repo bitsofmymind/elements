@@ -15,7 +15,7 @@
 class Representation
 {
 	protected:
-		typedef struct tag
+		struct tag
 		{
 			string< uint8_t > name;
 			string< uint32_t > content;

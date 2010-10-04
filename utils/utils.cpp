@@ -50,6 +50,8 @@ int8_t GenericList::insert(void* item, uint8_t position)
     }
     list[position] = item;
     items++;
+
+    return 0;
 }
 
 void* GenericList::remove( uint8_t index )

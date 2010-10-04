@@ -9,13 +9,12 @@
 #include "../pal/pal.h"
 #include "../utils/types.h"
 
-Processing::Processing(Resource* bound):
-	bound(bound),
-	Resource()
+Processing::Processing(Resource* bound): Resource(),
+	bound(bound)
+
 {}
-Processing::Processing(void):
-	bound(NULL),
-	Resource()
+Processing::Processing(void): Resource(),
+	bound(NULL)
 {}
 
 

@@ -18,7 +18,7 @@ using namespace Elements;
 class Message
 {
 	public:
-		typedef enum TYPE { REQUEST, RESPONSE, UNKNOWN };
+		enum TYPE { REQUEST, RESPONSE, UNKNOWN };
 
 		//General header fields
 		//static const string< uint8_t > CACHE_CONTROL;

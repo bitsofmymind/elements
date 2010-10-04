@@ -4,9 +4,7 @@
 
 #include <stdint.h>
 
-#define MAKE_STRING( string ) { string, sizeof(string) - 1 }
-
-
+#define MAKE_STRING( string ) { (char*)string, sizeof(string) - 1 }
 
 namespace Elements
 {
@@ -15,7 +13,7 @@ namespace Elements
 		char* text;
 		T length;
 
-		static string<T> make( char* content );
+		static string<T> make( const char* content );
 
 		T copy( char* destination );
 
@@ -86,10 +84,10 @@ namespace Elements
 
 
 	template< class T>
-	string<T> string<T>::make( char* content )
+	string<T> string<T>::make( const char* content )
 	{
-		string<T> str = { content, 0 };
-		for( ; str.length <= 2^(sizeof(T) * 8) - 1; str.length++ )
+		string<T> str = { (char*)content, 0 };
+		for( ; str.length <= (2^(sizeof(T) * 8)) - 1; str.length++ )
 		{
 			if( str.text[str.length] == '\0' )
 			{

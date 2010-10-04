@@ -133,6 +133,8 @@ uint32_t Message::get_message_length(void)
 
 	size += 2 /*ForCLRF between the fields and the body*/ \
 		+ body.length;
+
+	return size;
 }
 
 char Message::serialize(void)
@@ -186,7 +188,7 @@ char Message::serialize( char* buffer )
 //const string< uint8_t > Message::CONTENT_LOCATION = {"content-location", 13 };
 //const string< uint8_t > Message::CONTENT_MD5 = {"content-md5", 14 };
 //const string< uint8_t > Message::CONTENT_RANGE = {"content-range", 15 };
-const string< uint8_t > Message::CONTENT_TYPE = {"content-type", 16 };
+const string< uint8_t > Message::CONTENT_TYPE = MAKE_STRING("content-type");
 //const string< uint8_t > Message::EXPIRES = {"expires", 17 };
 //const string< uint8_t > Message::LAST_MODIFIED = {"last-modified", 18 };
 //const string< uint8_t > Message::FROM_URL = {"from-url", 48 };

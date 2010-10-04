@@ -91,7 +91,7 @@ Message* Resource::dispatch( Message* message)
 			response->body = content;
 			string<uint8_t>* content_type = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
 			content_type->length = sizeof("text/html");
-			content_type->text = "text/html";
+			content_type->text = (char*)"text/html";
 			response->fields.add(Message::CONTENT_TYPE, content_type );
 			return response;
 		}
@@ -215,7 +215,7 @@ Response* Resource::http_head(Request* request)
 	response->body = render( request );
 	string< uint8_t >* content_type = ( string< uint8_t >* )malloc( sizeof( string< uint8_t > ) );
 	content_type->length = sizeof("text/html");
-	content_type->text = "text/html";
+	content_type->text = (char*)"text/html";
 	response->fields.add(Message::CONTENT_TYPE, content_type);
 	return response;
 }
@@ -227,7 +227,7 @@ Response* Resource::http_trace( Request* request )
 	response->body = request->message;
 	string< uint8_t >* value = ( string< uint8_t >* )malloc( sizeof( string< uint8_t > ) );
 	char* content = ( char* )malloc(13);
-	content = "message/http";
+	content = (char*)"message/http";
 	value->text = content;
 	value->length = sizeof( "message/http");
 	response->fields.add( Message::CONTENT_TYPE, value );

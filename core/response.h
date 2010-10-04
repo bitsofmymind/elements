@@ -20,7 +20,7 @@ class Response: public Message
 {
 	public:
 
-		typedef struct status_code
+		struct status_code
 		{
 			const string< unsigned int> reason_phrase;
 			const unsigned int value_int;

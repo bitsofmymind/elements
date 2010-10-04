@@ -11,7 +11,7 @@
 #include "response.h"
 //#include "../elements.h"
 #include <stdint.h>
-#ifdef DEBUG, VERBOSE
+#if defined(DEBUG) ||  defined(VERBOSE)
 	#include <iostream>
 #endif
 
@@ -136,8 +136,8 @@ char Response::serialize( char* buffer)
 //const string<uint8_t> Response::SWITCHING_PROTOCOLS_CODE = { "101", 3 };
 
 //Successful: 2xx
-const string<uint8_t> Response::OK_REASON_PHRASE = { "OK", 200 };
-const string<uint8_t> Response::OK_CODE = { "200", 3 };
+const string<uint8_t> Response::OK_REASON_PHRASE = MAKE_STRING("OK");
+const string<uint8_t> Response::OK_CODE = MAKE_STRING("200");
 //const string<uint8_t> Response::CREATED_REASON_PHRASE = { "Created", 201 };
 //const string<uint8_t> Response::CREATED_CODE = { "201", 3 };
 //const string<uint8_t> Response::ACCEPTED_REASON_PHRASE = { "Accepted", 202 };
@@ -169,16 +169,16 @@ const string<uint8_t> Response::OK_CODE = { "200", 3 };
 //const string<uint8_t> Response::TEMPORARY_REDIRECT_CODE = { "307", 3 };
 
 //Client Error: 4xx
-const string<uint8_t> Response::BAD_REQUEST_REASON_PHRASE = { "Bad Request", 400 };
-const string<uint8_t> Response::BAD_REQUEST_CODE = { "400", 3 };
+const string<uint8_t> Response::BAD_REQUEST_REASON_PHRASE = MAKE_STRING("Bad Request");
+const string<uint8_t> Response::BAD_REQUEST_CODE = MAKE_STRING("400");
 //const string<uint8_t> Response::UNAUTHORIZED_REASON_PHRASE = { "Unauthorized", 401 };
 //const string<uint8_t> Response::UNAUTHORIZED_CODE = { "401", 3 };
 //const string<uint8_t> Response::PAYMENT_REQUIRED_REASON_PHRASE = { "Payment Required", 402 };
 //const string<uint8_t> Response::PAYMENT_REQUIRED_CODE = { "402", 3 };
 //const string<uint8_t> Response::FORBIDDEN_REASON_PHRASE = { "Forbidden", 403 };
 //const string<uint8_t> Response::FORBIDDEN_CODE = { "403", 3 };
-const string<uint8_t> Response::NOT_FOUND_REASON_PHRASE = { "Not Found", 404 };
-const string<uint8_t> Response::NOT_FOUND_CODE = { "404", 3 };
+const string<uint8_t> Response::NOT_FOUND_REASON_PHRASE = MAKE_STRING("Not Found");
+const string<uint8_t> Response::NOT_FOUND_CODE = MAKE_STRING("404");
 //const string<uint8_t> Response::METHOD_NOT_ALLOWED_REASON_PHRASE = { "Mehtod Not Allowed", 405 };
 //const string<uint8_t> Response::METHOD_NOT_ALLOWED_CODE = { "405", 3 };
 //const string<uint8_t> Response::NOT_ACCEPTABLE_REASON_PHRASE = { "Not Allowed", 406 };
@@ -209,8 +209,8 @@ const string<uint8_t> Response::NOT_FOUND_CODE = { "404", 3 };
 //Server error: 5xx
 //const string<uint8_t> Response::INTERNAL_SERVER_ERROR_REASON_PHRASE = { "Internal Server Error", 500 };
 //const string<uint8_t> Response::INTERNAL_SERVER_ERROR_CODE = { "500", 3 };
-const string<uint8_t> Response::NOT_IMPLEMENTED_REASON_PHRASE = { "Not Implemented", 501 };
-const string<uint8_t> Response::NOT_IMPLEMENTED_CODE = { "501", 3 };
+const string<uint8_t> Response::NOT_IMPLEMENTED_REASON_PHRASE = MAKE_STRING("Not Implemented");
+const string<uint8_t> Response::NOT_IMPLEMENTED_CODE = MAKE_STRING("501");
 //const string<uint8_t> Response::BAD_GATEWAY_REASON_PHRASE = { "Bad Gateway", 502 };
 //const string<uint8_t> Response::BAD_GATEWAY_CODE = { "502", 3 };
 //const string<uint8_t> Response::SERVICE_UNAVAILABE_REASON_PHRASE = { "Service Unavailable", 503 };
