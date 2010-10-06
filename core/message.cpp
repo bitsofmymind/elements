@@ -89,7 +89,7 @@ char Message::deserialize( string< uint32_t >& buffer, char* index )
 			start = index;
 			is_name = false;
 		}
-		else if( *index == '\r' && *(index + 1) == '\n' )
+		else if(*index == '\r' && *(index + 1) == '\n' )
 		{
 			value = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
 			value->text = start;
@@ -103,6 +103,10 @@ char Message::deserialize( string< uint32_t >& buffer, char* index )
 			}
 			start = index;
 			is_name = true;
+		}
+		else if(index == (buffer.text + buffer.length))
+		{
+			return -1;
 		}
 		else
 		{

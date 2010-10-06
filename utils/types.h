@@ -3,11 +3,13 @@
 #define TYPES_H_
 
 #include <stdint.h>
+#include <cstring>
 
 #define MAKE_STRING( string ) { (char*)string, sizeof(string) - 1 }
 
 namespace Elements
 {
+
 	template< class T > struct string
 	{
 		char* text;
@@ -87,13 +89,7 @@ namespace Elements
 	string<T> string<T>::make( const char* content )
 	{
 		string<T> str = { (char*)content, 0 };
-		for( ; str.length <= (2^(sizeof(T) * 8)) - 1; str.length++ )
-		{
-			if( str.text[str.length] == '\0' )
-			{
-				break;
-			}
-		}
+		str.length = strlen(content);
 		return str;
 	}
 }
