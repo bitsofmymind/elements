@@ -14,8 +14,10 @@ Processing::Processing(Resource* bound): Resource(),
 
 {}
 Processing::Processing(void): Resource(),
-	bound(NULL)
-{}
+		bound(NULL)
+{
+
+}
 
 
 Resource* Processing::step(Resource* current)
