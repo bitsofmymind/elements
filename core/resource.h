@@ -23,7 +23,7 @@ class Resource
     protected:
 		Dictionary< Resource >* children;
 		Elements::e_time_t own_sleep_clock;
-                Resource* parent;
+		Resource* parent;
 
 	private:
 		friend class Processing;

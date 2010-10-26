@@ -1,29 +1,33 @@
 /*
- * processing.h
+ * authority.h
  *
- *  Created on: Sep 21, 2009
+ *  Created on: Feb 17, 2009
  *      Author: Antoine
  */
 
 #ifndef PROCESSING_H_
 #define PROCESSING_H_
 
+#include <stdlib.h>
+#include "message.h"
+#include "response.h"
+#include "request.h"
 #include "resource.h"
+//#include "../elements.h"
+#include "../utils/utils.h"
+#include "../utils/types.h"
 
 class Processing: public Resource
 {
-	protected:
-		Resource* bound;
+	Resource* bound;
 
 	public:
 		Processing(Resource* bound);
-		Processing();
-
 
 		virtual void start(void);
 
 	protected:
-		static Resource* step(Resource* current);
+		Resource* step(Resource* current);
 
 };
 

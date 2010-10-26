@@ -1,20 +1,25 @@
 /*
- * processing.cpp
+ * authority.cpp
  *
- *  Created on: Sep 21, 2009
+ *  Created on: Feb 17, 2009
  *      Author: Antoine
  */
 
+
+
+
 #include "processing.h"
-#include "../pal/pal.h"
+//#include "../elements.h"
+#include "../utils/utils.h"
 #include "../utils/types.h"
+#include "resource.h"
+#include "../pal/pal.h"
+#include <stdint.h>
 
-Processing::Processing(Resource* bound): Resource(),
-	bound(bound)
+using namespace Elements;
 
-{}
-Processing::Processing(void): Resource(),
-		bound(NULL)
+Processing::Processing(Resource* bound):Resource(),
+		bound(bound)
 {
 
 }
@@ -55,4 +60,5 @@ void Processing::start(void)
 		}
 	}
 }
+
 

@@ -8,7 +8,8 @@
 #ifndef ELEMENTS_H_
 #define ELEMENTS_H_
 
+#include <stddef.h>
+
 #define VERBOSE 1
-#define NULL 0
 
 #endif /* ELEMENTS_H_ */
