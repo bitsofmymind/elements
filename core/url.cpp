@@ -11,6 +11,10 @@
 #include "url.h"
 #include <stdint.h>
 
+#ifdef DEBUG
+	#include <iostream>
+#endif
+
 using namespace Elements;
 
 URL::URL( )
@@ -230,6 +234,18 @@ int8_t URL::serialize(char* destination)
 	return serialize_resource(destination);
 }
 
+#ifdef DEBUG
+
+void URL::print(void)
+{
+	char* url = (char*)malloc(get_length()+1);
+	serialize(url);
+	url[get_length()] = 0;
+	std::cout << url;
+}
+
+#endif
+
 int8_t URL::serialize_authority( char* destination )
 {
 	if( protocol.length )
@@ -259,6 +275,7 @@ int8_t URL::serialize_resource( char* destination )
 	for(uint8_t i = 0; i< resources.items; i++)
 	{
 		destination += resources[i]->copy(destination);
+		*destination++ = '/';
 	}
 	if (arguments )
 	{
@@ -310,13 +327,9 @@ uint8_t URL::get_length(void)
 	}
 	for(uint8_t i = 0; i<resources.items; i++ )
 	{
+		length++; //For the '/'
 		length += resources[i]->length;
 	}
-	if(resources.items > 0)
-	{
-		length += resources.items - 1; //For the '/'
-	}
-
 	if(arguments)
 	{
 		key_value_pair<string<uint8_t>*>* kv;

@@ -17,13 +17,11 @@ using namespace Elements;
 GenericList::GenericList( void )
 {
 	capacity = DEFAULT_INITIAL_CAPACITY;
-	list = new void*[DEFAULT_INITIAL_CAPACITY];
 	items = 0;
 }
 
 GenericList::~GenericList( void )
 {
-	delete list;
 }
 
 int8_t GenericList::append(void* item)
@@ -143,19 +141,23 @@ Elements::string< uint8_t >* GenericDictionary::find( void* value )
 
 key_value_pair<void*>* GenericDictionary::get( string< uint8_t > key )//&
 {
+	uint8_t j;
 	for(uint8_t i = 0; i < items; i++)
 	{
 		if( list[i].key.length != key.length ) { continue; }
 		if(list[i].key.text == NULL){ break; }
 
-		for(uint8_t j = 0; j < key.length ; j++)
+		for(j = 0; j < key.length ; j++)
 		{
 			if(list[i].key.text[j] != key.text[j])
 			{
-				return NULL;
+				break;
 			}
 		}
-		return &list[i];
+		if(j == key.length)
+		{
+			return &list[i];
+		}
 	}
 	return NULL;
 }

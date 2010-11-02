@@ -19,34 +19,35 @@
 using namespace Elements;
 
 Processing::Processing(Resource* bound):Resource(),
-		bound(bound)
+		bound(bound),
+		current(this)
 {
 
 }
 
 
-Resource* Processing::step(Resource* current)
+void Processing::step(void)
 {
 	current->visit();
 
 	Resource* to_run = current->get_next_child_to_visit();
 	if(to_run)
 	{
-		return to_run;
+		current = to_run;
+	}
+	else if(current->parent != bound)
+	{
+		current = current->parent;
 	}
 
-	return current->parent;
 }
 
 void Processing::start(void)
 {
-	Resource* current = this;
-	Resource* next;
-
 	while(true)
 	{
-		next = step(current);
-		if(next == bound)
+		step();
+		if(current == bound)
 		{
 			Elements::e_time_t sleep_amount = current->get_sleep_clock() - get_uptime();
 			if(sleep_amount > e_time_t::MIN)
@@ -54,11 +55,9 @@ void Processing::start(void)
 				processing_sleep( sleep_amount );
 			}
 		}
-		else
-		{
-			current = next;
-		}
 	}
 }
+
+
 
 

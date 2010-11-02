@@ -48,10 +48,11 @@ class Request: public Message
 			virtual void print();
 		#endif
 
-		virtual uint32_t get_message_length(void);
+
 		virtual TYPE get_type( void );
 		virtual char deserialize( Elements::string<uint32_t>& buffer, char* index );
 		virtual char serialize( char* buffer );
+		virtual uint32_t get_message_length(void);
 };
 
 #endif /* REQUEST_H_ */

@@ -20,14 +20,16 @@
 class Processing: public Resource
 {
 	Resource* bound;
+	Resource* current;
 
 	public:
 		Processing(Resource* bound);
 
 		virtual void start(void);
+		void step(void);
 
 	protected:
-		Resource* step(Resource* current);
+
 
 };
 

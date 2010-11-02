@@ -57,6 +57,8 @@ Response::Response(
 	{
 		delete to_url;
 		to_url = _original_request->from_url;
+		delete from_url;
+		from_url = _original_request->to_url;
 	}
 }
 

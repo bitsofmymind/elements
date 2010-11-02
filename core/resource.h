@@ -73,6 +73,10 @@ class Resource
 		virtual Resource* get_next_child_to_visit();
 		bool update_children_sleep_clock(e_time_t time);
 
+		#ifdef DEBUG
+				void print_transaction(Message* message);
+		#endif
+
 };
 
 #endif /* RESOURCE_H_ */

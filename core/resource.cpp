@@ -17,6 +17,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef DEBUG
+	#include <iostream>
+#endif
+
 using namespace Elements;
 
 string<uint8_t> parent_resource = MAKE_STRING("..");
@@ -48,6 +52,10 @@ void Resource::visit(void)
 
 Resource* Resource::find_resource( string<uint8_t>* name )
 {
+	if(!children)
+	{
+		return NULL;
+	}
 	return children->find( *name );
 }
 
@@ -170,6 +178,9 @@ string<uint8_t> trace_method = MAKE_STRING( "trace");
 
 Response* Resource::process( Request* request )
 {
+	#ifdef DEBUG
+		print_transaction(request);
+	#endif
 	if( request->method == get_method )
 	{
 		return http_get( request );
@@ -188,8 +199,36 @@ Response* Resource::process( Request* request )
 
 Message* Resource::process(Response* response)
 {
+	#ifdef DEBUG
+		print_transaction(response);
+	#endif
 	return NULL;
 }
+
+#ifdef DEBUG
+	void Resource::print_transaction(Message* message)
+	{
+		using namespace std;
+
+		if(message->get_type() == Message::RESPONSE)
+		{
+			cout << "################### RESPONSE Received ###################" << endl;
+		}
+		else
+		{
+			cout << "################### REQUEST Received ###################" << endl;
+		}
+		cout << "From: ";
+		message->from_url->print();
+		cout << endl;
+		cout << "To: ";
+		message->to_url->print();
+		cout << endl;
+		message->print();
+		cout << endl;
+	}
+
+#endif
 
 void Resource::run( void )
 {

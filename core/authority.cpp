@@ -64,7 +64,11 @@ void Authority::process_queue(void)
                 }
                 else
                 {
-                    Resource::send(message);
+                    if(Resource::send(message))
+                    {
+                        message = Resource::dispatch(message);
+                        if(message){ message_queue->queue( message ); }
+                    }
                 }
 		/*CONCURENCY PROBLEM: there will most likely be a significant delay between the time that its dertemined there is
 		enough space on the messages_out queue and the actual queuing of the message. For exampe, collect() might be called in between

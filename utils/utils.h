@@ -20,7 +20,7 @@ using namespace Elements;
 class GenericList
 {
 	protected:
-		void** list;//[ DEFAULT_INITIAL_CAPACITY ];
+		void* list[DEFAULT_INITIAL_CAPACITY];
 	public:
 		uint8_t items;
 		uint8_t capacity;
@@ -29,7 +29,7 @@ class GenericList
 		~GenericList();
 
 		int8_t append( void* item );
-                int8_t insert(void* item, uint8_t position);
+        int8_t insert(void* item, uint8_t position);
 		void* remove( uint8_t index );
 		void* operator[](uint8_t i);
 	protected:
