@@ -38,6 +38,19 @@ class Echo: public Resource
 
 };
 
+class Timer: public Resource
+{
+	public:
+
+
+	virtual void run()
+	{
+		//Elements::e_time_t time =;
+		schedule( Elements::e_time_t(5,0) );
+		std::cout << "Timer tick" << std::endl;
+	}
+};
+
 int main()
 {
 	Echo* echo = new Echo();
@@ -45,10 +58,12 @@ int main()
 	Resource* res3 = new Resource();
 	Authority* root = new Authority();
 	Processing* proc = new Processing(NULL);
+	Timer* timer = new Timer();
 
 	root->add_child(Elements::string<uint8_t>::make("proc"), proc);
 	root->add_child(Elements::string<uint8_t>::make("echo"), echo);
 	root->add_child(Elements::string<uint8_t>::make("res2"), res2);
+	root->add_child(Elements::string<uint8_t>::make("timer"), timer);
 	res2->add_child(Elements::string<uint8_t>::make("res3"), res3);
 
 	const char* cmsg = "GET /res2/res3 HTTP/1.1\r\n\
@@ -72,6 +87,13 @@ Host: www.example.com\r\n\r\n"));
 	}
 
 	std::cout << "Echo completed in " << steps << " steps." << std::endl;
+
+
+	for(int ticks = 0; ticks < 100; ticks++)
+	{
+		proc->step();
+		increase_uptime(Elements::e_time_t(2, 0));
+	}
 
 	return 0;
 }
