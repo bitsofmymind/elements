@@ -15,7 +15,7 @@
 #include <iostream>
 
 void processing_wake(){}
-void processing_sleep(Elements::e_time_t time){}
+void processing_sleep(uint64_t time){}
 
 #include <stdlib.h>
 #include "string.h"
@@ -46,7 +46,7 @@ class Timer: public Resource
 	virtual void run()
 	{
 		//Elements::e_time_t time =;
-		schedule( Elements::e_time_t(5,0) );
+		schedule( 500 );
 		std::cout << "Timer tick" << std::endl;
 	}
 };
@@ -57,13 +57,17 @@ int main()
 	Resource* res2 = new Resource();
 	Resource* res3 = new Resource();
 	Authority* root = new Authority();
+	Authority* auth1 = new Authority();
 	Processing* proc = new Processing(NULL);
 	Timer* timer = new Timer();
 
 	root->add_child(Elements::string<uint8_t>::make("proc"), proc);
 	root->add_child(Elements::string<uint8_t>::make("echo"), echo);
 	root->add_child(Elements::string<uint8_t>::make("res2"), res2);
-	root->add_child(Elements::string<uint8_t>::make("timer"), timer);
+	root->add_child(Elements::string<uint8_t>::make("auth1"), auth1);
+
+	auth1->add_child(Elements::string<uint8_t>::make("timer"), timer);
+
 	res2->add_child(Elements::string<uint8_t>::make("res3"), res3);
 
 	const char* cmsg = "GET /res2/res3 HTTP/1.1\r\n\
@@ -80,11 +84,11 @@ Host: www.example.com\r\n\r\n"));
 
 	int steps = 0;
 
-	while(!echo->echoed)
+	/*while(!echo->echoed)
 	{
 		proc->step();
 		steps++;
-	}
+	}*/
 
 	std::cout << "Echo completed in " << steps << " steps." << std::endl;
 
@@ -92,7 +96,7 @@ Host: www.example.com\r\n\r\n"));
 	for(int ticks = 0; ticks < 100; ticks++)
 	{
 		proc->step();
-		increase_uptime(Elements::e_time_t(2, 0));
+		increase_uptime(100);
 	}
 
 	return 0;
