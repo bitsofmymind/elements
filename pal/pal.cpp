@@ -14,8 +14,8 @@
 }*/
 
 using namespace Elements;
-static e_time_t system_uptime;
-static e_time_t system_time;
+static e_time_t system_uptime(0, 0);
+static e_time_t system_time(0, 0);
 
 e_time_t get_time( void )
 {
@@ -33,9 +33,9 @@ e_time_t get_uptime( void )
 	return system_uptime;
 }
 
-void increase_uptime(uint16_t amount)
+void increase_uptime(Elements::e_time_t time)
 {
-	system_uptime.increase_ms(amount);
+	system_uptime += time;
 }
 
 /*This is the Interrupt handling function for time keeping, it should be vectored to every millisecond.*/

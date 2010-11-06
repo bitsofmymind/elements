@@ -26,7 +26,7 @@
 	extern Elements::e_time_t get_time( void );
 	extern void set_time(Elements::e_time_t time);
 	extern Elements::e_time_t get_uptime( void );
-	extern void increase_uptime(uint16_t amount);
+	void increase_uptime(Elements::e_time_t time);
 	inline void initialize_time( void );
 	inline uint32_t get_number_of_elements( void );
 	inline void register_element( void );
