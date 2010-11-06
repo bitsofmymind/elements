@@ -5,7 +5,7 @@
 
 using namespace Elements;
 
-const e_time_t e_time_t::MAX = e_time_t(UINT32_MAX, 999);
+/*const e_time_t e_time_t::MAX = e_time_t(UINT32_MAX, 999);
 const e_time_t e_time_t::MIN = e_time_t(0, 0);
 
 e_time_t::e_time_t(void)
@@ -148,4 +148,4 @@ void e_time_t::increase_ms(uint16_t amount)
     {
         milliseconds += amount;
     }
-}
+}*/

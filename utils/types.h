@@ -29,7 +29,7 @@ namespace Elements
 		U value;
 	};
 
-	struct e_time_t
+	/*struct e_time_t
 	{
 		static const e_time_t MAX;
 		static const e_time_t MIN;
@@ -54,7 +54,7 @@ namespace Elements
 		e_time_t operator+=(e_time_t rhs);
 		e_time_t operator-=(e_time_t rhs);
 		void increase_ms(uint16_t amount);
-	};
+	};*/
 
 	template<class T>
 	T string<T>::copy(char* destination )

@@ -45,7 +45,7 @@ void Authority::visit(void)
 Message* Authority::dispatch(Message* message)
 {
 	message_queue->queue(message);
-	schedule(NULL, Elements::e_time_t::MIN);
+	schedule(NULL, 0);
 	return NULL;
 }
 
@@ -85,16 +85,16 @@ uint8_t Authority::send(Message* message)
     uint8_t result = message_queue->queue(message);
     if(!result)
     {
-        schedule(NULL, Elements::e_time_t::MIN);
+        schedule(NULL, 0);
     }
     return result;
 }
 
-Elements::e_time_t Authority::get_sleep_clock(void)
+uint64_t Authority::get_sleep_clock(void)
 {
     if(message_queue->items)
     {
-        return Elements::e_time_t::MIN;
+        return 0;
     }
     return Resource::get_sleep_clock();
 

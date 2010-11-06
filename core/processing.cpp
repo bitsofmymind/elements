@@ -49,8 +49,8 @@ void Processing::start(void)
 		step();
 		if(current == bound)
 		{
-			Elements::e_time_t sleep_amount = current->get_sleep_clock() - get_uptime();
-			if(sleep_amount > e_time_t::MIN)
+			uint64_t sleep_amount = current->get_sleep_clock() - get_uptime();
+			if(sleep_amount > 0)
 			{
 				processing_sleep( sleep_amount );
 			}

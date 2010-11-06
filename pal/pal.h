@@ -23,16 +23,16 @@
 	}formatedTime;
 
 	//formatedTime get_formated_time( void );
-	extern Elements::e_time_t get_time( void );
-	extern void set_time(Elements::e_time_t time);
-	extern Elements::e_time_t get_uptime( void );
-	void increase_uptime(Elements::e_time_t time);
+	extern uint64_t get_time( void );
+	extern void set_time(uint64_t time);
+	extern uint64_t get_uptime( void );
+	void increase_uptime(uint64_t time);
 	inline void initialize_time( void );
 	inline uint32_t get_number_of_elements( void );
 	inline void register_element( void );
 	inline void unregister_element( void );
 	extern void processing_wake();
-	extern void processing_sleep(Elements::e_time_t time);
+	extern void processing_sleep(uint64_t time);
 
 #ifdef MULTITHREADING
 	void lock();

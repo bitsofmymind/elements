@@ -14,26 +14,26 @@
 }*/
 
 using namespace Elements;
-static e_time_t system_uptime(0, 0);
-static e_time_t system_time(0, 0);
+static uint64_t system_uptime = 0;
+static uint64_t system_time = 0;
 
-e_time_t get_time( void )
+uint64_t get_time( void )
 {
 	//time_in_milliseconds += uptime_in_milliseconds;
 	return system_time;
 }
 
-void set_time(Elements::e_time_t time)
+void set_time(uint64_t time)
 {
 	system_time = time;
 }
 
-e_time_t get_uptime( void )
+uint64_t get_uptime( void )
 {
 	return system_uptime;
 }
 
-void increase_uptime(Elements::e_time_t time)
+void increase_uptime(uint64_t time)
 {
 	system_uptime += time;
 }

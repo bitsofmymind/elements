@@ -27,9 +27,9 @@ string<uint8_t> parent_resource = MAKE_STRING("..");
 
 Resource::Resource(void)
 {
-	own_sleep_clock = e_time_t::MIN;
-	children_sleep_clock = e_time_t::MAX;
-	buffer_children_sleep_clock = e_time_t::MAX;
+	own_sleep_clock = 0;
+	children_sleep_clock = UINT64_MAX;
+	buffer_children_sleep_clock = UINT64_MAX;
 	child_to_visit = 0;
 	visiting_children = false;
 	//register_element();
@@ -45,7 +45,7 @@ void Resource::visit(void)
 {
 	if(own_sleep_clock <= get_uptime() )
 	{
-		own_sleep_clock = e_time_t::MAX;
+		own_sleep_clock = UINT64_MAX;
 		run();
 	}
 }
@@ -149,7 +149,7 @@ int8_t Resource::add_child(string<uint8_t> name, Resource* child )
 	if( children == NULL )
 	{
 		children = new Dictionary<Resource>();
-		children_sleep_clock = e_time_t::MIN;
+		children_sleep_clock = 0;
 	}
 
 	int8_t return_code = children->add(name, child);
@@ -233,11 +233,11 @@ Message* Resource::process(Response* response)
 
 void Resource::run( void )
 {
-	schedule( &own_sleep_clock, Elements::e_time_t::MAX );
+	schedule( &own_sleep_clock, UINT64_MAX );
 }
 
 
-e_time_t Resource::get_sleep_clock( void )
+uint64_t Resource::get_sleep_clock( void )
 {
 	return children_sleep_clock > own_sleep_clock ? own_sleep_clock:children_sleep_clock;
 }
@@ -274,10 +274,13 @@ Response* Resource::http_trace( Request* request )
 	return response;
 }
 
-void Resource::schedule( e_time_t* timer, e_time_t time )
+void Resource::schedule( uint64_t* timer, uint64_t time )
 {
 
-    time += get_uptime();
+    if(time != UINT64_MAX)
+    {
+    	time += get_uptime();
+    }
 
     if(timer)
     {
@@ -287,17 +290,19 @@ void Resource::schedule( e_time_t* timer, e_time_t time )
 	Resource* current = parent;
 	while(true)
 	{
-		if (!current || current->update_children_sleep_clock(time))
+		if (!current )
 		{
 			break;
 		}
+		current->update_children_sleep_clock(time);
 		current = current->parent;
+
 	}
         processing_wake();
 
 }
 
-void Resource::schedule(e_time_t time)
+void Resource::schedule(uint64_t time)
 {
     schedule(&own_sleep_clock, time);
 }
@@ -308,44 +313,41 @@ string<uint32_t> Resource::render( Request* request )
 	return buffer;
 }
 
-bool Resource::update_children_sleep_clock(e_time_t time)
+void Resource::update_children_sleep_clock(uint64_t time)
 {
 
-	if(visiting_children)
+
+	if(time <  buffer_children_sleep_clock)
 	{
-		if(time <  buffer_children_sleep_clock)
-		{
-			buffer_children_sleep_clock = time;
-			return true;
-		}
+		buffer_children_sleep_clock = time;
 	}
-	else
+	if(!visiting_children)
 	{
 		if(time <  children_sleep_clock)
 		{
 			children_sleep_clock = time;
-			return true;
 		}
 	}
-	return false;
 }
 
 Resource* Resource::get_next_child_to_visit(void)
 {
 	if(children && children_sleep_clock <= get_uptime() )
 	{
-		uint8_t start = child_to_visit;
 
-		if(start == 0)
-		{
-			visiting_children = true;
-		}
+		visiting_children = true;
 
-		do
+		while(true)
 		{
-			if((*children)[child_to_visit]->value->get_sleep_clock() <= get_uptime())
+			Resource* child = (*children)[child_to_visit]->value;
+
+			if(child->get_sleep_clock() <= get_uptime())
 			{
-				return (*children)[child_to_visit]->value;
+				return child;
+			}
+			if(child->get_sleep_clock() < buffer_children_sleep_clock)
+			{
+				buffer_children_sleep_clock = child->get_sleep_clock();
 			}
 			if(++child_to_visit == children->items)
 			{
@@ -367,11 +369,11 @@ Resource* Resource::get_next_child_to_visit(void)
 				 * we update 'children_sleep_clock' with the value in the buffer.
 				 */
 
-				buffer_children_sleep_clock = e_time_t::MAX;
+				buffer_children_sleep_clock = UINT64_MAX;
+
 				break;
 			}
 		}
-		while(child_to_visit != start);
 	}
 
 	return NULL;
