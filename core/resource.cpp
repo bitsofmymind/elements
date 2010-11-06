@@ -27,7 +27,7 @@ string<uint8_t> parent_resource = MAKE_STRING("..");
 
 Resource::Resource(void)
 {
-	own_sleep_clock = e_time_t::MAX;
+	own_sleep_clock = e_time_t::MIN;
 	children_sleep_clock = e_time_t::MAX;
 	buffer_children_sleep_clock = e_time_t::MAX;
 	child_to_visit = 0;
@@ -149,6 +149,7 @@ int8_t Resource::add_child(string<uint8_t> name, Resource* child )
 	if( children == NULL )
 	{
 		children = new Dictionary<Resource>();
+		children_sleep_clock = e_time_t::MIN;
 	}
 
 	int8_t return_code = children->add(name, child);
@@ -238,7 +239,7 @@ void Resource::run( void )
 
 e_time_t Resource::get_sleep_clock( void )
 {
-    return children_sleep_clock > own_sleep_clock ? own_sleep_clock:children_sleep_clock;
+	return children_sleep_clock > own_sleep_clock ? own_sleep_clock:children_sleep_clock;
 }
 
 Response* Resource::http_get(Request* request)
@@ -275,11 +276,14 @@ Response* Resource::http_trace( Request* request )
 
 void Resource::schedule( e_time_t* timer, e_time_t time )
 {
-	time += get_uptime() + time;
-        if(timer)
-        {
-            *timer = time;
-        }
+
+    time += get_uptime();
+
+    if(timer)
+    {
+    	*timer = time;
+    }
+
 	Resource* current = parent;
 	while(true)
 	{
@@ -364,7 +368,7 @@ Resource* Resource::get_next_child_to_visit(void)
 				 */
 
 				buffer_children_sleep_clock = e_time_t::MAX;
-
+				break;
 			}
 		}
 		while(child_to_visit != start);
