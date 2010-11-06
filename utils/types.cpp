@@ -114,7 +114,7 @@ e_time_t e_time_t::operator+=(e_time_t rhs)
     if(milliseconds >= 1000)
     {
         seconds++;
-        milliseconds = 0;
+        milliseconds -= 1000;
     }
     seconds += rhs.seconds;
 

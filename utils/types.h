@@ -3,7 +3,7 @@
 #define TYPES_H_
 
 #include <stdint.h>
-#include <cstring>
+#include <string.h>
 
 #define MAKE_STRING( string ) { (char*)string, sizeof(string) - 1 }
 
