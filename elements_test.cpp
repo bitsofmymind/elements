@@ -13,12 +13,12 @@
 #include <core/request.h>
 #include <utils/utils.h>
 #include <iostream>
+#include <stdlib.h>
+#include "string.h"
+#include "filein.h"
 
 void processing_wake(){}
 void processing_sleep(uint64_t time){}
-
-#include <stdlib.h>
-#include "string.h"
 
 class Echo: public Resource
 {
@@ -59,14 +59,18 @@ int main()
 	Authority* root = new Authority();
 	Authority* auth1 = new Authority();
 	Processing* proc = new Processing(NULL);
-	Timer* timer = new Timer();
+	Timer* timer1 = new Timer();
+	Timer* timer2 = new Timer();
+	Filein* filein = new Filein();
 
 	root->add_child(Elements::string<uint8_t>::make("proc"), proc);
 	root->add_child(Elements::string<uint8_t>::make("echo"), echo);
 	root->add_child(Elements::string<uint8_t>::make("res2"), res2);
 	root->add_child(Elements::string<uint8_t>::make("auth1"), auth1);
+	auth1->add_child(Elements::string<uint8_t>::make("filein"), filein);
+	root->add_child(Elements::string<uint8_t>::make("timer"), timer1);
 
-	auth1->add_child(Elements::string<uint8_t>::make("timer"), timer);
+	auth1->add_child(Elements::string<uint8_t>::make("timer"), timer2);
 
 	res2->add_child(Elements::string<uint8_t>::make("res3"), res3);
 
@@ -80,15 +84,15 @@ Host: www.example.com\r\n\r\n"));
 
 	req->deserialize(str, str.text);
 
-	echo->send(req);
+	//echo->send(req);
 
 	int steps = 0;
 
-	/*while(!echo->echoed)
+	while(!echo->echoed)
 	{
 		proc->step();
 		steps++;
-	}*/
+	}
 
 	std::cout << "Echo completed in " << steps << " steps." << std::endl;
 
