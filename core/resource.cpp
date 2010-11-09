@@ -339,17 +339,7 @@ Resource* Resource::get_next_child_to_visit(void)
 
 		while(true)
 		{
-			Resource* child = (*children)[child_to_visit]->value;
-
-			if(child->get_sleep_clock() <= get_uptime())
-			{
-				return child;
-			}
-			if(child->get_sleep_clock() < buffer_children_sleep_clock)
-			{
-				buffer_children_sleep_clock = child->get_sleep_clock();
-			}
-			if(++child_to_visit == children->items)
+			if(child_to_visit == children->items)
 			{
 				child_to_visit = 0;
 				visiting_children = false;
@@ -372,6 +362,17 @@ Resource* Resource::get_next_child_to_visit(void)
 				buffer_children_sleep_clock = UINT64_MAX;
 
 				break;
+			}
+			Resource* child = (*children)[child_to_visit]->value;
+			child_to_visit++;
+			if(child->get_sleep_clock() <= get_uptime())
+			{
+				return child;
+			}
+			//What follows is probably useless...
+			if(child->get_sleep_clock() < buffer_children_sleep_clock)
+			{
+				buffer_children_sleep_clock = child->get_sleep_clock();
 			}
 		}
 	}

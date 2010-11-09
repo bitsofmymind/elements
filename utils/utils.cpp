@@ -44,7 +44,7 @@ int8_t GenericList::insert(void* item, uint8_t position)
     }
     for(uint8_t i = items; i > position; i--)
     {
-        list[i+1] = list[i];
+        list[i] = list[i - 1];
     }
     list[position] = item;
     items++;

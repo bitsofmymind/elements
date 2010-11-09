@@ -61,7 +61,7 @@ class GenericDictionary
 		//virtual bool insert( char* key, T* value );
 		void* remove( Elements::string< uint8_t >& key);
 		void* find( Elements::string< uint8_t > key );
-                Elements::string<uint8_t>* find( void* value );
+        Elements::string<uint8_t>* find( void* value );
 		key_value_pair<void*>* operator[](uint8_t i);
 		//virtual T* operator[]( string<uint8_t> key);
 		//virtual T* operator[]( char* key );

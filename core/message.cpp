@@ -98,7 +98,6 @@ char Message::deserialize( string< uint32_t >& buffer, char* index )
 			fields.add( name, value );
 			if( *index == '\r' && *(index + 1) == '\n' )
 			{
-				index += 2;
 				break;
 			}
 			start = index;
@@ -114,9 +113,11 @@ char Message::deserialize( string< uint32_t >& buffer, char* index )
 		}
 	}
 
+	index++; //Skips the '\r'
 	message = buffer;
-	body.length = buffer.length - (index - buffer.text);
-	body.text = index;
+	body.length = buffer.length - (index - buffer.text); /*We do not move past the '\n'
+	in case the message had no body as doing so would cause a buffer overflow.*/
+	body.text = index + 1;
 
 	return 0;
 }
