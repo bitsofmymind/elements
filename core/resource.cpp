@@ -185,24 +185,27 @@ Resource* Resource::remove_child(string<uint8_t> name)
 	return orphan;
 }
 
-string<uint8_t> get_method = MAKE_STRING( "get");
-string<uint8_t> head_method = MAKE_STRING( "head");
-string<uint8_t> trace_method = MAKE_STRING( "trace");
+/*string<uint8_t> get_method = MAKE_STRING("get");
+string<uint8_t> head_method = MAKE_STRING("head");
+string<uint8_t> trace_method = MAKE_STRING("trace");*/
 
 Response* Resource::process( Request* request )
 {
 	#ifdef DEBUG
 		print_transaction(request);
 	#endif
-	if( request->method == get_method )
+	//if( request->method == get_method)
+	if(!memcmp("get", request->method.text, 3))
 	{
 		return http_get( request );
 	}
-	else if( request->method == head_method )
+	//else if( request->method == head_method )
+	else if(!memcmp("head", request->method.text, 4))
 	{
 		return http_head( request );
 	}
-	else if( request->method == trace_method )
+	//else if( request->method == trace_method )
+	else if(!memcmp("trace", request->method.text, 5))
 	{
 		return http_trace( request );
 	}

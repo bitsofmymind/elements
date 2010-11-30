@@ -13,20 +13,18 @@
 #include "types.h"
 #include <stdint.h>
 
-#define DEFAULT_INITIAL_CAPACITY 5
+#define CAPACITY 5
 
 using namespace Elements;
 
 class GenericList
 {
 	protected:
-		void* list[DEFAULT_INITIAL_CAPACITY];
+		void* list[CAPACITY];
 	public:
 		uint8_t items;
-		uint8_t capacity;
 
 		GenericList();
-		~GenericList();
 
 		int8_t append( void* item );
         int8_t insert(void* item, uint8_t position);
@@ -49,10 +47,9 @@ class GenericDictionary
 {
 
 	protected:
-		key_value_pair<void*> list[DEFAULT_INITIAL_CAPACITY];
+		key_value_pair<void*> list[CAPACITY];
 	public:
 		uint8_t items;
-		uint8_t capacity;
 
 		GenericDictionary();
 
@@ -60,14 +57,14 @@ class GenericDictionary
 		//virtual bool insert( char* key, uint8_t length, T* value );
 		//virtual bool insert( char* key, T* value );
 		void* remove( Elements::string< uint8_t >& key);
-		void* find( Elements::string< uint8_t > key );
+		void* find( Elements::string< uint8_t >& key );
         Elements::string<uint8_t>* find( void* value );
 		key_value_pair<void*>* operator[](uint8_t i);
 		//virtual T* operator[]( string<uint8_t> key);
 		//virtual T* operator[]( char* key );
 
 	protected:
-		key_value_pair<void*>* get(  Elements::string< uint8_t > key );
+		key_value_pair<void*>* get(  Elements::string< uint8_t >& key );
 		void compact( void );
 
 };
@@ -86,57 +83,15 @@ template< class T> class Dictionary: public GenericDictionary
 		//virtual T* operator[]( char* key );
 };
 
-class GenericDynamicDictionary
-{
-
-	protected:
-		key_value_pair<void*> list[DEFAULT_INITIAL_CAPACITY];
-	public:
-		uint8_t items;
-		uint8_t capacity;
-
-		GenericDynamicDictionary();
-
-		int8_t add( const Elements::string< uint8_t > key, void* value );
-		//virtual bool insert( char* key, uint8_t length, T* value );
-		//virtual bool insert( char* key, T* value );
-		void* remove( Elements::string< uint8_t >& key);
-		void* find( Elements::string< uint8_t > key );
-		key_value_pair<void*>* operator[](uint8_t i);
-		//virtual T* operator[]( string<uint8_t> key);
-		//virtual T* operator[]( char* key );
-
-	protected:
-		key_value_pair<void*>* get(  Elements::string< uint8_t > key );
-		void compact( void );
-
-};
-
-template< class T> class DynamicDictionary: public GenericDynamicDictionary
-{
-	public:
-		bool add( const string< uint8_t > key, T* value );
-		//virtual bool insert( char* key, uint8_t length, T* value );
-		//virtual bool insert( char* key, T* value );
-		T* remove( string< uint8_t >& key);
-		T* find( string< uint8_t > key );
-		key_value_pair<T*>* operator[](uint8_t i);
-		//virtual T* operator[]( string<uint8_t> key);
-		//virtual T* operator[]( char* key );
-};
-
 class GenericQueue
 {
 	protected:
-		void* list[DEFAULT_INITIAL_CAPACITY];
+		void* list[CAPACITY];
 		uint8_t start;
 	public:
 		uint8_t items;
-		uint8_t capacity;
 
 		GenericQueue();
-
-		void* operator[](uint8_t index);
 
 		int8_t queue( void* object );
 		void* dequeue( void );
@@ -146,8 +101,6 @@ class GenericQueue
 template< class T > class Queue: public GenericQueue
 {
 	public:
-		T* operator[](uint8_t index);
-
 		int8_t queue( T* object );
 		T* dequeue( void );
 
@@ -206,11 +159,6 @@ key_value_pair<T*>* Dictionary<T>::operator[](uint8_t i)
 	return (key_value_pair<T*>*)GenericDictionary::operator[](i);
 }
 
-template< class T >
-T* Queue<T>::operator[]( uint8_t index )
-{
-	return (T*)GenericQueue::operator[](index);
-}
 
 template< class T>
 int8_t Queue<T>::queue(T* object)

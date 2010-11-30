@@ -57,7 +57,7 @@ constitutes the entry point of a thread.*/
 void Authority::process_queue(void)
 {
 	Message* message; //Danger here, if the queue becomes full, it will no longer run
-	while(message_queue->items && message_queue->items < message_queue->capacity)
+	while(message_queue->items && message_queue->items < CAPACITY)
 	{
 		message = message_queue->dequeue();
                 if(message->to_url_resource_index > 0 || !message->to_url->is_absolute_path)
