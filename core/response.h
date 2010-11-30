@@ -157,7 +157,6 @@ class Response: public Message
 			virtual void print();
 		#endif
 
-		virtual TYPE get_type(void);
 		virtual MESSAGE_SIZE get_message_length(void);
 		virtual char deserialize( Elements::string<MESSAGE_SIZE>& buffer, char* index );
 		virtual char serialize(char* buffer);

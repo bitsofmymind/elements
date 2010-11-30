@@ -18,10 +18,12 @@
 
 using namespace Elements;
 
-Request::Request()
+Request::Request():
+		Message()
 {
 	to_url = new URL();
 	from_url = new URL();
+	object_type = REQUEST;
 }
 
 Request::~Request()
@@ -52,11 +54,6 @@ Request::~Request()
 		Message::print();
 	}
 #endif
-
-Message::TYPE Request::get_type(void)
-{
-	return Message::REQUEST;
-}
 
 char Request::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
 {

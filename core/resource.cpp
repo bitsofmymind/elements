@@ -69,7 +69,7 @@ Message* Resource::dispatch( Message* message)
 	message->to_url_resource_index++;
 	if( resource_name == NULL )
 	{
-		if( message->get_type() == Message::REQUEST)
+		if( message->object_type == Message::REQUEST)
 		{
 			return process( (Request*) message );
 		}
@@ -96,7 +96,7 @@ Message* Resource::dispatch( Message* message)
 
 	if( child_resource == NULL )
 	{
-		if( message->get_type() == Message::REQUEST )
+		if( message->object_type == Message::REQUEST )
 		{
 			Response* response = new Response( &Response::NOT_FOUND_CODE, &Response::NOT_FOUND_REASON_PHRASE, (Request*)message );
 			string<MESSAGE_SIZE> content = MAKE_STRING("<html><body>Not found</body></html>");
@@ -223,7 +223,7 @@ Message* Resource::process(Response* response)
 	{
 		using namespace std;
 
-		if(message->get_type() == Message::RESPONSE)
+		if(message->object_type == Message::RESPONSE)
 		{
 			cout << "################### RESPONSE Received ###################" << endl;
 		}

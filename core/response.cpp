@@ -44,6 +44,8 @@ Response::Response(
 			response_code(*_response_code),
 			original_request(_original_request)
 {
+	object_type = RESPONSE;
+
 	if( _reason_phrase == NULL )
 	{
 		this->reason_phrase.text = NULL;
@@ -79,11 +81,6 @@ Response::~Response()
 		delete from_url;
 	}
 	free(body.text);
-}
-
-Message::TYPE Response::get_type( void )
-{
-	return Message::RESPONSE;
 }
 
 char Response::deserialize(string<MESSAGE_SIZE>& buffer, char* index)

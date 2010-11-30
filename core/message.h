@@ -52,6 +52,8 @@ class Message
 		URL* to_url;
 		URL* from_url;
 
+		TYPE object_type;
+
 		uint8_t to_url_resource_index;
 
 
@@ -66,7 +68,6 @@ class Message
 		#ifdef DEBUG
 			virtual void print();
 		#endif
- 		virtual TYPE get_type( void ) = 0;
  		virtual MESSAGE_SIZE get_message_length(void);
 		virtual char deserialize(Elements::string<MESSAGE_SIZE>& buffer, char* index );
 		char deserialize();
