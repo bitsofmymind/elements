@@ -28,6 +28,7 @@
 <tool id="de.innot.avreclipse.tool.compiler.winavr.lib.debug.970934249" name="AVR Compiler" superClass="de.innot.avreclipse.tool.compiler.winavr.lib.debug">
 <option id="de.innot.avreclipse.compiler.option.debug.level.558543350" name="Generate Debugging Info" superClass="de.innot.avreclipse.compiler.option.debug.level"/>
 <option id="de.innot.avreclipse.compiler.option.optimize.2069111884" name="Optimization Level" superClass="de.innot.avreclipse.compiler.option.optimize" value="de.innot.avreclipse.compiler.optimize.size" valueType="enumerated"/>
+<option id="de.innot.avreclipse.compiler.option.optimize.other.1521319782" superClass="de.innot.avreclipse.compiler.option.optimize.other" value="-ffreestanding -fno-tree-scev-cprop -ffunction-sections -fdata-sections -mcall-prologues -fvtable-gc -static" valueType="string"/>
 <inputType id="de.innot.avreclipse.compiler.winavr.input.1258366662" name="C Source Files" superClass="de.innot.avreclipse.compiler.winavr.input"/>
 </tool>
 <tool id="de.innot.avreclipse.tool.cppcompiler.lib.debug.1186955000" name="AVR C++ Compiler" superClass="de.innot.avreclipse.tool.cppcompiler.lib.debug">
@@ -37,7 +38,7 @@
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/elements_avr}&quot;"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/avr_utils}&quot;"/>
 </option>
-<option id="de.innot.avreclipse.cppcompiler.option.optimize.other.1406186904" name="Other Optimization Flags" superClass="de.innot.avreclipse.cppcompiler.option.optimize.other" value="" valueType="string"/>
+<option id="de.innot.avreclipse.cppcompiler.option.optimize.other.1406186904" name="Other Optimization Flags" superClass="de.innot.avreclipse.cppcompiler.option.optimize.other" value="-ffreestanding -fno-tree-scev-cprop -ffunction-sections -fdata-sections -mcall-prologues -fvtable-gc -static" valueType="string"/>
 <inputType id="de.innot.avreclipse.cppcompiler.input.690806005" superClass="de.innot.avreclipse.cppcompiler.input"/>
 </tool>
 <tool id="de.innot.avreclipse.tool.linker.winavr.base.174939157" name="AVR C Linker" superClass="de.innot.avreclipse.tool.linker.winavr.base"/>

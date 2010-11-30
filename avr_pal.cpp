@@ -10,6 +10,33 @@
 #include <avr/io.h>
 #include <avr/sleep.h>
 #include "serial/HardwareSerial.h"
+#include <stdlib.h>
+
+void __cxa_pure_virtual(void){};
+
+int __cxa_guard_acquire(__guard *g) {return !*(char *)(g);};
+void __cxa_guard_release (__guard *g) {*(char *)g = 1;};
+void __cxa_guard_abort (__guard *) {};
+
+void * operator new(size_t size)
+{
+    void* temp = malloc(size);
+    int sz = size;
+    Serial.print("new ");
+    Serial.print(sz, HEX);
+    Serial.print(" ");
+    Serial.println((uint16_t)temp);
+
+	return temp;
+}
+
+void operator delete(void * ptr)
+{
+	Serial.print("del ");
+	free(ptr);
+	Serial.println((uint16_t)ptr);
+}
+
 
 //This will give use a period of 8ms precisely
 #define TIMER2_PRESCALER 256
@@ -18,7 +45,6 @@
 #define MS_TO_TIMER2_OVERFLOW 4//1000 / (F_CPU /(TIMER2_PRESCALER * TIMER2_OUTPUT_COMPARE))
 
 static bool volatile wake_up = false;
-
 volatile uint16_t stack_pointer = RAMEND;
 
 void processing_wake()
