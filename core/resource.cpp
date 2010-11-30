@@ -32,6 +32,8 @@ Resource::Resource(void)
 	buffer_children_sleep_clock = UINT64_MAX;
 	child_to_visit = 0;
 	visiting_children = false;
+	children = 0;
+	parent = 0;
 	//register_element();
 }
 
