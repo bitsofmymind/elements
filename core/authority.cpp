@@ -27,14 +27,17 @@ Authority::Authority(void):Resource()
 	message_queue = new Queue<Message>();
 }
 
-Authority::~Authority(void)
-{
-	/*for( uint8_t i = 0; i < message_queue->items ; i++ )
+#ifndef NO_RESOURCE_DESTRUCTION
+	Authority::~Authority(void)
 	{
-		delete message_queue[i];
-	}*/
+		/*for( uint8_t i = 0; i < message_queue->items ; i++ )
+		{
+			delete message_queue[i];
+		}*/
+		delete message_queue;
 
-}
+	}
+#endif
 
 void Authority::visit(void)
 {
@@ -53,7 +56,7 @@ Message* Authority::dispatch(Message* message)
 constitutes the entry point of a thread.*/
 void Authority::process_queue(void)
 {
-	Message* message;
+	Message* message; //Danger here, if the queue becomes full, it will no longer run
 	while(message_queue->items && message_queue->items < message_queue->capacity)
 	{
 		message = message_queue->dequeue();

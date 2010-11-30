@@ -55,10 +55,13 @@ Response::Response(
 	}
 	if(_original_request != NULL)
 	{
-		delete to_url;
 		to_url = _original_request->from_url;
-		delete from_url;
 		from_url = _original_request->to_url;
+	}
+	else
+	{
+		to_url = new URL();
+		from_url = new URL();
 	}
 }
 
@@ -66,7 +69,16 @@ Response::Response(){}
 
 Response::~Response()
 {
-	delete original_request ;
+	if(original_request)
+	{
+		delete original_request;
+	}
+	else
+	{
+		delete to_url;
+		delete from_url;
+	}
+	free(body.text);
 }
 
 Message::TYPE Response::get_type( void )
@@ -74,7 +86,7 @@ Message::TYPE Response::get_type( void )
 	return Message::RESPONSE;
 }
 
-char Response::deserialize(string<uint32_t>& buffer, char* index)
+char Response::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
 {
 	//Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
 
@@ -101,7 +113,7 @@ char Response::deserialize(string<uint32_t>& buffer, char* index)
 	return Message::deserialize(buffer, index);
 }
 
-uint32_t Response::get_message_length(void)
+MESSAGE_SIZE Response::get_message_length(void)
 {
 	//The 3 and 5 are for 'HTTP/' and the version
 	return 5 /*For 'HTTP/'*/ \

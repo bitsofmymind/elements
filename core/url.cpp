@@ -22,10 +22,23 @@ URL::URL( )
 	this->url.text = NULL;
 	this->url.length = 0;
 	valid = false;
+	authorities = 0;
+	arguments = 0;
 }
 URL::~URL()
 {
-	//delete authorities;
+	if(authorities)
+	{
+		while(authorities->items)
+		{
+			free(authorities->remove(0));
+		}
+		delete authorities;
+	}
+	while(resources.items)
+	{
+		free(resources.remove(0));
+	}
 }
 
 void URL::deserialize(char* url_string)
@@ -238,10 +251,11 @@ int8_t URL::serialize(char* destination)
 
 void URL::print(void)
 {
-	char* url = (char*)malloc(get_length()+1);
-	serialize(url);
-	url[get_length()] = 0;
-	std::cout << url;
+	char* urlstr = (char*)malloc(get_length()+1);
+	//serialize(urlstr);
+	urlstr[get_length()] = 0;
+	std::cout << urlstr;
+	free(urlstr);
 }
 
 #endif

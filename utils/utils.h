@@ -13,7 +13,7 @@
 #include "types.h"
 #include <stdint.h>
 
-#define DEFAULT_INITIAL_CAPACITY 20
+#define DEFAULT_INITIAL_CAPACITY 5
 
 using namespace Elements;
 
@@ -56,7 +56,7 @@ class GenericDictionary
 
 		GenericDictionary();
 
-		int8_t add( const Elements::string< uint8_t > key, void* value );
+		int8_t add(Elements::string< uint8_t > key, void* value );
 		//virtual bool insert( char* key, uint8_t length, T* value );
 		//virtual bool insert( char* key, T* value );
 		void* remove( Elements::string< uint8_t >& key);
@@ -75,7 +75,7 @@ class GenericDictionary
 template< class T> class Dictionary: public GenericDictionary
 {
 	public:
-		int8_t add( const Elements::string< uint8_t > key, T* value );
+		int8_t add(Elements::string< uint8_t > key, T* value );
 		//virtual bool insert( char* key, uint8_t length, T* value );
 		//virtual bool insert( char* key, T* value );
 		T* remove( Elements::string< uint8_t >& key);

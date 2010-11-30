@@ -85,6 +85,7 @@ GenericDictionary::GenericDictionary( void )
 {
 	capacity = DEFAULT_INITIAL_CAPACITY;
 	items = 0;
+
 }
 
 
@@ -93,6 +94,7 @@ int8_t GenericDictionary::add( string< uint8_t > key, void* value)
 	if(items == capacity){ return 1; }
 
 	key_value_pair<void*>* kv = get(key);
+
 	if( kv == NULL)
 	{
 		list[items].key = key;
@@ -279,7 +281,7 @@ void* GenericQueue::operator[]( uint8_t index )
 int8_t GenericQueue::queue(void* object)
 {
 	if(items == capacity){ return 1; }
-	if(start + items > capacity){ list[start + items - capacity] = object;}
+	if(start + items >= capacity){ list[start + items - capacity] = object;}
 	else { list[start + items] = object; }
 	items++;
 	return 0;
@@ -289,10 +291,10 @@ void* GenericQueue::dequeue(void)
 {
 	if(items == 0) { return NULL; }
 	items--;
-	if(start == capacity)
+	if(start == capacity - 1)
 	{
 		start = 0;
-		return list[capacity];
+		return list[capacity - 1];
 	}
 	start++;
 	return list[start - 1];

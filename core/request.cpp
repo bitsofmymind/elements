@@ -18,6 +18,18 @@
 
 using namespace Elements;
 
+Request::Request()
+{
+	to_url = new URL();
+	from_url = new URL();
+}
+
+Request::~Request()
+{
+	delete to_url;
+	delete from_url;
+}
+
 #ifdef DEBUG
 	void Request::print(void)
 	{
@@ -46,7 +58,7 @@ Message::TYPE Request::get_type(void)
 	return Message::REQUEST;
 }
 
-char Request::deserialize(string<uint32_t>& buffer, char* index)
+char Request::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
 {
 	char* start = index;
 
@@ -77,7 +89,7 @@ char Request::deserialize(string<uint32_t>& buffer, char* index)
 	return Message::deserialize( buffer, index );
 }
 
-uint32_t Request::get_message_length(void)
+MESSAGE_SIZE Request::get_message_length(void)
 {
 	//The 3 and 5 are for 'HTTP/' and the version
 	return method.length /*For 'HTTP/'*/ \

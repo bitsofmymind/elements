@@ -10,6 +10,7 @@
 
 #include "../utils/types.h"
 #include "../utils/utils.h"
+#include "../elements.h"
 #include <stdint.h>
 
 class Representation
@@ -18,21 +19,21 @@ class Representation
 		struct tag
 		{
 			string< uint8_t > name;
-			string< uint32_t > content;
+			string< MESSAGE_SIZE > content;
 			char* position;
-			uint32_t length;
+			MESSAGE_SIZE length;
 		};
-		string< uint32_t > rendered_representation;
-		const string< uint32_t > template_data;
+		string< MESSAGE_SIZE > rendered_representation;
+		const string< MESSAGE_SIZE > template_data;
 		List< tag > tags;
 
 	public:
-		Representation( const string< uint32_t > );
+		Representation( const string< MESSAGE_SIZE > );
 		virtual ~Representation();
 
-		virtual void set( Dictionary< string <uint32_t> >* );
-		virtual string< uint32_t> render( void );
-		virtual string< uint32_t > render( char* start, char* stop );
+		virtual void set( Dictionary< string <MESSAGE_SIZE> >* );
+		virtual string<MESSAGE_SIZE> render( void );
+		virtual string<MESSAGE_SIZE> render( char* start, char* stop );
 	protected:
 		virtual void parse( void );
 };

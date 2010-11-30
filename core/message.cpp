@@ -8,7 +8,7 @@
 
 #include <stdlib.h>
 #include "message.h"
-//#include "../elements.h"
+#include "../elements.h"
 #include "../utils/utils.h"
 #include "../utils/types.h"
 #include "url.h"
@@ -55,11 +55,17 @@ using namespace Elements;
 Message::Message()
 {
 	to_url_resource_index = 0;
-	to_url = new URL();
-	from_url = new URL();
+	body.length = 0;
+	body.text = NULL;
+	message.length = 0;
+	message.text = 0;
 }
 Message::~Message()
 {
+	while(fields.items)
+	{
+		free(fields.remove(fields[0]->key));
+	}
 	free( message.text );
 }
 
@@ -68,14 +74,14 @@ char Message::deserialize(void)
 	return deserialize( message, message.text );
 }
 
-char Message::deserialize( string< uint32_t >& buffer, char* index )
+char Message::deserialize( string< MESSAGE_SIZE >& buffer, char* index )
 {
 	char* start = index;
 	string<uint8_t> name;
 	string<uint8_t>* value;
 	bool is_name = true;
 
-	while( true )
+	for(;;)
 	{
 		if( *index >= 'A' && *index <= 'Z' )
 		{
@@ -91,11 +97,15 @@ char Message::deserialize( string< uint32_t >& buffer, char* index )
 		}
 		else if(*index == '\r' && *(index + 1) == '\n' )
 		{
-			value = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
-			value->text = start;
-			value->length = index - start;
+			if(!is_name)
+			{
+				value = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+				value->text = start;
+				value->length = index - start;
+				fields.add( name, value );
+			}
+
 			index += 2;
-			fields.add( name, value );
 			if( *index == '\r' && *(index + 1) == '\n' )
 			{
 				break;
@@ -103,7 +113,7 @@ char Message::deserialize( string< uint32_t >& buffer, char* index )
 			start = index;
 			is_name = true;
 		}
-		else if(index == (buffer.text + buffer.length))
+		else if(index >= (buffer.text + buffer.length))
 		{
 			return -1;
 		}
@@ -122,10 +132,10 @@ char Message::deserialize( string< uint32_t >& buffer, char* index )
 	return 0;
 }
 
-uint32_t Message::get_message_length(void)
+MESSAGE_SIZE Message::get_message_length(void)
 {
 	key_value_pair<string<uint8_t>*>* kv;
-	uint32_t size = 0;
+	MESSAGE_SIZE size = 0;
 
 	for( uint8_t i = 0; i < fields.items; i++)
 	{

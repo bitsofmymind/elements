@@ -9,7 +9,7 @@
 #include "response.h"
 #include "request.h"
 #include "resource.h"
-//#include "../elements.h"
+#include "../elements.h"
 #include "url.h"
 #include "../utils/utils.h"
 #include "../utils/types.h"
@@ -35,11 +35,13 @@ Resource::Resource(void)
 	//register_element();
 }
 
-Resource::~Resource(void)
-{
-	//unregister_element();
-	delete children;
-}
+#ifndef NO_RESOURCE_DESTRUCTION
+	Resource::~Resource(void)
+	{
+		//unregister_element();
+		delete children;
+	}
+#endif
 
 void Resource::visit(void)
 {
@@ -56,7 +58,7 @@ Resource* Resource::find_resource( string<uint8_t>* name )
 	{
 		return NULL;
 	}
-	return children->find( *name );
+	return (Resource*)children->find( *name );
 }
 
 Message* Resource::dispatch( Message* message)
@@ -95,7 +97,7 @@ Message* Resource::dispatch( Message* message)
 		if( message->get_type() == Message::REQUEST )
 		{
 			Response* response = new Response( &Response::NOT_FOUND_CODE, &Response::NOT_FOUND_REASON_PHRASE, (Request*)message );
-			string<uint32_t> content = MAKE_STRING("<html><body>Not found</body></html>");
+			string<MESSAGE_SIZE> content = MAKE_STRING("<html><body>Not found</body></html>");
 			response->body = content;
 			string<uint8_t>* content_type = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
 			content_type->length = sizeof("text/html");
@@ -123,12 +125,16 @@ uint8_t Resource::send(Message* message)
     if(parent)
     {
         string<uint8_t>* name = parent->get_name(this);
+        string<uint8_t>* new_name = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+
+        new_name->length = name->length;
+        new_name->text = name->text;
 
         if(!message->to_url->is_absolute_path)
         {
-            message->to_url->resources.insert(name,0);
+            message->to_url->resources.insert(new_name,0);
         }
-        message->from_url->resources.insert(name,0);
+        message->from_url->resources.insert(new_name,0);
         return parent->send(message);
     }
     return 1;
@@ -149,6 +155,10 @@ int8_t Resource::add_child(string<uint8_t> name, Resource* child )
 	if( children == NULL )
 	{
 		children = new Dictionary<Resource>();
+		if(!children)
+		{
+			return -2;
+		}
 		children_sleep_clock = 0;
 	}
 
@@ -168,7 +178,7 @@ uint8_t Resource::get_number_of_children()
 }
 Resource* Resource::remove_child(string<uint8_t> name)
 {
-	Resource* orphan = !children ? NULL: children->remove(name);
+	Resource* orphan = !children ? NULL: (Resource*)children->remove(name);
 	orphan->parent = NULL;
 	return orphan;
 }
@@ -252,7 +262,7 @@ Response* Resource::http_get(Request* request)
 Response* Resource::http_head(Request* request)
 {
 	Response* response =  new Response(&Response::OK_CODE, &Response::OK_REASON_PHRASE, request );
-	response->body = render( request );
+	//response->body = render( request );
 	string< uint8_t >* content_type = ( string< uint8_t >* )malloc( sizeof( string< uint8_t > ) );
 	content_type->length = sizeof("text/html");
 	content_type->text = (char*)"text/html";
@@ -307,10 +317,16 @@ void Resource::schedule(uint64_t time)
     schedule(&own_sleep_clock, time);
 }
 
-string<uint32_t> Resource::render( Request* request )
+string<MESSAGE_SIZE> Resource::render( Request* request )
 {
-	string<uint32_t> buffer = MAKE_STRING("<html><body>There are currently no representation associated with this resource.</body></html>");
-	return buffer;
+	//string<MESSAGE_SIZE> buffer = MAKE_STRING("<html><body>There are currently no representation associated with this resource.</body></html>");
+	//const char* cmsg = "<html><body>There are currently no representation associated with this resource.</body></html>";
+	//char* msg = (char*)malloc(sizeof("<html><body>There are currently no representation associated with this resource.</body></html>"));
+	const char* cmsg = "//";
+	char* msg = (char*)malloc(sizeof("//"));
+	strcpy(msg,cmsg);
+	string<MESSAGE_SIZE> str = string<MESSAGE_SIZE>::make(msg);
+	return str;
 }
 
 void Resource::update_children_sleep_clock(uint64_t time)

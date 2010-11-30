@@ -10,6 +10,8 @@
 
 #include <stddef.h>
 
-#define VERBOSE 1
+//#define VERBOSE 1
+#define MESSAGE_SIZE uint16_t
+//#define NO_RESOURCE_DESTRUCTION
 
 #endif /* ELEMENTS_H_ */

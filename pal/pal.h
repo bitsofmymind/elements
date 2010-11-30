@@ -11,6 +11,9 @@
 #include <stdint.h>
 #include "../utils/types.h"
 
+extern uint64_t system_uptime;
+extern uint64_t system_time;
+
 	typedef struct
 	{
 		uint32_t years;

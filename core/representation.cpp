@@ -8,7 +8,7 @@
 #include "representation.h"
 #include <stdlib.h>
 
-Representation::Representation( const string< uint32_t > template_data  ):
+Representation::Representation( const string< MESSAGE_SIZE > template_data  ):
 	template_data(template_data)
 {
 	parse();
@@ -49,9 +49,9 @@ void Representation::parse( void )
 	}
 }
 
-void Representation::set( Dictionary< string <uint32_t> >* rendering_arguments )
+void Representation::set( Dictionary< string <MESSAGE_SIZE> >* rendering_arguments )
 {
-	string< uint32_t >* content;
+	string< MESSAGE_SIZE >* content;
 
 	for( uint8_t i = 0; i < tags.items; i++)
 	{
@@ -63,7 +63,7 @@ void Representation::set( Dictionary< string <uint32_t> >* rendering_arguments )
 	}
 }
 
-string< uint32_t> Representation::render( void )
+string<MESSAGE_SIZE> Representation::render( void )
 {
 	if( rendered_representation.text != NULL )
 	{
@@ -75,7 +75,7 @@ string< uint32_t> Representation::render( void )
 		or check if it was modified ?*/
 	}
 
-	uint32_t length = template_data.length;
+	MESSAGE_SIZE length = template_data.length;
 
 	for( uint8_t i = 0; i < tags.items; i++)
 	{
@@ -125,7 +125,7 @@ string< uint32_t> Representation::render( void )
 
 }
 
-string< uint32_t> Representation::render( char* start, char* stop )
+string<MESSAGE_SIZE> Representation::render( char* start, char* stop )
 {
 
 	free( rendered_representation.text );

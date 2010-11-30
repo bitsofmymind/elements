@@ -8,12 +8,16 @@
 #ifndef MESSAGE_H_
 #define MESSAGE_H_
 
-//#include "../elements.h"
+#include "../elements.h"
 #include "url.h"
 #include "../utils/utils.h"
 #include "../utils/types.h"
 
 using namespace Elements;
+
+#ifndef MESSAGE_SIZE
+	#define MESSAGE_SIZE uint32_t
+#endif
 
 class Message
 {
@@ -51,21 +55,20 @@ class Message
 		uint8_t to_url_resource_index;
 
 
-		Elements::string< uint32_t > message;
-		Elements::string< uint32_t > body;
+		Elements::string< MESSAGE_SIZE > message;
+		Elements::string< MESSAGE_SIZE > body;
 		Dictionary< Elements::string<uint8_t> > fields;
 
 	public:
 		Message();
-		virtual ~Message();
-
+		~Message();
 
 		#ifdef DEBUG
 			virtual void print();
 		#endif
  		virtual TYPE get_type( void ) = 0;
- 		virtual uint32_t get_message_length(void);
-		virtual char deserialize(Elements::string< uint32_t>& buffer, char* index );
+ 		virtual MESSAGE_SIZE get_message_length(void);
+		virtual char deserialize(Elements::string<MESSAGE_SIZE>& buffer, char* index );
 		char deserialize();
 		char serialize(void);
 		virtual char serialize( char* buffer );

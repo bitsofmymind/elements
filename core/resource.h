@@ -20,7 +20,7 @@
 class Resource
 {
 
-    protected:
+    public:
 		Dictionary< Resource >* children;
 		uint64_t own_sleep_clock;
 		Resource* parent;
@@ -40,7 +40,9 @@ class Resource
 
 	public:
 		Resource(void);
-		virtual ~Resource(void);
+		#ifndef NO_RESOURCE_DESTRUCTION
+			virtual ~Resource(void);
+		#endif
 
 
 		int8_t add_child(Elements::string<uint8_t> name, Resource* child);
@@ -68,9 +70,9 @@ class Resource
 		void schedule(uint64_t* timer, uint64_t time );
         void schedule(uint64_t time);
 
-		virtual Elements::string<uint32_t> render( Request* request );
+		virtual Elements::string<MESSAGE_SIZE> render( Request* request );
 
-		virtual Resource* get_next_child_to_visit();
+		Resource* get_next_child_to_visit();
 		void update_children_sleep_clock(uint64_t time);
 
 		#ifdef DEBUG

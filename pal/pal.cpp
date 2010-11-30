@@ -14,8 +14,8 @@
 }*/
 
 using namespace Elements;
-static uint64_t system_uptime = 0;
-static uint64_t system_time = 0;
+uint64_t system_uptime = 0;
+uint64_t system_time = 0;
 
 uint64_t get_time( void )
 {

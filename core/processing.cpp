@@ -44,7 +44,7 @@ void Processing::step(void)
 
 void Processing::start(void)
 {
-	while(true)
+	for(;;)
 	{
 		step();
 		if(current == bound)

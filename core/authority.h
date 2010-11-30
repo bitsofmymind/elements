@@ -27,7 +27,9 @@ class Authority: public Resource
 
 	public:
 		Authority(void);
-		virtual ~Authority(void);
+		#ifndef NO_RESOURCE_DESTRUCTION
+			virtual ~Authority(void);
+		#endif
 
 	protected:
 		virtual void visit(void);

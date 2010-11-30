@@ -44,15 +44,18 @@ class Request: public Message
 		Elements::string< uint8_t > url;
 		uint8_t http_version;
 
+		Request();
+		~Request();
+
 		#ifdef DEBUG
 			virtual void print();
 		#endif
 
 
 		virtual TYPE get_type( void );
-		virtual char deserialize( Elements::string<uint32_t>& buffer, char* index );
+		virtual char deserialize( Elements::string<MESSAGE_SIZE>& buffer, char* index );
 		virtual char serialize( char* buffer );
-		virtual uint32_t get_message_length(void);
+		virtual MESSAGE_SIZE get_message_length(void);
 };
 
 #endif /* REQUEST_H_ */
