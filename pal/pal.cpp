@@ -13,7 +13,6 @@
 
 }*/
 
-using namespace Elements;
 uint64_t system_uptime = 0;
 uint64_t system_time = 0;
 
