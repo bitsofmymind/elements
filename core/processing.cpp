@@ -49,7 +49,7 @@ void Processing::start(void)
 		step();
 		if(current == bound)
 		{
-			uint64_t sleep_amount = current->get_sleep_clock() - get_uptime();
+			uptime_t sleep_amount = current->get_sleep_clock() - get_uptime();
 			if(sleep_amount > 0)
 			{
 				processing_sleep( sleep_amount );

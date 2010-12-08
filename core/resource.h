@@ -22,14 +22,14 @@ class Resource
 
     public:
 		Dictionary< Resource >* children;
-		uint64_t own_sleep_clock;
+		uptime_t own_sleep_clock;
 		Resource* parent;
 
 	private:
 		friend class Processing;
 
-		uint64_t children_sleep_clock;
-		uint64_t buffer_children_sleep_clock;
+		uptime_t children_sleep_clock;
+		uptime_t buffer_children_sleep_clock;
 		volatile bool visiting_children;
 		uint8_t child_to_visit;
 
@@ -53,10 +53,10 @@ class Resource
 		virtual void visit(void);
 		virtual Message* dispatch(Message* message);
 		virtual void run( void );
-        virtual uint8_t send(Message* message);
+                virtual uint8_t send(Message* message);
 
-		virtual uint64_t get_sleep_clock( void );
-        string<uint8_t>* get_name(Resource* resource);
+		virtual uptime_t get_sleep_clock( void );
+                string<uint8_t>* get_name(Resource* resource);
 
 		Resource* find_resource( Elements::string<uint8_t>* name );
 
@@ -67,16 +67,16 @@ class Resource
 		Response* http_head(Request* request);
 		Response* http_trace(Request* request);
 
-		void schedule(uint64_t* timer, uint64_t time );
-        void schedule(uint64_t time);
+		void schedule(uptime_t* timer, uptime_t time );
+                void schedule(uptime_t time);
 
 		virtual Elements::string<MESSAGE_SIZE> render( Request* request );
 
 		Resource* get_next_child_to_visit();
-		void update_children_sleep_clock(uint64_t time);
+		void update_children_sleep_clock(uptime_t time);
 
 		#ifdef DEBUG
-				void print_transaction(Message* message);
+                  void print_transaction(Message* message);
 		#endif
 
 };

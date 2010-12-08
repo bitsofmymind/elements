@@ -13,7 +13,7 @@
 
 }*/
 
-uint64_t system_uptime = 0;
+uptime_t system_uptime = 0;
 uint64_t system_time = 0;
 
 uint64_t get_time( void )
@@ -27,12 +27,12 @@ void set_time(uint64_t time)
 	system_time = time;
 }
 
-uint64_t get_uptime( void )
+uptime_t get_uptime( void )
 {
 	return system_uptime;
 }
 
-void increase_uptime(uint64_t time)
+void increase_uptime(uptime_t time)
 {
 	system_uptime += time;
 }

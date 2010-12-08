@@ -28,8 +28,8 @@ string<uint8_t> parent_resource = MAKE_STRING("..");
 Resource::Resource(void)
 {
 	own_sleep_clock = 0;
-	children_sleep_clock = UINT64_MAX;
-	buffer_children_sleep_clock = UINT64_MAX;
+	children_sleep_clock = MAX_UPTIME;
+	buffer_children_sleep_clock = MAX_UPTIME;
 	child_to_visit = 0;
 	visiting_children = false;
 	children = 0;
@@ -49,7 +49,7 @@ void Resource::visit(void)
 {
 	if(own_sleep_clock <= get_uptime() )
 	{
-		own_sleep_clock = UINT64_MAX;
+		own_sleep_clock = MAX_UPTIME;
 		run();
 	}
 }
@@ -248,11 +248,11 @@ Message* Resource::process(Response* response)
 
 void Resource::run( void )
 {
-	schedule( &own_sleep_clock, UINT64_MAX );
+	schedule( &own_sleep_clock, MAX_UPTIME );
 }
 
 
-uint64_t Resource::get_sleep_clock( void )
+uptime_t Resource::get_sleep_clock( void )
 {
 	return children_sleep_clock > own_sleep_clock ? own_sleep_clock:children_sleep_clock;
 }
@@ -289,10 +289,10 @@ Response* Resource::http_trace( Request* request )
 	return response;
 }
 
-void Resource::schedule( uint64_t* timer, uint64_t time )
+void Resource::schedule( uptime_t* timer, uptime_t time )
 {
 
-    if(time != UINT64_MAX)
+    if(time != MAX_UPTIME)
     {
     	time += get_uptime();
     }
@@ -317,7 +317,7 @@ void Resource::schedule( uint64_t* timer, uint64_t time )
 
 }
 
-void Resource::schedule(uint64_t time)
+void Resource::schedule(uptime_t time)
 {
     schedule(&own_sleep_clock, time);
 }
@@ -334,7 +334,7 @@ string<MESSAGE_SIZE> Resource::render( Request* request )
 	return str;
 }
 
-void Resource::update_children_sleep_clock(uint64_t time)
+void Resource::update_children_sleep_clock(uptime_t time)
 {
 
 
@@ -380,7 +380,7 @@ Resource* Resource::get_next_child_to_visit(void)
 				 * we update 'children_sleep_clock' with the value in the buffer.
 				 */
 
-				buffer_children_sleep_clock = UINT64_MAX;
+				buffer_children_sleep_clock = MAX_UPTIME;
 
 				break;
 			}

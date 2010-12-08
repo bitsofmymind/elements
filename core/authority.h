@@ -36,7 +36,7 @@ class Authority: public Resource
 		virtual Message* dispatch(Message* message);
         virtual uint8_t send(Message* message);
 
-        virtual uint64_t get_sleep_clock( void );
+        virtual uptime_t get_sleep_clock( void );
 
 		virtual void process_queue(void);
 };

@@ -93,7 +93,7 @@ uint8_t Authority::send(Message* message)
     return result;
 }
 
-uint64_t Authority::get_sleep_clock(void)
+uptime_t Authority::get_sleep_clock(void)
 {
     if(message_queue->items)
     {

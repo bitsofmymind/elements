@@ -8,10 +8,10 @@
 #ifndef MESSAGE_H_
 #define MESSAGE_H_
 
-#include "../elements.h"
+#include <elements.h>
 #include "url.h"
-#include "../utils/utils.h"
-#include "../utils/types.h"
+#include <utils/utils.h>
+#include <utils/types.h>
 
 using namespace Elements;
 
