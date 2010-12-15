@@ -51,9 +51,9 @@ void processing_wake()
 {
 	wake_up = true;
 }
-void processing_sleep(uint64_t time)
+void processing_sleep(uptime_t time)
 {
-	uint64_t time_to_wake = get_uptime() + time;
+	uptime_t time_to_wake = get_uptime() + time;
 
 	set_sleep_mode(SLEEP_MODE_IDLE);
 

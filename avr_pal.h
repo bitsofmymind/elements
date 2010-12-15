@@ -8,7 +8,9 @@
 #ifndef AVR_PAL_H_
 #define AVR_PAL_H_
 
+
 #include <pal/pal.h>
+#include <stdlib.h>
 
 void * operator new(size_t size);
 void operator delete(void * ptr);
