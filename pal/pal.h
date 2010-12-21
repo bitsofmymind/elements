@@ -24,6 +24,8 @@
 
 //formatedTime get_formated_time( void );
 
+extern void init(void);
+
 #define ASAP 0
 #define SECONDS(s) s*1000
 #define MINUTES(m) m*SECONDS(60)

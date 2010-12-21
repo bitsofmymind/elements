@@ -25,11 +25,11 @@ using namespace Elements;
 
 string<uint8_t> parent_resource = MAKE_STRING("..");
 
-Resource::Resource(void)
+Resource::Resource(void):
+  children_sleep_clock(MAX_UPTIME),
+  buffer_children_sleep_clock(MAX_UPTIME)
 {
 	own_sleep_clock = 0;
-	children_sleep_clock = MAX_UPTIME;
-	buffer_children_sleep_clock = MAX_UPTIME;
 	child_to_visit = 0;
 	visiting_children = false;
 	children = 0;
@@ -54,19 +54,34 @@ void Resource::visit(void)
 	}
 }
 
-Resource* Resource::find_resource( string<uint8_t>* name )
+Resource* Resource::find_resource( URL* url )
 {
+	string<uint8_t>* name = url->resources[url->cursor];
+
+	if(name->text[0] == '.')
+	{
+		if(name->text[1] == '.' && name->length == 2 )
+		{
+			return parent;
+		}
+		if(name->length == 1)
+		{
+			return this;
+		}
+	}
+
 	if(!children)
 	{
 		return NULL;
 	}
+
 	return (Resource*)children->find( *name );
 }
 
 Message* Resource::dispatch( Message* message)
 {
-	string<uint8_t>* resource_name = message->to_url->resources[message->to_url_resource_index];
-	message->to_url_resource_index++;
+	/*string<uint8_t>* resource_name = message->to_url->resources[message->to_url->cursor];
+	message->to_url->cursor++;
 	if( resource_name == NULL )
 	{
 		if( message->object_type == Message::REQUEST)
@@ -79,22 +94,39 @@ Message* Resource::dispatch( Message* message)
 	{
 		if( !message->to_url->is_absolute_path)
 		{
-			message->from_url->resources.append(message->to_url->resources[message->to_url_resource_index - 2 ]);
+			message->from_url->resources.append(message->to_url->resources[message->to_url->cursor - 2 ]);
 		}
 		return message;
 	}
 	if( resource_name->text[0] == '.' && resource_name->length == 1 )
 	{
 		return dispatch(message); //RISK OF STACK OVERFLOW IF THERE IS TOO MUCH /./././././././././.
-	}
+	}*/
 
-	if( !message->to_url->is_absolute_path)
+
+	/*f( !message->to_url->is_absolute_path)
 	{
 		message->from_url->resources.append(&parent_resource);
 	}
-	Resource* child_resource = find_resource( resource_name );
+	Resource* child_resource = find_resource( resource_name );*/
 
-	if( child_resource == NULL )
+	if(message->to_url->cursor >= message->to_url->resources.items)
+	{
+		if( message->object_type == Message::REQUEST)
+		{
+			return process( (Request*) message );
+		}
+		return process( (Response*)message);
+	}
+
+	Resource* next = find_resource( message->to_url);
+	message->to_url->cursor++;
+
+	if(next == this)
+	{
+		return dispatch(message);
+	}
+	if(next == NULL )
 	{
 		if( message->object_type == Message::REQUEST )
 		{
@@ -110,16 +142,10 @@ Message* Resource::dispatch( Message* message)
 		delete message ;
 		return NULL;
 	}
-
-	message = child_resource->dispatch(message);
-	update_children_sleep_clock(child_resource->get_sleep_clock());
-
-	if(message==NULL) {return NULL;}
-	if( message->to_url->is_absolute_path )
+	else
 	{
-		return message;
+		message = next->dispatch(message);
 	}
-	return dispatch(message);
 }
 
 uint8_t Resource::send(Message* message)
@@ -129,8 +155,7 @@ uint8_t Resource::send(Message* message)
         string<uint8_t>* name = parent->get_name(this);
         string<uint8_t>* new_name = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
 
-        new_name->length = name->length;
-        new_name->text = name->text;
+        *new_name = *name;
 
         if(!message->to_url->is_absolute_path)
         {

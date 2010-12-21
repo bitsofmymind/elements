@@ -34,6 +34,8 @@ class URL
 		bool valid;
 		bool is_absolute_url;
 		bool is_absolute_path;
+		uint8_t cursor;
+
 	public:
 		URL();
 		~URL();

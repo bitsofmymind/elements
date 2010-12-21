@@ -12,6 +12,7 @@
 #include "url.h"
 #include <utils/utils.h>
 #include <utils/types.h>
+#include <utils/file.h>
 
 using namespace Elements;
 
@@ -54,11 +55,9 @@ class Message
 
 		TYPE object_type;
 
-		uint8_t to_url_resource_index;
-
-
 		Elements::string< MESSAGE_SIZE > message;
 		Elements::string< MESSAGE_SIZE > body;
+		File<MESSAGE_SIZE>* body_file;
 		Dictionary< Elements::string<uint8_t> > fields;
 
 	public:

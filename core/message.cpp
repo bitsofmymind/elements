@@ -54,11 +54,11 @@ using namespace Elements;
 
 Message::Message()
 {
-	to_url_resource_index = 0;
 	body.length = 0;
 	body.text = NULL;
 	message.length = 0;
 	message.text = 0;
+	body_file = 0;
 }
 Message::~Message()
 {

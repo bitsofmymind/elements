@@ -24,6 +24,7 @@ URL::URL( )
 	valid = false;
 	authorities = 0;
 	arguments = 0;
+	cursor = 0;
 }
 URL::~URL()
 {

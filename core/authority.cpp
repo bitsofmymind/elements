@@ -60,7 +60,7 @@ void Authority::process_queue(void)
 	while(message_queue->items && message_queue->items < CAPACITY)
 	{
 		message = message_queue->dequeue();
-                if(message->to_url_resource_index > 0 || !message->to_url->is_absolute_path)
+                if(message->to_url->cursor > 0 || !message->to_url->is_absolute_path)
                 {
                     message = Resource::dispatch(message);
                     if(message){ message_queue->queue( message ); }

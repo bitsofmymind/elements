@@ -1,8 +1,9 @@
 
-#include <stdint.h>
+#ifndef FILE_H_
+#define FILE_H_
 
+#include <stdint.h>
 #include "types.h"
-#include "../core/resource.h"
 
 using namespace Elements;
 
@@ -15,47 +16,20 @@ preallocated to the amount of bytes the caller is expecting. The read method wil
 return with the buffer filled up with no more than the specified amount of bytes and
 with the length property set to the amount of bytes
 */
-		virtual int8_t read(string<T>* buffer, bool async) = 0;
-		virtual int8_t write(string<T>* buffer, bool async) = 0;
+		virtual T read(string<T>* buffer, bool async) = 0;
+		virtual T write(string<T>* buffer, bool async) = 0;
 };
 
 template<class T> class File: public Device<T>
 {
 	public:
+		T size;
+		T cursor;
 
-		Resource* owner;
-
-		File(Resource* owner):
-			owner(owner)
-		{
-			
-		}
-
-		virtual int8_t read(string<T>* buffer, bool async) = 0;
-		virtual int8_t write(string<T>* buffer, bool async) = 0;
-		virtual int8_t open(Resource* owner);
-		virtual int8_t close(void);
+		virtual T read(string<T>* buffer, bool async) = 0;
+		virtual T write(string<T>* buffer, bool async) = 0;
+		virtual int8_t open(void) = 0;
+		virtual void close(void) = 0;
 };
 
-template<class T> class Buffer: public Device<T>
-{
-    public:
-
-        bool free_if_consumed;
-	T size;
-	
-	uint8_t* data; 
-	
-	virtual int8_t write(uint8_t byte);
-	virtual int8_t read(uint8_t* dest);
-};
-
-template<class T> class IndexedBuffer: public Buffer<T>
-{
-	uint8_t* cursor;
-};
-
-template<class T> class CircularBuffer: public IndexedBuffer<T>
-{
-	uint8_t start;
-};
+#endif //FILE_H_

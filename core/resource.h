@@ -53,12 +53,12 @@ class Resource
 		virtual void visit(void);
 		virtual Message* dispatch(Message* message);
 		virtual void run( void );
-                virtual uint8_t send(Message* message);
+        virtual uint8_t send(Message* message);
 
 		virtual uptime_t get_sleep_clock( void );
                 string<uint8_t>* get_name(Resource* resource);
 
-		Resource* find_resource( Elements::string<uint8_t>* name );
+		Resource* find_resource( URL* url );
 
 		virtual Response* process( Request* request );
 		virtual Message* process( Response* response );
@@ -68,7 +68,7 @@ class Resource
 		Response* http_trace(Request* request);
 
 		void schedule(uptime_t* timer, uptime_t time );
-                void schedule(uptime_t time);
+        void schedule(uptime_t time);
 
 		virtual Elements::string<MESSAGE_SIZE> render( Request* request );
 
