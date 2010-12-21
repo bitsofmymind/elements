@@ -27,6 +27,7 @@ class SDMMC: public Resource
 		SDMMC();
 
 	protected:
+		virtual Resource* find_resource( URL* url );
 		virtual Response* http_get(Request* request);
 		virtual void run(void);
 

@@ -51,7 +51,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="serial/eserial.h|serial/eserial.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="sd_mmc/mmc.cpp|serial/eserial.h|serial/eserial.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -511,7 +511,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>

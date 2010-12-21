@@ -406,6 +406,7 @@ DRESULT disk_read (
  */
 
 #include "sd_mmc.h"
+#include "fat_file.h"
 #include <stdlib.h>
 
 SDMMC::SDMMC(void): Resource()
@@ -416,9 +417,39 @@ SDMMC::SDMMC(void): Resource()
 	initialization so calling it will take care of booting our disk.*/
 }
 
+Resource* SDMMC::find_resource( URL* url )
+{
+	Resource* res = Resource::find_resource(url);
+	if(!res)
+	{
+		uint8_t len  = 0;
+		for( uint8_t i = url->cursor; i < url->resources.items; i++)
+		{
+			len += url->resources[i]->length + 1; // for '/'
+		}
+
+		char* str = (char*)malloc(len + 1);
+
+		for(uint8_t i = url->cursor, pos = 0; i < url->resources.items; i++)
+		{
+			memcpy((void*)str[pos], url->resources[i], url->resources[i]->length);
+			pos += url->resources[i]->length;
+			str[pos++] = '/';
+		}
+
+		str[len] = '\0';
+	}
+
+	return res;
+}
+
 Response* SDMMC::http_get(Request* request)
 {
+	/*Response* response =  http_head(request);
+	char* loc = (char*)malloc(request->to_url->)
 
+	FATFile* fat_file = new FATFile();
+	return response;*/
 }
 
 void SDMMC::run(void)
