@@ -106,6 +106,31 @@ template< class T > class Queue: public GenericQueue
 
 };
 
+class GenericLinkedList
+{
+	private:
+		struct entry {void* item; entry* next;} * start;
+
+	public:
+
+		GenericLinkedList();
+
+		uint8_t items(void);
+		int8_t append( void* item );
+        int8_t insert(void* item, uint8_t position);
+		void* remove( uint8_t position );
+
+	private:
+		entry* get(uint8_t position);
+};
+
+template<class T> class LinkedList: public GenericLinkedList
+{
+	int8_t append( T* item );
+    int8_t insert(T* item, uint8_t position);
+	T* remove( uint8_t index );
+};
+
 template< class T>
 int8_t List<T>::append(T* item)
 {
@@ -171,6 +196,22 @@ template< class T>
 T* Queue<T>::dequeue(void)
 {
 	return (T*)this->GenericQueue::dequeue( );
+}
+
+
+template<class T> int8_t LinkedList<T>::append(T* item)
+{
+	return this->GenericLinkedList::append( (void*)item );
+}
+
+template<class T> int8_t LinkedList<T>::insert(T* item, uint8_t position)
+{
+	return this->GenericLinkedList::insert( (void*)item, position );
+}
+
+template<class T> T* LinkedList<T>::remove(uint8_t position)
+{
+	return this->GenericLinkedList::remove( position );
 }
 
 #endif /* UTILS_H_ */

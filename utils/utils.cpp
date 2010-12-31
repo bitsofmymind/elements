@@ -10,6 +10,7 @@
 #include "../elements.h"
 #include "types.h"
 #include <stdint.h>
+#include <stdlib.h>
 #include "utils.h"
 
 using namespace Elements;
@@ -199,4 +200,121 @@ void* GenericQueue::dequeue(void)
 	return list[start - 1];
 }
 
+GenericLinkedList::GenericLinkedList():
+		start(NULL)
+{}
 
+uint8_t GenericLinkedList::items(void)
+{
+	uint8_t items = 0;
+	entry* current = start;
+
+	while(current != NULL)
+	{
+		items++;
+		current = current->next;
+	}
+
+	return items;
+}
+int8_t GenericLinkedList::append( void* item )
+{
+	entry** next = &start;
+
+	while(*next != NULL)
+	{
+		next = &(*next)->next;
+	}
+
+	*next = (entry*)malloc(sizeof(entry));
+
+	if(!*next)
+	{
+		return 1;
+	}
+
+	(*next)->item = item;
+	(*next)->next = NULL;
+
+	return 0;
+}
+int8_t GenericLinkedList::insert(void* item, uint8_t position)
+{
+	entry* ent = (entry*)malloc(sizeof(entry));
+
+	if(!ent)
+	{
+		return 1;
+	}
+
+	ent->item = item;
+
+	if(position == 0)
+	{
+		ent->next = start;
+		start = ent;
+	}
+	else
+	{
+		entry* temp = get(position - 1);
+		if(!temp)
+		{
+			return 2;
+		}
+		ent->next = temp->next;
+		temp->next = ent;
+	}
+
+	return 0;
+
+}
+void* GenericLinkedList::remove( uint8_t index )
+{
+	entry* ent;
+	void* item;
+
+	if(index == 0)
+	{
+		if(start)
+		{
+			ent = start;
+			start = ent->next;
+		}
+		else
+		{
+			return NULL;
+		}
+	}
+	else
+	{
+		entry* temp;
+		ent = get(index - 1);
+
+		if(!ent || !(ent->next))
+		{
+			return NULL;
+		}
+		temp = ent->next;
+		ent->next = temp->next;
+		ent = temp;
+	}
+	item = ent->item;
+	free(ent);
+
+	return item;
+}
+
+GenericLinkedList::entry* GenericLinkedList::get(uint8_t position)
+{
+	entry* current = start;
+	while(  current )
+	{
+		current = current->next;
+		if(!--position)
+		{
+			break;
+		}
+	}
+
+	return current;
+}
