@@ -9,7 +9,6 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/sleep.h>
-#include "serial/HardwareSerial.h"
 #include <stdlib.h>
 
 void __cxa_pure_virtual(void){};
@@ -18,23 +17,14 @@ int __cxa_guard_acquire(__guard *g) {return !*(char *)(g);};
 void __cxa_guard_release (__guard *g) {*(char *)g = 1;};
 void __cxa_guard_abort (__guard *) {};
 
-void * operator new(size_t size)
+void* operator new(size_t size)
 {
-    void* temp = malloc(size);
-    int sz = size;
-    Serial.print("new ");
-    Serial.print(sz, HEX);
-    Serial.print(" ");
-    Serial.println((uint16_t)temp);
-
-	return temp;
+	return malloc(size);
 }
 
 void operator delete(void * ptr)
 {
-	Serial.print("del ");
 	free(ptr);
-	Serial.println((uint16_t)ptr);
 }
 
 
@@ -70,7 +60,7 @@ void processing_sleep(uptime_t time)
 
 void init(void)
 {
-	Serial.begin(9600);
+
 
 	TCCR2A |= _BV(WGM21); //Timer clear on output match of OCR2A
 	TCCR2B |= _BV(CS22) + _BV(CS21); //Prescaler at 256
