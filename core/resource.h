@@ -22,14 +22,14 @@ class Resource
 
     public:
 		Dictionary< Resource >* children;
-		uptime_t own_sleep_clock;
+		volatile uptime_t own_sleep_clock;
 		Resource* parent;
 
 	private:
 		friend class Processing;
 
-		uptime_t children_sleep_clock;
-		uptime_t buffer_children_sleep_clock;
+		volatile uptime_t children_sleep_clock;
+		volatile uptime_t buffer_children_sleep_clock;
 		volatile bool visiting_children;
 		uint8_t child_to_visit;
 
@@ -67,7 +67,7 @@ class Resource
 		Response* http_head(Request* request);
 		Response* http_trace(Request* request);
 
-		void schedule(uptime_t* timer, uptime_t time );
+		void schedule(volatile uptime_t* timer, uptime_t time );
         void schedule(uptime_t time);
 
 		virtual Elements::string<MESSAGE_SIZE> render( Request* request );

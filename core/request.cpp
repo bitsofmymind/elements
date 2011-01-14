@@ -67,6 +67,10 @@ char Request::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
 			method.length = index - start;
 			break;
 		}
+		else if (index > buffer.text + buffer.length)
+		{
+			return 1;
+		}
 		index++;
 	}
 

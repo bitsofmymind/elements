@@ -32,7 +32,7 @@ extern void init(void);
 #define HOURS(h) h*MINUTES(60)
 #define DAYS(d) d*HOURS(24)
 #define WEEKS(w) w*DAYS(7)
-#define NEVER MAX_TIME
+#define NEVER MAX_UPTIME
 
 
 extern uint64_t get_time( void );

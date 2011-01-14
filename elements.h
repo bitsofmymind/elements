@@ -16,6 +16,6 @@
 //#define NO_RESOURCE_DESTRUCTION
 
 typedef uint64_t uptime_t;
-#define MAX_UPTIME UINT64_MAX
+#define MAX_UPTIME __UINT64_C(18446744073709551615)
 
 #endif /* ELEMENTS_H_ */

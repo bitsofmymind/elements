@@ -314,7 +314,7 @@ Response* Resource::http_trace( Request* request )
 	return response;
 }
 
-void Resource::schedule( uptime_t* timer, uptime_t time )
+void Resource::schedule( volatile uptime_t* timer, uptime_t time )
 {
 
     if(time != MAX_UPTIME)
