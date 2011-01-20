@@ -133,7 +133,7 @@ Message* Resource::dispatch( Message* message)
 			Response* response = new Response( &Response::NOT_FOUND_CODE, &Response::NOT_FOUND_REASON_PHRASE, (Request*)message );
 			string<MESSAGE_SIZE> content = MAKE_STRING("<html><body>Not found</body></html>");
 			response->body = content;
-			string<uint8_t>* content_type = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+			string<uint8_t>* content_type = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
 			content_type->length = sizeof("text/html");
 			content_type->text = (char*)"text/html";
 			response->fields.add(Message::CONTENT_TYPE, content_type );
@@ -153,7 +153,7 @@ uint8_t Resource::send(Message* message)
     if(parent)
     {
         string<uint8_t>* name = parent->get_name(this);
-        string<uint8_t>* new_name = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+        string<uint8_t>* new_name = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
 
         *new_name = *name;
 
@@ -305,8 +305,8 @@ Response* Resource::http_trace( Request* request )
 	Response* response = new Response( &Response::OK_CODE, &Response::OK_REASON_PHRASE, request );
 	request->Message::serialize();
 	response->body = request->message;
-	string< uint8_t >* value = ( string< uint8_t >* )malloc( sizeof( string< uint8_t > ) );
-	char* content = ( char* )malloc(13);
+	string< uint8_t >* value = ( string< uint8_t >* )ts_malloc( sizeof( string< uint8_t > ) );
+	char* content = ( char* )ts_malloc(13);
 	content = (char*)"message/http";
 	value->text = content;
 	value->length = sizeof( "message/http");
@@ -353,7 +353,7 @@ string<MESSAGE_SIZE> Resource::render( Request* request )
 	//const char* cmsg = "<html><body>There are currently no representation associated with this resource.</body></html>";
 	//char* msg = (char*)malloc(sizeof("<html><body>There are currently no representation associated with this resource.</body></html>"));
 	const char* cmsg = "//";
-	char* msg = (char*)malloc(sizeof("//"));
+	char* msg = (char*)ts_malloc(sizeof("//"));
 	strcpy(msg,cmsg);
 	string<MESSAGE_SIZE> str = string<MESSAGE_SIZE>::make(msg);
 	return str;

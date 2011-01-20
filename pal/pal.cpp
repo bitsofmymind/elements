@@ -7,6 +7,7 @@
 
 #include "pal.h"
 #include <stdint.h>
+#include <stdlib.h>
 
 /*formatedTime get_formated_time( void )
 {
@@ -51,6 +52,25 @@ inline void register_element( void )
 inline void unregister_element( void )
 {
 	number_of_elements--;
+}
+
+
+void* ts_malloc(size_t size)
+{
+	void* block;
+	ATOMIC
+	{
+		block = malloc(size);
+	}
+	return block;
+}
+
+void ts_free(void* block)
+{
+	ATOMIC
+	{
+		free(block);
+	}
 }
 
 /*

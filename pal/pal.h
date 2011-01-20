@@ -48,6 +48,10 @@ inline void unregister_element( void );
 extern void processing_wake();
 extern void processing_sleep(uptime_t time);
 
+
+void* ts_malloc(size_t size);
+void ts_free(void* block);
+
 #ifdef MULTITHREADING
 	void lock();
         bool try_lock();

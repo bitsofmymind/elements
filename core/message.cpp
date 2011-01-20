@@ -11,7 +11,7 @@
 #include "../elements.h"
 #include "../utils/utils.h"
 #include "../utils/types.h"
-#include "url.h"
+#include <pal/pal.h>
 #ifdef DEBUG
 	#include <iostream>
 #endif
@@ -64,9 +64,8 @@ Message::~Message()
 {
 	while(fields.items)
 	{
-		free(fields.remove(fields[0]->key));
+		ts_free(fields.remove(fields[0]->key));
 	}
-	free( message.text );
 }
 
 char Message::deserialize(void)
@@ -99,7 +98,7 @@ char Message::deserialize( string< MESSAGE_SIZE >& buffer, char* index )
 		{
 			if(!is_name)
 			{
-				value = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+				value = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
 				value->text = start;
 				value->length = index - start;
 				fields.add( name, value );
@@ -156,11 +155,11 @@ char Message::serialize(void)
 {
 	if(message.text != NULL )
 	{
-		free(message.text);
+		ts_free(message.text);
 	}
 
 	message.length = get_message_length();
-	message.text = (char*)malloc( message.length );
+	message.text = (char*)ts_malloc( message.length );
 
 	return serialize( message.text );
 }

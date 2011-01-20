@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "../elements.h"
 #include "../utils/types.h"
+#include <pal/pal.h>
 #include "url.h"
 #include <stdint.h>
 
@@ -32,13 +33,13 @@ URL::~URL()
 	{
 		while(authorities->items)
 		{
-			free(authorities->remove(0));
+			ts_free(authorities->remove(0));
 		}
 		delete authorities;
 	}
 	while(resources.items)
 	{
-		free(resources.remove(0));
+		ts_free(resources.remove(0));
 	}
 }
 
@@ -82,7 +83,7 @@ void URL::deserialize(char* url_string)
 		{
 			if(url.text[index] == '.')
 			{
-				temp = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+				temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
 				temp->text = url.text + start;
 				temp->length = index - start;
 				authorities->append( temp );
@@ -90,7 +91,7 @@ void URL::deserialize(char* url_string)
 			}
 			else if( url.text[index] == '/' || url.text[index] == ':' || url.text[index] == '#' || url.text[index] == '?' )
 			{
-				temp = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+				temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
 				temp->text = url.text + start;
 				temp->length = index - start;
 				authorities->append( temp );
@@ -145,7 +146,7 @@ void URL::deserialize(char* url_string)
 		{
 			if( url.text[index] == '/' )
 			{
-				temp = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+				temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
 				temp->text = url.text + start;
 				temp->length = index - start;
 				resources.append( temp );
@@ -156,7 +157,7 @@ void URL::deserialize(char* url_string)
 				if( url.text[index-1] == '/' )
 				{
 					if( resources.items == 0 ){ break; }
-					temp = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+					temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
 					temp->text = url.text + index;
 					temp->length = 1;
 					resources.append( temp );
@@ -165,7 +166,7 @@ void URL::deserialize(char* url_string)
 				{
 					/*There is necessarily a resource present because it was verified
 					at the beginning of this part.*/
-					temp = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+					temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
 					temp->text = url.text + start;
 					temp->length = index - start;
 					resources.append( temp );
@@ -208,7 +209,7 @@ void URL::deserialize(char* url_string)
 				if( url.text[index] == '&' )
 				{
 					is_key = true;
-					temp = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+					temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
 					temp->text = url.text + start;
 					temp->length = index - start;
 					arguments->add( key, temp );
@@ -216,7 +217,7 @@ void URL::deserialize(char* url_string)
 				}
 				else if( url.text[index] == '#' || url.text[index] == ' ' )
 				{
-					temp = (string<uint8_t>*)malloc(sizeof(string<uint8_t>));
+					temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
 					temp->text = url.text + start;
 					temp->length = index - start;
 					arguments->add( key, temp );
