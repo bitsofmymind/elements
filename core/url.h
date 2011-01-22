@@ -17,6 +17,7 @@
 #include "../utils/types.h"
 #include "../utils/utils.h"
 #include <stdint.h>
+#include "../elements.h"
 
 using namespace Elements;
 
@@ -45,9 +46,9 @@ class URL
 		int8_t serialize_authority( char* destination );
 		int8_t serialize_resource( char* destination );
 		uint8_t get_length(void);
-		#ifdef DEBUG
+		//#ifdef DEBUG
 			void print(void);
-		#endif
+		//#endif
 
 
 };

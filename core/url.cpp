@@ -6,15 +6,10 @@
  */
 
 #include <stdlib.h>
-#include "../elements.h"
 #include "../utils/types.h"
 #include <pal/pal.h>
 #include "url.h"
 #include <stdint.h>
-
-#ifdef DEBUG
-	#include <iostream>
-#endif
 
 using namespace Elements;
 
@@ -22,8 +17,14 @@ URL::URL( )
 {
 	this->url.text = NULL;
 	this->url.length = 0;
+	port.text = NULL;
+	port.length = 0;
+	protocol.text = NULL;
+	protocol.length = 0;
+	fragment.text = NULL;
+	fragment.length = 0;
 	valid = false;
-	authorities = 0;
+	authorities = NULL;
 	arguments = 0;
 	cursor = 0;
 }
@@ -249,18 +250,41 @@ int8_t URL::serialize(char* destination)
 	return serialize_resource(destination);
 }
 
-#ifdef DEBUG
+//#ifdef DEBUG
 
 void URL::print(void)
 {
-	char* urlstr = (char*)malloc(get_length()+1);
-	//serialize(urlstr);
-	urlstr[get_length()] = 0;
-	std::cout << urlstr;
-	free(urlstr);
+	if(protocol.length)
+	{
+		Debug::print(protocol.text, protocol.length);
+		Debug::print(":");
+	}
+	if(authorities)
+	{
+		for(uint8_t i = 0; i < authorities->items; i++)
+		{
+			Debug::print((*authorities)[i]->text, (*authorities)[i]->length);
+			Debug::print(".");
+		}
+	}
+	if(port.length)
+	{
+		Debug::print(":");
+		Debug::print(port.text, port.length);
+	}
+	if(is_absolute_path)
+	{
+		Debug::print("/");
+	}
+	for(uint8_t i = 0; i < resources.items; i++)
+	{
+		Debug::print(resources[i]->text, resources[i]->length);
+		Debug::print("/");
+	}
+
 }
 
-#endif
+//#endif
 
 int8_t URL::serialize_authority( char* destination )
 {

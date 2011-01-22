@@ -17,10 +17,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#ifdef DEBUG
-	#include <iostream>
-#endif
-
 using namespace Elements;
 
 string<uint8_t> parent_resource = MAKE_STRING("..");
@@ -128,19 +124,7 @@ Message* Resource::dispatch( Message* message)
 	}
 	if(next == NULL )
 	{
-		if( message->object_type == Message::REQUEST )
-		{
-			Response* response = new Response( &Response::NOT_FOUND_CODE, &Response::NOT_FOUND_REASON_PHRASE, (Request*)message );
-			string<MESSAGE_SIZE> content = MAKE_STRING("<html><body>Not found</body></html>");
-			response->body = content;
-			string<uint8_t>* content_type = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
-			content_type->length = sizeof("text/html");
-			content_type->text = (char*)"text/html";
-			response->fields.add(Message::CONTENT_TYPE, content_type );
-			return response;
-		}
-		delete message ;
-		return NULL;
+		return error(NOT_FOUND_404, message);
 	}
 	else
 	{
@@ -219,6 +203,7 @@ Response* Resource::process( Request* request )
 	#ifdef DEBUG
 		print_transaction(request);
 	#endif
+
 	//if( request->method == get_method)
 	if(!memcmp("get", request->method.text, 3))
 	{
@@ -235,7 +220,7 @@ Response* Resource::process( Request* request )
 		return http_trace( request );
 	}
 
-	return new Response(&Response::NOT_IMPLEMENTED_CODE, &Response::NOT_IMPLEMENTED_REASON_PHRASE, request);
+	return error(NOT_IMPLEMENTED_501, request);
 }
 
 Message* Resource::process(Response* response)
@@ -249,24 +234,15 @@ Message* Resource::process(Response* response)
 #ifdef DEBUG
 	void Resource::print_transaction(Message* message)
 	{
-		using namespace std;
-
-		if(message->object_type == Message::RESPONSE)
-		{
-			cout << "################### RESPONSE Received ###################" << endl;
-		}
-		else
-		{
-			cout << "################### REQUEST Received ###################" << endl;
-		}
-		cout << "From: ";
+		Debug::println("# Received: ");
+		Debug::print("from: ");
 		message->from_url->print();
-		cout << endl;
-		cout << "To: ";
+		Debug::println();
+		Debug::print("to: ");
 		message->to_url->print();
-		cout << endl;
+		Debug::println();
 		message->print();
-		cout << endl;
+		Debug::println();
 	}
 
 #endif
@@ -291,7 +267,7 @@ Response* Resource::http_get(Request* request)
 
 Response* Resource::http_head(Request* request)
 {
-	Response* response =  new Response(&Response::OK_CODE, &Response::OK_REASON_PHRASE, request );
+	Response* response =  new Response(OK_200, request );
 	//response->body = render( request );
 	string< uint8_t >* content_type = ( string< uint8_t >* )malloc( sizeof( string< uint8_t > ) );
 	content_type->length = sizeof("text/html");
@@ -302,7 +278,7 @@ Response* Resource::http_head(Request* request)
 
 Response* Resource::http_trace( Request* request )
 {
-	Response* response = new Response( &Response::OK_CODE, &Response::OK_REASON_PHRASE, request );
+	Response* response = new Response(OK_200, request );
 	request->Message::serialize();
 	response->body = request->message;
 	string< uint8_t >* value = ( string< uint8_t >* )ts_malloc( sizeof( string< uint8_t > ) );
@@ -352,11 +328,7 @@ string<MESSAGE_SIZE> Resource::render( Request* request )
 	//string<MESSAGE_SIZE> buffer = MAKE_STRING("<html><body>There are currently no representation associated with this resource.</body></html>");
 	//const char* cmsg = "<html><body>There are currently no representation associated with this resource.</body></html>";
 	//char* msg = (char*)malloc(sizeof("<html><body>There are currently no representation associated with this resource.</body></html>"));
-	const char* cmsg = "//";
-	char* msg = (char*)ts_malloc(sizeof("//"));
-	strcpy(msg,cmsg);
-	string<MESSAGE_SIZE> str = string<MESSAGE_SIZE>::make(msg);
-	return str;
+	return string<MESSAGE_SIZE>::make("//");
 }
 
 void Resource::update_children_sleep_clock(uptime_t time)
@@ -426,3 +398,28 @@ Resource* Resource::get_next_child_to_visit(void)
 	return NULL;
 }
 
+Response* Resource::error(uint16_t error, Message* message)
+{
+
+	if( message->object_type == Message::REQUEST )
+	{
+
+		Response* response = new Response(error, (Request*)message);
+		if(!response)
+		{
+			//Memory could not be allocated for the response
+			delete message;
+			return NULL;
+		}
+		switch(error)
+		{
+			case NOT_FOUND_404:
+				response->body = string<MESSAGE_SIZE>::make("<html><body>Not found</body></html>");
+				break;
+			default:
+				break;
+		}
+		return response;
+	}
+	return NULL;
+}

@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <pal/pal.h>
 
 #define MAKE_STRING( string ) { (char*)string, sizeof(string) - 1 }
 
@@ -15,7 +16,7 @@ namespace Elements
 		char* text;
 		T length;
 
-		static string<T> make( const char* content );
+		static string<T> make( const char* str );
 
 		T copy( char* destination );
 
@@ -86,11 +87,13 @@ namespace Elements
 
 
 	template< class T>
-	string<T> string<T>::make( const char* content )
+	string<T> string<T>::make( const char* str )
 	{
-		string<T> str = { (char*)content, 0 };
-		str.length = strlen(content);
-		return str;
+		string<T> estr;
+		estr.length = strlen(str);
+		estr.text = (char*)ts_malloc(estr.length);
+		memcpy(estr.text, str, estr.length );
+		return estr;
 	}
 }
 

@@ -30,7 +30,13 @@ void set_time(uint64_t time)
 
 uptime_t get_uptime( void )
 {
-	return system_uptime;
+	uptime_t val;
+	ATOMIC
+	{
+		val = system_uptime;
+	}
+
+	return val;
 }
 
 void increase_uptime(uptime_t time)
@@ -94,3 +100,134 @@ bool unregister_interrupt_handler( void ( *handler_pointer )( void ), void* vect
 	return false;
 }
 */
+
+void printNumber(uint32_t n, uint8_t base)
+{
+  unsigned char buf[8 * sizeof(int32_t)]; // Assumes 8-bit chars.
+  uint32_t i = 0;
+
+  if (n == 0) {
+	  Debug::print('0');
+    return;
+  }
+
+  while (n > 0) {
+    buf[i++] = n % base;
+    n /= base;
+  }
+
+  for (; i > 0; i--)
+	  Debug::print((char) (buf[i - 1] < 10 ?
+      '0' + buf[i - 1] :
+      'A' + buf[i - 1] - 10));
+}
+
+void Debug::print(const char* str)
+{
+	while(*str)
+	{
+		Debug::print((char)(*str++));
+	}
+}
+
+void Debug::print(const char* str, uint16_t length)
+{
+	while(length--)
+	{
+		Debug::print(*str++);
+	}
+}
+
+void Debug::print(char c, uint8_t base)
+{
+	Debug::print((int32_t) c, base);
+}
+
+void Debug::print(uint8_t b, uint8_t base)
+{
+	Debug::print((uint32_t) b, base);
+}
+
+void Debug::print(int16_t n, uint8_t base)
+{
+	Debug::print((int32_t) n, base);
+}
+
+void Debug::print(uint16_t n, uint8_t base)
+{
+	Debug::print((uint32_t) n, base);
+}
+
+void Debug::print(int32_t n, uint8_t base)
+{
+  if (base == 0) {
+	  Debug::print(n);
+  } else if (base == 10) {
+    if (n < 0) {
+    	Debug::print('-');
+      n = -n;
+    }
+    printNumber(n, 10);
+  } else {
+    printNumber(n, base);
+  }
+}
+
+void Debug::print(uint32_t n, uint8_t base)
+{
+  if (base == 0) { Debug::print(n); }
+  else { printNumber(n, base); }
+}
+
+/*void Print::print(double n, int digits)
+{
+  printFloat(n, digits);
+}*/
+
+void Debug::println(const char* c)
+{
+	Debug::print(c);
+	Debug::println();
+}
+
+void Debug::println(const char* str, uint16_t length)
+{
+	Debug::print(str, length);
+	Debug::println();
+}
+
+void Debug::println(char c, uint8_t base)
+{
+	Debug::print(c, base);
+	Debug::println();
+}
+
+void Debug::println(unsigned char b, uint8_t base)
+{
+  print(b, base);
+  println();
+}
+
+void Debug::println(int16_t n, uint8_t base)
+{
+	Debug::print(n, base);
+	Debug::println();
+}
+
+void Debug::println(uint16_t n, uint8_t base)
+{
+	Debug::print(n, base);
+	Debug::println();
+}
+
+void Debug::println(int32_t n, uint8_t base)
+{
+	Debug::print(n, base);
+	Debug::println();
+}
+
+void Debug::println(uint32_t n, uint8_t base)
+{
+	Debug::print(n, base);
+	Debug::println();
+}

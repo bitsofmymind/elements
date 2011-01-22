@@ -10,51 +10,40 @@
 #include "message.h"
 #include "response.h"
 //#include "../elements.h"
+#include <pal/pal.h>
 #include <stdint.h>
-#if defined(DEBUG) ||  defined(VERBOSE)
-	#include <iostream>
-#endif
 
 using namespace Elements;
 
 #ifdef DEBUG
 	void Response::print(void)
 	{
-		using namespace std;
-
-		cout << "%%%%%%%%%%%%%%%%%%%%%% Response %%%%%%%%%%%%%%%%%%%%%%" << endl;
-		cout << "---------- Status Line ----------" << endl;
-		cout << "HTTP version: " << (int)http_version << endl;
-		cout << "Status code: ";
-		cout << response_code.text[0] << response_code.text[1] << response_code.text[2] << endl;
-		cout << "Reason phrase: ";
-		for(unsigned int i = 0 ; i < reason_phrase.length; i++) { cout << reason_phrase.text[i]; }
-		cout << endl;
-
-		cout << '\n' << endl;
+		Debug::print("% Response: ");
+		Debug::print(response_code_int, DEC);
+		Debug::print(" ");
+		Debug::print(reason_phrase.text, reason_phrase.length);
+		Debug::print(" HTTP/");
+		Debug::println(http_version, DEC);
 		Message::print();
 	}
 #endif
 
 Response::Response(
-		const string<uint8_t>* _response_code,
-		const string<uint8_t>* _reason_phrase = NULL,
+		const uint16_t _response_code,
 		Request* _original_request = NULL ):
 			Message(),
-			response_code(*_response_code),
+			response_code_int(_response_code),
 			original_request(_original_request)
 {
 	object_type = RESPONSE;
 
-	if( _reason_phrase == NULL )
-	{
-		this->reason_phrase.text = NULL;
-		this->reason_phrase.length = 0;
-	}
-	else
-	{
-		this->reason_phrase = *_reason_phrase;
-	}
+	http_version = 0;
+	response_code.text = 0;
+	response_code.length = 0;
+
+	reason_phrase.text = NULL;
+	reason_phrase.length = 0;
+
 	if(_original_request != NULL)
 	{
 		to_url = _original_request->from_url;
@@ -67,8 +56,6 @@ Response::Response(
 	}
 }
 
-Response::Response(){}
-
 Response::~Response()
 {
 	if(original_request)
@@ -80,7 +67,6 @@ Response::~Response()
 		delete to_url;
 		delete from_url;
 	}
-	free(body.text);
 }
 
 char Response::deserialize(string<MESSAGE_SIZE>& buffer, char* index)

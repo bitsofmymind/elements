@@ -12,9 +12,7 @@
 #include "../utils/types.h"
 #include "url.h"
 #include <stdint.h>
-#ifdef DEBUG
-	#include <iostream>
-#endif
+#include <pal/pal.h>
 
 using namespace Elements;
 
@@ -24,6 +22,12 @@ Request::Request():
 	to_url = new URL();
 	from_url = new URL();
 	object_type = REQUEST;
+
+	method.text = NULL;
+	method.length = 0;
+	url.text = NULL;
+	url.length = 0;
+	http_version = 0;
 }
 
 Request::~Request()
@@ -35,22 +39,12 @@ Request::~Request()
 #ifdef DEBUG
 	void Request::print(void)
 	{
-		using namespace std;
-
-		cout << "%%%%%%%%%%%%%%%%%%%%%% Request %%%%%%%%%%%%%%%%%%%%%%" << endl;
-		cout << "---------- Request Line ----------" << endl;
-		cout << "Method: ";
-		for(uint8_t i = 0 ; i < method.length; i++) { cout << method.text[i]; }
-		cout << endl;
-		cout << "Request URI: ";
-		for( uint8_t i = 0 ; i < url.length; i++ )
-		{
-			cout << this->url.text[i];
-		}
-		cout << endl;
-
-		cout << "HTTP version: " << (int)(http_version) << endl;
-		cout << '\n' << endl;
+		Debug::print(" % Request: ");
+		Debug::print(method.text, method.length);
+		Debug::print(" ");
+		Debug::print(url.text, url.length);
+		Debug::print(" HTTP/");
+		Debug::println(http_version, DEC);
 		Message::print();
 	}
 #endif
@@ -67,7 +61,7 @@ char Request::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
 			method.length = index - start;
 			break;
 		}
-		else if (index > buffer.text + buffer.length)
+		else if (index > (buffer.text + buffer.length))
 		{
 			return 1;
 		}
@@ -80,12 +74,22 @@ char Request::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
 	url.length = to_url->url.length;
 	from_url->is_absolute_path = to_url->is_absolute_path;
 
-	index += to_url->url.length + 1 + 5; //Jumps the URL, the space and 'HTTP/'
-	http_version = (*index++ - 48) * 10;
-	index++; //Skips the '.'
-	http_version += *index++ - 48;
+	while(*index++ != '\r')
+	{
+		if(*index == 'H')
+		{
+			index += to_url->url.length + 1 + 5; //Jumps the URL, the space and 'HTTP/'
+			http_version = (*index++ - 48) * 10;
+			index++; //Skips the '.'
+			http_version += *index++ - 48;
+		}
+		else if (index > (buffer.text + buffer.length))
+		{
+			return 1;
+		}
+	}
 
-	index += 2; //skips \r\n (CRLF)
+	index++; //skips \n (CRLF)
 
 	return Message::deserialize( buffer, index );
 }

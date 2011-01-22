@@ -76,9 +76,11 @@ class Resource
 		void update_children_sleep_clock(uptime_t time);
 
 		#ifdef DEBUG
-                  void print_transaction(Message* message);
+              void print_transaction(Message* message);
 		#endif
 
+	protected:
+        Response* error(uint16_t error, Message* message);
 };
 
 #endif /* RESOURCE_H_ */

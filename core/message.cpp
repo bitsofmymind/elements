@@ -12,43 +12,24 @@
 #include "../utils/utils.h"
 #include "../utils/types.h"
 #include <pal/pal.h>
-#ifdef DEBUG
-	#include <iostream>
-#endif
+
 
 using namespace Elements;
 
 #ifdef DEBUG
 	void Message::print()
 	{
-		using namespace std;
-
-		cout << "---------- Message header fields ----------" << endl;
 
 		for( uint8_t i = 0; i<fields.items ; i++)
 		{
-			cout << "Field: ";
-			for( uint8_t j = 0; j < fields[i]->key.length; j++)
-			{
-				cout << fields[i]->key.text[j];
-			}
-			cout << endl;
-			cout << "Value: ";
-			for( uint8_t j = 0; j < fields[i]->value->length; j++)
-			{
-				cout << fields[i]->value->text[j];
-			}
-
-			cout << '\n' << endl;
+			Debug::print("   ");
+			Debug::print(fields[i]->key.text, fields[i]->key.length);
+			Debug::print(": ");
+			Debug::println(fields[i]->value->text, fields[i]->value->length);
 		}
 
-		cout << "---------- Message body ----------" << endl;
-
-		for (uint32_t i = 0; i < body.length; i++)
-		{
-			cout << this->body.text[i];
-		}
-		cout << '\n' << endl;
+		Debug::print("   body: ");
+		Debug::println(body.length, DEC);
 	}
 #endif
 
@@ -65,6 +46,14 @@ Message::~Message()
 	while(fields.items)
 	{
 		ts_free(fields.remove(fields[0]->key));
+	}
+	if(message.length)
+	{
+		ts_free(message.text);
+	}
+	else if(body.length)
+	{
+		ts_free(body.text);
 	}
 }
 
@@ -103,6 +92,10 @@ char Message::deserialize( string< MESSAGE_SIZE >& buffer, char* index )
 				value->length = index - start;
 				fields.add( name, value );
 			}
+			else
+			{
+				index -= 2;
+			}
 
 			index += 2;
 			if( *index == '\r' && *(index + 1) == '\n' )
@@ -124,7 +117,7 @@ char Message::deserialize( string< MESSAGE_SIZE >& buffer, char* index )
 
 	index++; //Skips the '\r'
 	message = buffer;
-	body.length = buffer.length - (index - buffer.text); /*We do not move past the '\n'
+	body.length = buffer.length - (index - buffer.text) - 1; /*We do not move past the '\n'
 	in case the message had no body as doing so would cause a buffer overflow.*/
 	body.text = index + 1;
 
@@ -169,20 +162,20 @@ char Message::serialize( char* buffer )
 	key_value_pair<Elements::string<uint8_t>*>* kv;
 
 	for( uint8_t i = 0; i < fields.items; i++)
-		{
-			 kv = fields[i];
-			 buffer += kv->key.copy(buffer);
-			 *buffer++ = ':'; *buffer++ = ' ';
-			 buffer += kv->value->copy(buffer);
-			 *buffer++ = '\r';
-			 *buffer++ = '\n';
-		}
-		*buffer++ = '\r';
-		*buffer++ = '\n';
-		buffer += body.copy(buffer);
-		*buffer = '\0'; //So we can print the message to cout
-		message.length++;
-		return 0;
+	{
+		 kv = fields[i];
+		 buffer += kv->key.copy(buffer);
+		 *buffer++ = ':'; *buffer++ = ' ';
+		 buffer += kv->value->copy(buffer);
+		 *buffer++ = '\r';
+		 *buffer++ = '\n';
+	}
+	*buffer++ = '\r';
+	*buffer++ = '\n';
+	buffer += body.copy(buffer);
+	*buffer = '\0'; //So we can print the message to cout
+	message.length++;
+	return 0;
 }
 
 

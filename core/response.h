@@ -37,6 +37,7 @@ class Response: public Message
 		//Successful: 2xx
 		static const string<uint8_t> OK_REASON_PHRASE;
 		static const string<uint8_t> OK_CODE;
+		#define OK_200 200
 		//static const string<uint8_t> CREATED_REASON_PHRASE;
 		//static const string<uint8_t> CREATED_CODE;
 		//static const string<uint8_t> ACCEPTED_REASON_PHRASE;
@@ -70,6 +71,7 @@ class Response: public Message
 		//Client Error: 4xx
 		static const Elements::string<uint8_t> BAD_REQUEST_REASON_PHRASE;
 		static const Elements::string<uint8_t> BAD_REQUEST_CODE;
+		#define BAD_REQUEST_400 400
 		//static const string<uint8_t> UNAUTHORIZED_REASON_PHRASE;
 		//static const string<uint8_t> UNAUTHORIZED_CODE;
 		//static const string<uint8_t> PAYMENT_REQUIRED_REASON_PHRASE;
@@ -78,6 +80,7 @@ class Response: public Message
 		//static const string<uint8_t> FORBIDDEN_CODE;
 		static const Elements::string<uint8_t> NOT_FOUND_REASON_PHRASE;
 		static const Elements::string<uint8_t> NOT_FOUND_CODE;
+		#define NOT_FOUND_404 404
 		//static const string<uint8_t> METHOD_NOT_ALLOWED_REASON_PHRASE;
 		//static const string<uint8_t> METHOD_NOT_ALLOWED_CODE;
 		//static const string<uint8_t> NOT_ACCEPTABLE_REASON_PHRASE;
@@ -110,6 +113,7 @@ class Response: public Message
 		//static const string<uint8_t> INTERNAL_SERVER_ERROR_CODE;
 		static const Elements::string<uint8_t> NOT_IMPLEMENTED_REASON_PHRASE;
 		static const Elements::string<uint8_t> NOT_IMPLEMENTED_CODE;
+		#define NOT_IMPLEMENTED_501 501
 		//static const string<uint8_t> BAD_GATEWAY_REASON_PHRASE;
 		//static const string<uint8_t> BAD_GATEWAY_CODE;
 		//static const string<uint8_t> SERVICE_UNAVAILABE_REASON_PHRASE;
@@ -146,11 +150,7 @@ class Response: public Message
 		Request* original_request;
 
 	public:
-		Response(
-				const Elements::string<uint8_t>* response_code,
-				const Elements::string<uint8_t>* reason_phase,
-				Request* request );
-		Response();
+		Response( const uint16_t response_code,	Request* request );
 		~Response();
 
 		#ifdef DEBUG
