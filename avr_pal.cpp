@@ -19,12 +19,12 @@ void __cxa_guard_abort (__guard *) {};
 
 void* operator new(size_t size)
 {
-	return malloc(size);
+	return ts_malloc(size);
 }
 
 void operator delete(void * ptr)
 {
-	free(ptr);
+	ts_free(ptr);
 }
 
 

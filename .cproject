@@ -51,7 +51,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="tcpip|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/apps|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="sd_mmc|tcpip|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/apps|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -511,7 +511,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="tcpip|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/apps|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="sd_mmc|tcpip|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/apps|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>

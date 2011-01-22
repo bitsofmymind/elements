@@ -17,11 +17,12 @@ class ESerial: public Resource
 {
 
 	#define MESSAGE_BUFFER_INCREMENT_SIZE 20
-	Elements::string<uint8_t> buffer;
-	uint16_t buffer_size;
+	volatile Elements::string<uint8_t> buffer;
+	volatile uint16_t buffer_size;
 	uint16_t content_length;
 	volatile uint16_t received;
 	bool body_started;
+	bool newcomm;
 
 	uptime_t timeout;
 
@@ -37,31 +38,6 @@ class ESerial: public Resource
 
 };
 
-#define DEC 10
-#define HEX 16
-#define OCT 8
-#define BIN 2
-#define BYTE 0
-
-void print(const char*);
-void print(const char* str, uint16_t length);
-void print(char, uint8_t = BYTE);
-void print(uint8_t, uint8_t = BYTE);
-void print(int16_t, uint8_t = DEC);
-void print(uint16_t, uint8_t = DEC);
-void print(int32_t, uint8_t= DEC);
-void print(uint32_t, uint8_t = DEC);
-//void print(double, int = 2);
-
-void println(const char*);
-void println(const char* str, uint16_t length);
-void println(char, uint8_t = BYTE);
-void println(uint8_t, uint8_t = BYTE);
-void println(int16_t, uint8_t = DEC);
-void println(uint16_t, uint8_t = DEC);
-void println(int32_t, uint8_t= DEC);
-void println(uint32_t, uint8_t = DEC);
-//void println(double, int = 2);
-void println(void);
+void print(char c);
 
 #endif /* ESERIAL_H_ */

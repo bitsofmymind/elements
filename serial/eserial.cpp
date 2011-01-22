@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <pal/pal.h>
 
 static ESerial* instance;
 
@@ -16,11 +17,13 @@ ESerial::ESerial(uint16_t baud):
 		Resource(),
 		buffer_size(0),
 		body_started(false),
-		received(0)
+		received(0),
+		newcomm(true)
 {
 	instance = this;
 
 	buffer.length = 0;
+	buffer.text = 0;
 
 	uint16_t baud_setting;
 	bool use_u2x;
@@ -54,25 +57,63 @@ ESerial::ESerial(uint16_t baud):
 
 	UCSR0B |= _BV(RXCIE0) + _BV(TXEN0) + _BV(RXEN0);
 
-	println("Waiting...");
+	Debug::println("Waiting...");
 
 }
+
+/*void ESerial::receive(uint8_t c)
+{
+	if(buffer.length >= buffer_size)
+	{
+		char* new_buffer = (char*)ts_malloc(buffer_size + MESSAGE_BUFFER_INCREMENT_SIZE);
+		if(new_buffer != NULL)
+		{
+			if(buffer.text)
+			{
+				memcpy(new_buffer, buffer.text, buffer_size);
+				ts_free(buffer.text);
+			}
+			buffer_size += MESSAGE_BUFFER_INCREMENT_SIZE;
+			buffer.text = new_buffer;
+		}
+		else
+		{
+			buffer.length = received = 0;
+			return;
+		}
+	}
+
+	received++;
+	buffer.text[buffer.length++] = c;
+
+	schedule(ASAP);
+}*/
+
 
 void ESerial::receive(uint8_t c)
 {
 	if(buffer.length >= buffer_size)
 	{
-		char* new_buffer = (char*)malloc(buffer_size + MESSAGE_BUFFER_INCREMENT_SIZE);
+		char* new_buffer = (char*)ts_malloc(buffer_size + MESSAGE_BUFFER_INCREMENT_SIZE);
 		if(new_buffer != NULL)
 		{
-			memcpy(new_buffer, buffer.text, buffer_size);
+			if(buffer.text)
+			{
+				memcpy(new_buffer, buffer.text, buffer_size);
+				ts_free(buffer.text);
+			}
 			buffer_size += MESSAGE_BUFFER_INCREMENT_SIZE;
-			free(buffer.text);
 			buffer.text = new_buffer;
 		}
 		else
 		{
-			buffer.length = 0;
+			if(buffer.text)
+			{
+				ts_free(buffer.text);
+			}
+			buffer.text = NULL;
+			buffer.length = received = buffer_size = 0;
+			return;
 		}
 	}
 
@@ -91,57 +132,88 @@ void ESerial::write(uint8_t c)
 
 void ESerial::run(void)
 {
+	uint16_t rec_alt;
+	uint16_t len;
 
 	bool rec = false;
+	ATOMIC
+	{
+		rec_alt = received;
+		len = buffer.length;
+		received = 0;
+	}
 
-	while(received)
+	while(rec_alt)
 	{
 		rec = true;
-		cli();
-		received--;
 
-		if(buffer.length > 1
-				&& buffer.text[buffer.length-1 ] == ';'
-				&& buffer.text[buffer.length] == ';'  )
+		if(len > 2
+				&& buffer.text[len - rec_alt - 1 ] == ';'
+				&& buffer.text[len - rec_alt] == ';'
+				&& buffer.text[len - rec_alt - 2] != '\r' )
 		{
-			buffer.text[buffer.length-1 ] = '\r';
-			buffer.text[buffer.length] = '\n';
+			buffer.text[len - rec_alt-1 ] = '\r';
+			buffer.text[len - rec_alt] = '\n';
 		}
 
-		if(buffer.length > 4
-				&& buffer.text[buffer.length - 3] == '\r'
-				&& buffer.text[buffer.length - 2] == '\n'
-				&& buffer.text[buffer.length - 1] == '\r'
-				&& buffer.text[buffer.length] == '\n')
+		if(len > 4
+				&& buffer.text[len - rec_alt - 3] == '\r'
+				&& buffer.text[len - rec_alt - 2] == '\n'
+				&& buffer.text[len - rec_alt - 1] == '\r'
+				&& buffer.text[len - rec_alt] == '\n')
 		{
-			Elements::string<uint16_t> message = {buffer.text, buffer.length};
+			Elements::string<uint16_t> message = {buffer.text, len};
 
-			if(received != 0)
+			if(rec_alt)
 			{
-				buffer.text = (char*)malloc(received + MESSAGE_BUFFER_INCREMENT_SIZE);
-				if(buffer.text)
+				ATOMIC
 				{
-					buffer.length = received;
-					buffer_size = received + MESSAGE_BUFFER_INCREMENT_SIZE;
-					memcpy(buffer.text, message.text + message.length, received);
+					buffer.text = (char*)ts_malloc(rec_alt + received + MESSAGE_BUFFER_INCREMENT_SIZE);
+					if(buffer.text)
+					{
+						buffer.length = received + rec_alt;
+						buffer_size = received + MESSAGE_BUFFER_INCREMENT_SIZE + rec_alt;
+						memcpy(buffer.text, message.text + message.length, received + rec_alt);
+						//print("remaining: "); println(buffer.text, buffer.length);
+					}
+					else{ received = buffer.length = buffer_size = 0; }
 				}
-				else{ received = buffer.length = buffer_size = 0; }
+
 			}
 			else
 			{
-				received = buffer.length = buffer_size = 0;
+				ATOMIC
+				{
+					received = buffer.length = buffer_size = 0;
+				}
 			}
 
-			sei();
-
 			Request* request = new Request();
+			if(!request)
+			{
+				Debug::println("not enough space");
+			}
+
 			request->message.length = message.length;
 			request->message.text = message.text;
-			request->deserialize(message, message.text);
-			send(request);
-		}
 
-		sei();
+			Debug::println("msg");
+			int8_t res = request->deserialize(message, message.text);
+
+			if(res)
+			{
+				Debug::print("parsing failed ");
+				delete request;
+				Debug::println(res, DEC);
+			}
+			else
+			{
+				Debug::println("sent");
+				send(request);
+			}
+
+		}
+		rec_alt--;
 	}
 
 	if(rec)
@@ -151,12 +223,15 @@ void ESerial::run(void)
 	}
 	else if(timeout <= get_uptime())
 	{
-		println("timed out");
-		cli();
-		if(buffer.length){ free(buffer.text); }
-		received = buffer.length = buffer_size = 0;
-		sei();
+		Debug::println("timed out");
+		ATOMIC
+		{
+			if(buffer.text && buffer.length){ ts_free(buffer.text); }
+			buffer.text = 0;
+			received = buffer.length = buffer_size = 0;
+		}
 		schedule(NEVER);
+		newcomm = true;
 	}
 
 }
@@ -164,8 +239,8 @@ void ESerial::run(void)
 Message* ESerial::process(Response* response)
 {
 
+	Resource::process(response);
 	delete response;
-	buffer.text = (char*)malloc(100);
 
 	return NULL;
 }
@@ -175,181 +250,14 @@ ISR(USART_RX_vect)
 	instance->receive(UDR0);
 }
 
-void printNumber(uint32_t n, uint8_t base)
+void Debug::print(char c)
 {
-  unsigned char buf[8 * sizeof(int32_t)]; // Assumes 8-bit chars.
-  uint32_t i = 0;
-
-  if (n == 0) {
-	  instance->write('0');
-    return;
-  }
-
-  while (n > 0) {
-    buf[i++] = n % base;
-    n /= base;
-  }
-
-  for (; i > 0; i--)
-	  instance->write((char) (buf[i - 1] < 10 ?
-      '0' + buf[i - 1] :
-      'A' + buf[i - 1] - 10));
+	instance->write(c);
+}
+void Debug::println()
+{
+	print("\r");
+	print("\n");
 }
 
-void print(const char* str)
-{
-	while(*str)
-	{
-		instance->write(*str++);
-	}
-}
 
-void print(const char* str, uint16_t length)
-{
-	while(length--)
-	{
-		instance->write(*str++);
-	}
-}
-
-void print(char c, uint8_t base)
-{
-  print((int32_t) c, base);
-}
-
-void print(uint8_t b, uint8_t base)
-{
-  print((uint32_t) b, base);
-}
-
-void print(int16_t n, uint8_t base)
-{
-  print((int32_t) n, base);
-}
-
-void print(uint16_t n, uint8_t base)
-{
-  print((uint32_t) n, base);
-}
-
-void print(int32_t n, uint8_t base)
-{
-  if (base == 0) {
-    instance->write(n);
-  } else if (base == 10) {
-    if (n < 0) {
-      print('-');
-      n = -n;
-    }
-    printNumber(n, 10);
-  } else {
-    printNumber(n, base);
-  }
-}
-
-void print(uint32_t n, uint8_t base)
-{
-  if (base == 0) { instance->write(n); }
-  else { printNumber(n, base); }
-}
-
-/*void Print::print(double n, int digits)
-{
-  printFloat(n, digits);
-}*/
-
-void println(void)
-{
-  print('\r');
-  print('\n');
-}
-
-void println(const char* c)
-{
-  print(c);
-  println();
-}
-
-void println(const char* str, uint16_t length)
-{
-	print(str, length);
-	println();
-}
-
-void println(char c, uint8_t base)
-{
-  print(c, base);
-  println();
-}
-
-void println(unsigned char b, uint8_t base)
-{
-  print(b, base);
-  println();
-}
-
-void Pprintln(int n, uint8_t base)
-{
-  print(n, base);
-  println();
-}
-
-void println(unsigned int n, uint8_t base)
-{
-  print(n, base);
-  println();
-}
-
-void println(long n, uint8_t base)
-{
-  print(n, base);
-  println();
-}
-
-void println(unsigned long n, uint8_t base)
-{
-  print(n, base);
-  println();
-}
-
-/*void Print::println(double n, int digits)
-{
-  print(n, digits);
-  println();
-}*/
-
-
-/*void Print::printFloat(double number, uint8_t digits)
-{
-  // Handle negative numbers
-  if (number < 0.0)
-  {
-     print('-');
-     number = -number;
-  }
-
-  // Round correctly so that print(1.999, 2) prints as "2.00"
-  double rounding = 0.5;
-  for (uint8_t i=0; i<digits; ++i)
-    rounding /= 10.0;
-
-  number += rounding;
-
-  // Extract the integer part of the number and print it
-  unsigned long int_part = (unsigned long)number;
-  double remainder = number - (double)int_part;
-  print(int_part);
-
-  // Print the decimal point, but only if there are digits beyond
-  if (digits > 0)
-    print(".");
-
-  // Extract digits from the remainder one at a time
-  while (digits-- > 0)
-  {
-    remainder *= 10.0;
-    int toPrint = int(remainder);
-    print(toPrint);
-    remainder -= toPrint;
-  }
-}*/
