@@ -13,16 +13,19 @@
 
 class FATFile: public File<uint16_t>
 {
-	const char* name;
+	char* name;
 	FIL file;
-	FRESULT last_op_result;
 
-	FATFile(const char* name);
+	public:
+		FRESULT last_op_result;
+
+	FATFile(char* name);
+	~FATFile();
 
 	virtual uint16_t read(string<uint16_t>* buffer, bool async);
 	virtual uint16_t write(string<uint16_t>* buffer, bool async);
-	virtual int8_t open(void) = 0;
-	virtual void close(void) = 0;
+	virtual int8_t open(void);
+	virtual void close(void);
 };
 
 #endif /* FAT_FILE_H_ */

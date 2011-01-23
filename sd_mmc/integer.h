@@ -21,7 +21,7 @@ typedef uint16_t		UINT;
 /* These types must be 8-bit integer */
 typedef char			CHAR;
 typedef unsigned char	UCHAR;
-typedef uint8_t			BYTE;
+//typedef uint8_t			BYTE;
 
 /* These types must be 16-bit integer */
 typedef int16_t			SHORT;

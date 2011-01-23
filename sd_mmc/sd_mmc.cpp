@@ -63,10 +63,10 @@ static volatile
 DSTATUS Stat = STA_NOINIT | STA_NODISK;	/* Disk status */
 
 static
-BYTE CardType;			/* Card type flags */
+uint8_t CardType;			/* Card type flags */
 
 /*-----------------------------------------------------------------------*/
-/* Transmit a byte to MMC via SPI  (Platform dependent)                  */
+/* Transmit a uint8_t to MMC via SPI  (Platform dependent)                  */
 /*-----------------------------------------------------------------------*/
 
 #define xmit_spi(dat) 	SPDR=(dat); loop_until_bit_is_set(SPSR,SPIF)
@@ -74,11 +74,11 @@ BYTE CardType;			/* Card type flags */
 
 
 /*-----------------------------------------------------------------------*/
-/* Receive a byte from MMC via SPI  (Platform dependent)                 */
+/* Receive a uint8_t from MMC via SPI  (Platform dependent)                 */
 /*-----------------------------------------------------------------------*/
 
 static
-BYTE rcvr_spi (void)
+uint8_t rcvr_spi (void)
 {
 	SPDR = 0xFF;
 	loop_until_bit_is_set(SPSR, SPIF);
@@ -97,12 +97,13 @@ BYTE rcvr_spi (void)
 static
 int wait_ready (void)	/* 1:OK, 0:Timeout */
 {
-	uint64_t timer = get_uptime() + 500;	/* Wait for ready in timeout of 500ms */
+	uptime_t timer = get_uptime() + 500;	/* Wait for ready in timeout of 500ms */
 	rcvr_spi();
+
 	do
 		if (rcvr_spi() == 0xFF) return 1;
 	while (get_uptime() < timer);
-
+	Debug::println("init");
 	return 0;
 }
 
@@ -129,10 +130,14 @@ static
 int select (void)	/* 1:Successful, 0:Timeout */
 {
 	CS_LOW();
-	if (!wait_ready()) {
+
+	/*This causes the disk to fail for some reason. In sdfatlib( adaptation of this library to
+	 * arduino), it is no present.*/
+
+	/*if (!wait_ready()) {
 		deselect();
 		return 0;
-	}
+	}*/
 	return 1;
 }
 
@@ -156,7 +161,7 @@ void power_on (void)
 {
 	//PORTE &= ~0x80;				/* Socket power on */
 	//for (Timer1 = 2; Timer1; );	/* Wait for 20ms */
-	uint64_t timer = get_uptime() + 20;
+	uptime_t timer = get_uptime() + 20;
 	while(get_uptime() < timer);
 	//PORTB = 0b10110101;			/* Enable drivers */
 	//DDRB  = 0b11000111;
@@ -192,13 +197,13 @@ void power_off (void)
 
 static
 int rcvr_datablock (
-	BYTE *buff,			/* Data buffer to store received data */
-	UINT btr			/* Byte count (must be multiple of 4) */
+	uint8_t *buff,			/* Data buffer to store received data */
+	UINT btr			/* uint8_t count (must be multiple of 4) */
 )
 {
-	BYTE token;
+	uint8_t token;
 
-	uint64_t timer = get_uptime() + 200;
+	uptime_t timer = get_uptime() + 200;
 
 	do {							/* Wait for data packet in timeout of 200ms */
 		token = rcvr_spi();
@@ -224,12 +229,12 @@ int rcvr_datablock (
 /*-----------------------------------------------------------------------*/
 
 static
-BYTE send_cmd (		/* Returns R1 resp (bit7==1:Send failed) */
-	BYTE cmd,		/* Command index */
+uint8_t send_cmd (		/* Returns R1 resp (bit7==1:Send failed) */
+	uint8_t cmd,		/* Command index */
 	DWORD arg		/* Argument */
 )
 {
-	BYTE n, res;
+	uint8_t n, res;
 
 
 	if (cmd & 0x80) {	/* ACMD<n> is the command sequense of CMD55-CMD<n> */
@@ -243,17 +248,17 @@ BYTE send_cmd (		/* Returns R1 resp (bit7==1:Send failed) */
 	if (!select()) return 0xFF;
 	/* Send command packet */
 	xmit_spi(0x40 | cmd);				/* Start + Command index */
-	xmit_spi((BYTE)(arg >> 24));		/* Argument[31..24] */
-	xmit_spi((BYTE)(arg >> 16));		/* Argument[23..16] */
-	xmit_spi((BYTE)(arg >> 8));			/* Argument[15..8] */
-	xmit_spi((BYTE)arg);				/* Argument[7..0] */
+	xmit_spi((uint8_t)(arg >> 24));		/* Argument[31..24] */
+	xmit_spi((uint8_t)(arg >> 16));		/* Argument[23..16] */
+	xmit_spi((uint8_t)(arg >> 8));			/* Argument[15..8] */
+	xmit_spi((uint8_t)arg);				/* Argument[7..0] */
 	n = 0x01;							/* Dummy CRC + Stop */
 	if (cmd == CMD0) n = 0x95;			/* Valid CRC for CMD0(0) */
 	if (cmd == CMD8) n = 0x87;			/* Valid CRC for CMD8(0x1AA) */
 	xmit_spi(n);
 
 	/* Receive command response */
-	if (cmd == CMD12) rcvr_spi();		/* Skip a stuff byte when stop reading */
+	if (cmd == CMD12) rcvr_spi();		/* Skip a stuff uint8_t when stop reading */
 	n = 10;								/* Wait for a valid response in timeout of 10 attempts */
 	do
 		res = rcvr_spi();
@@ -276,10 +281,10 @@ BYTE send_cmd (		/* Returns R1 resp (bit7==1:Send failed) */
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_initialize (
-	BYTE drv		/* Physical drive nmuber (0) */
+	uint8_t drv		/* Physical drive nmuber (0) */
 )
 {
-	BYTE n, cmd, ty, ocr[4];
+	uint8_t n, cmd, ty, ocr[4];
 
 
 	if (drv) return STA_NOINIT;			/* Supports only single drive */
@@ -290,14 +295,13 @@ DSTATUS disk_initialize (
 	for (n = 10; n; n--) rcvr_spi();	/* 80 dummy clocks */
 
 	select();
-
 	ty = 0;
 	if (send_cmd(CMD0, 0) == 1)
 	{	/* Enter Idle state */
-		//Timer1 = 100;
+
 		/* Initialization timeout of 1000 msec */
 
-		uint64_t timer = get_uptime() + 1000;
+		uptime_t timer = get_uptime() + 1000;
 		if (send_cmd(CMD8, 0x1AA) == 1)
 		  {	/* SDv2? */
 			for (n = 0; n < 4; n++) ocr[n] = rcvr_spi();		/* Get trailing return value of R7 resp */
@@ -349,7 +353,7 @@ DSTATUS disk_initialize (
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_status (
-	BYTE drv		/* Physical drive nmuber (0) */
+	uint8_t drv		/* Physical drive nmuber (0) */
 )
 {
 	if (drv) return STA_NOINIT;		/* Supports only single drive */
@@ -363,16 +367,16 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_read (
-	BYTE drv,			/* Physical drive nmuber (0) */
-	BYTE *buff,			/* Pointer to the data buffer to store read data */
+	uint8_t drv,			/* Physical drive nmuber (0) */
+	uint8_t *buff,			/* Pointer to the data buffer to store read data */
 	DWORD sector,		/* Start sector number (LBA) */
-	BYTE count			/* Sector count (1..255) */
+	uint8_t count			/* Sector count (1..255) */
 )
 {
 	if (drv || !count) return RES_PARERR;
 	if (Stat & STA_NOINIT) return RES_NOTRDY;
 
-	if (!(CardType & CT_BLOCK)) sector *= 512;	/* Convert to byte address if needed */
+	if (!(CardType & CT_BLOCK)) sector *= 512;	/* Convert to uint8_t address if needed */
 
 	if (count == 1) {	/* Single block read */
 		if (send_cmd(CMD17, sector) == 0 )
@@ -409,7 +413,9 @@ DRESULT disk_read (
 #include "fat_file.h"
 #include <stdlib.h>
 
-SDMMC::SDMMC(void): Resource()
+SDMMC::SDMMC(void):
+		Resource(),
+		request_path(NULL)
 {
 	CARD_DETECT_DDR &= ~_BV(CARD_DETECT_PIN);
 	CARD_DETECT_PORT |= _BV(CARD_DETECT_PIN); //Turns on the pull-up for CARD_DETECT_PIN
@@ -420,6 +426,7 @@ SDMMC::SDMMC(void): Resource()
 Resource* SDMMC::find_resource( URL* url )
 {
 	Resource* res = Resource::find_resource(url);
+
 	if(!res)
 	{
 		uint8_t len  = 0;
@@ -428,16 +435,22 @@ Resource* SDMMC::find_resource( URL* url )
 			len += url->resources[i]->length + 1; // for '/'
 		}
 
-		char* str = (char*)malloc(len + 1);
-
+		request_path = (char*)ts_malloc(len + 1);
+		if(!request_path)
+		{
+			//Critical error, there is no memory left.
+		}
 		for(uint8_t i = url->cursor, pos = 0; i < url->resources.items; i++)
 		{
-			memcpy((void*)str[pos], url->resources[i], url->resources[i]->length);
+			request_path [pos++] = '/';
+			memcpy((void*)(request_path  + pos), url->resources[i]->text, url->resources[i]->length);
 			pos += url->resources[i]->length;
-			str[pos++] = '/';
 		}
 
-		str[len] = '\0';
+		request_path [len] = '\0';
+		url->cursor = url->resources.items;
+
+		return this;
 	}
 
 	return res;
@@ -445,17 +458,46 @@ Resource* SDMMC::find_resource( URL* url )
 
 Response* SDMMC::http_get(Request* request)
 {
-	/*Response* response =  http_head(request);
-	char* loc = (char*)malloc(request->to_url->)
+	Response* response;
+	if(request_path)
+	{
+		response =  http_head(request);
+		FATFile* file = new FATFile(request_path);
+		Debug::print("fetching ");
+		Debug::println(request_path);
+		if(!file)
+		{
+			//Critical error
+			Debug::println("Alloc failed");
+		}
+		else if(file->last_op_result == FR_NO_FILE || file->last_op_result == FR_NO_PATH)
+		{
+			delete file;
+			response = error(NOT_FOUND_404, request);
+		}
+		else if(file->last_op_result != FR_OK)
+		{
+			delete file;
+			Debug::print("error opening file ");
+			Debug::println(file->last_op_result, DEC);
+			response = error(INTERNAL_SERVER_ERROR_500, request);
+		}
 
-	FATFile* fat_file = new FATFile();
-	return response;*/
+		request_path = NULL;
+		response = http_head(request);
+		response->body_file = file;
+	}
+	else
+	{
+		response =  http_head(request);
+	}
+
+	return response;
 }
 
 void SDMMC::run(void)
 {
-
-	if(CARD_DETECT_PINREG & CARD_DETECT_PIN) //If there is a disk in the socket
+	if(!(CARD_DETECT_PINREG & _BV(CARD_DETECT_PIN))) //If there is a disk in the socket
 	{
 		if(Stat & (STA_NOINIT)) //If the disk in the socket has not been initialized
 		{
@@ -464,37 +506,44 @@ void SDMMC::run(void)
 				/*Do nothing. With the setting of STA_NODISK below and the scheduling
 				 * of the next run in 100ms, this will effectively provide a debouncing
 				 * delay.*/
+				Debug::println("Disk inserted");
+				Stat &= ~STA_NODISK; //Indicate the presence of disk in the socket
 			}
 			else if(!disk_initialize(0)) //If there is a disk and it has been debounced
 			{
-				/*STA_NOINIT was cleared in disk_initialized because it succeeded*/
-				fatfs = (FATFS*)malloc(sizeof(FATFS)); //Allocates FATFS struct
+				//STA_NOINIT was cleared in disk_initialized because it succeeded
+				fatfs = (FATFS*)ts_malloc(sizeof(FATFS)); //Allocates FATFS struct
+				Debug::println("Disk initialized");
 				if(!fatfs)
 				{
 					//allocation of fatfs failed!
+					Debug::println("Alloc failed");
 				}
 				else
 				{
 					f_mount(0, fatfs); //Mounts the disk
 				}
 			}
-			/*Initialization will be attempted again in 100ms if it failed.*/
-			Stat &= ~STA_NODISK; //Indicate the presence of disk in the socket
+			else
+			{
+				Debug::println("Disk fail");
+			}
+			//Initialization will be attempted again in 100ms if it failed.
 
 		}
 		schedule(10);
 	}
 	else //If there is no disk in the socket
 	{
+		Debug::println("No disk");
 		if(!fatfs) //If fatfs was previously allocated
 		{
-			free(fatfs);
+			ts_free(fatfs);
 			f_mount(0, NULL); //unmounts the disk
 			power_off(); //Power it off
 		}
 		Stat = STA_NODISK + STA_NOINIT; /*Indicate there is no disk and it has not been
 		initialized*/
+		schedule(1000);
 	}
-
-	schedule(100);
 }

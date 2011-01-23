@@ -22,6 +22,7 @@ class SDMMC: public Resource
 	private:
 		FATFS* fatfs;
 		FIL* file;
+		char* request_path;
 
 	public:
 		SDMMC();
