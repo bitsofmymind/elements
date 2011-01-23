@@ -29,8 +29,6 @@ class Resource
 		friend class Processing;
 
 		volatile uptime_t children_sleep_clock;
-		volatile uptime_t buffer_children_sleep_clock;
-		volatile bool visiting_children;
 		uint8_t child_to_visit;
 
 	public:
@@ -73,7 +71,6 @@ class Resource
 		virtual Elements::string<MESSAGE_SIZE> render( Request* request );
 
 		Resource* get_next_child_to_visit();
-		void update_children_sleep_clock(uptime_t time);
 
 		#ifdef DEBUG
               void print_transaction(Message* message);

@@ -23,11 +23,9 @@ string<uint8_t> parent_resource = MAKE_STRING("..");
 
 Resource::Resource(void):
   children_sleep_clock(MAX_UPTIME),
-  buffer_children_sleep_clock(MAX_UPTIME)
+  own_sleep_clock(MAX_UPTIME)
 {
-	own_sleep_clock = 0;
 	child_to_visit = 0;
-	visiting_children = false;
 	children = 0;
 	parent = 0;
 	//register_element();
@@ -170,7 +168,7 @@ int8_t Resource::add_child(string<uint8_t> name, Resource* child )
 		{
 			return -2;
 		}
-		children_sleep_clock = 0;
+		//children_sleep_clock = 0;
 	}
 
 	int8_t return_code = children->add(name, child);
@@ -180,6 +178,10 @@ int8_t Resource::add_child(string<uint8_t> name, Resource* child )
 	if(!return_code)
 	{
 		child->parent = this;
+		if(child->get_sleep_clock() < children_sleep_clock)
+		{
+			schedule(&children_sleep_clock, child->get_sleep_clock());
+		}
 	}
 	return return_code;
 }
@@ -310,7 +312,14 @@ void Resource::schedule( volatile uptime_t* timer, uptime_t time )
 		{
 			break;
 		}
-		current->update_children_sleep_clock(time);
+		if(current->children_sleep_clock > time)
+		{
+			current->children_sleep_clock = time;
+		}
+		else
+		{
+			break;
+		}
 		current = current->parent;
 
 	}
@@ -320,7 +329,7 @@ void Resource::schedule( volatile uptime_t* timer, uptime_t time )
 
 void Resource::schedule(uptime_t time)
 {
-    schedule(&own_sleep_clock, time);
+	schedule(&own_sleep_clock, time);
 }
 
 string<MESSAGE_SIZE> Resource::render( Request* request )
@@ -331,53 +340,27 @@ string<MESSAGE_SIZE> Resource::render( Request* request )
 	return string<MESSAGE_SIZE>::make("//");
 }
 
-void Resource::update_children_sleep_clock(uptime_t time)
-{
-
-
-	if(time <  buffer_children_sleep_clock)
-	{
-		buffer_children_sleep_clock = time;
-	}
-	if(!visiting_children)
-	{
-		if(time <  children_sleep_clock)
-		{
-			children_sleep_clock = time;
-		}
-	}
-}
-
 Resource* Resource::get_next_child_to_visit(void)
 {
 	if(children && children_sleep_clock <= get_uptime() )
 	{
-
-		visiting_children = true;
 
 		while(true)
 		{
 			if(child_to_visit == children->items)
 			{
 				child_to_visit = 0;
-				visiting_children = false;
-				/*In this case, the actual act of finding the next children
-				 * to visit can be considered a Resource task in its own
-				 * right. Hence, when actually going through the children
-				 * to find the next one to process, the current Resource will keep
-				 * its 'children_sleep_clock' so other thread can come and
-				 * find themselves a child. If this method was entered, it means
-				 * the 'child_sleep_clock' attribute was below the uptime; no wake or
-				 * sleep_clock update by Resources already visited will lead to a
-				 * lower value.*/
 
-				children_sleep_clock = buffer_children_sleep_clock;
+				children_sleep_clock = MAX_UPTIME;
 
-				/*Now that we are done running the children that required attention,
-				 * we update 'children_sleep_clock' with the value in the buffer.
-				 */
-
-				buffer_children_sleep_clock = MAX_UPTIME;
+				for(uint8_t i = 0; i < children->items; i++)
+				{
+					uptime_t sleep_clock = (*children)[i]->value->get_sleep_clock();
+					if(sleep_clock < children_sleep_clock)
+					{
+						children_sleep_clock = sleep_clock;
+					}
+				}
 
 				break;
 			}
@@ -386,11 +369,6 @@ Resource* Resource::get_next_child_to_visit(void)
 			if(child->get_sleep_clock() <= get_uptime())
 			{
 				return child;
-			}
-			//What follows is probably useless...
-			if(child->get_sleep_clock() < buffer_children_sleep_clock)
-			{
-				buffer_children_sleep_clock = child->get_sleep_clock();
 			}
 		}
 	}

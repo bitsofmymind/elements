@@ -250,7 +250,7 @@ int8_t URL::serialize(char* destination)
 	return serialize_resource(destination);
 }
 
-//#ifdef DEBUG
+#ifdef DEBUG
 
 void URL::print(void)
 {
@@ -284,7 +284,7 @@ void URL::print(void)
 
 }
 
-//#endif
+#endif
 
 int8_t URL::serialize_authority( char* destination )
 {
