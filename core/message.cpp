@@ -19,7 +19,7 @@ using namespace Elements;
 #ifdef DEBUG
 	void Message::print()
 	{
-
+		Debug::print(fields.items, DEC);
 		for( uint8_t i = 0; i<fields.items ; i++)
 		{
 			Debug::print("   ");
@@ -29,7 +29,14 @@ using namespace Elements;
 		}
 
 		Debug::print("   body: ");
-		Debug::println(body.length, DEC);
+		if(body.text)
+		{
+			Debug::println(body.length, DEC);
+		}
+		else if(body_file)
+		{
+			Debug::println(body_file->size, DEC);
+		}
 	}
 #endif
 
@@ -38,8 +45,8 @@ Message::Message()
 	body.length = 0;
 	body.text = NULL;
 	message.length = 0;
-	message.text = 0;
-	body_file = 0;
+	message.text = NULL;
+	body_file = NULL;
 }
 Message::~Message()
 {
@@ -54,6 +61,11 @@ Message::~Message()
 	else if(body.length)
 	{
 		ts_free(body.text);
+	}
+
+	if(body_file)
+	{
+		delete body_file;
 	}
 }
 

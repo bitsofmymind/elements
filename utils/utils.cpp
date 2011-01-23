@@ -80,7 +80,6 @@ void* GenericList::operator[](uint8_t i)
 GenericDictionary::GenericDictionary( void )
 {
 	items = 0;
-
 }
 
 

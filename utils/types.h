@@ -17,7 +17,7 @@ namespace Elements
 		T length;
 
 		static string<T> make( const char* str );
-
+		static string<T> convert(char* str);
 		T copy( char* destination );
 
 		bool operator==( string<T>& right ) const;
@@ -93,6 +93,14 @@ namespace Elements
 		estr.length = strlen(str);
 		estr.text = (char*)ts_malloc(estr.length);
 		memcpy(estr.text, str, estr.length );
+		return estr;
+	}
+	template< class T>
+	string<T> string<T>::convert( char* str )
+	{
+		string<T> estr;
+		estr.length = strlen(str);
+		estr.text = str;
 		return estr;
 	}
 }

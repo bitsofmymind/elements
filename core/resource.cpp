@@ -263,7 +263,7 @@ uptime_t Resource::get_sleep_clock( void )
 Response* Resource::http_get(Request* request)
 {
 	Response* response =  http_head(request);
-	response->body = render( request );
+	response->body_file = render( request );
 	return response;
 }
 
@@ -271,10 +271,10 @@ Response* Resource::http_head(Request* request)
 {
 	Response* response =  new Response(OK_200, request );
 	//response->body = render( request );
-	string< uint8_t >* content_type = ( string< uint8_t >* )malloc( sizeof( string< uint8_t > ) );
+	/*string< uint8_t >* content_type = ( string< uint8_t >* )ts_malloc( sizeof( string< uint8_t > ) );
 	content_type->length = sizeof("text/html");
 	content_type->text = (char*)"text/html";
-	response->fields.add(Message::CONTENT_TYPE, content_type);
+	response->fields.add(Message::CONTENT_TYPE, content_type);*/
 	return response;
 }
 
@@ -332,12 +332,12 @@ void Resource::schedule(uptime_t time)
 	schedule(&own_sleep_clock, time);
 }
 
-string<MESSAGE_SIZE> Resource::render( Request* request )
+File<MESSAGE_SIZE>* Resource::render( Request* request )
 {
 	//string<MESSAGE_SIZE> buffer = MAKE_STRING("<html><body>There are currently no representation associated with this resource.</body></html>");
 	//const char* cmsg = "<html><body>There are currently no representation associated with this resource.</body></html>";
 	//char* msg = (char*)malloc(sizeof("<html><body>There are currently no representation associated with this resource.</body></html>"));
-	return string<MESSAGE_SIZE>::make("//");
+	return new ConstFile<MESSAGE_SIZE>("//");//string<MESSAGE_SIZE>::make("//");
 }
 
 Resource* Resource::get_next_child_to_visit(void)
@@ -392,7 +392,8 @@ Response* Resource::error(uint16_t error, Message* message)
 		switch(error)
 		{
 			case NOT_FOUND_404:
-				response->body = string<MESSAGE_SIZE>::make("<html><body>Not found</body></html>");
+				//response->body = string<MESSAGE_SIZE>::make("?");//"<html><body>Not found</body></html>");
+				response->body_file = new ConstFile<MESSAGE_SIZE>("?");
 				break;
 			default:
 				break;

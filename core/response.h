@@ -111,6 +111,7 @@ class Response: public Message
 		//Server error: 5xx
 		//static const string<uint8_t> INTERNAL_SERVER_ERROR_REASON_PHRASE;
 		//static const string<uint8_t> INTERNAL_SERVER_ERROR_CODE;
+		#define INTERNAL_SERVER_ERROR_500 500
 		static const Elements::string<uint8_t> NOT_IMPLEMENTED_REASON_PHRASE;
 		static const Elements::string<uint8_t> NOT_IMPLEMENTED_CODE;
 		#define NOT_IMPLEMENTED_501 501
