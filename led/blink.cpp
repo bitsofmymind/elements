@@ -16,11 +16,11 @@ Blinker::Blinker(uint32_t interval, uint8_t pin, volatile uint8_t* ddr, volatile
 	_port(port)
 {
 	*ddr |= _BV(pin);
+	schedule( _interval );
 }
 
 void Blinker::run(void)
 {
-	schedule( _interval );
 	if(*_port & _pin)
 	{
 		*_port &= ~_pin;
@@ -29,6 +29,7 @@ void Blinker::run(void)
 	{
 		*_port |= _pin;
 	}
+	schedule( _interval );
 }
 
 BusyBlinker::BusyBlinker(uint32_t interval, uint8_t pin):
