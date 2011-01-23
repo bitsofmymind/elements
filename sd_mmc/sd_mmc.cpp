@@ -477,19 +477,23 @@ Response* SDMMC::http_get(Request* request)
 		}
 		else if(file->last_op_result != FR_OK)
 		{
-			delete file;
 			Debug::print("error opening file ");
 			Debug::println(file->last_op_result, DEC);
+			delete file;
 			response = error(INTERNAL_SERVER_ERROR_500, request);
 		}
-
+		else
+		{
+			Debug::println("file opened");
+			response = http_head(request);
+			response->body_file = file;
+		}
 		request_path = NULL;
-		response = http_head(request);
-		response->body_file = file;
+
 	}
 	else
 	{
-		response =  http_head(request);
+		response =  Resource::http_get(request);
 	}
 
 	return response;

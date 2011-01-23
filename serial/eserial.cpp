@@ -61,35 +61,6 @@ ESerial::ESerial(uint16_t baud):
 
 }
 
-/*void ESerial::receive(uint8_t c)
-{
-	if(buffer.length >= buffer_size)
-	{
-		char* new_buffer = (char*)ts_malloc(buffer_size + MESSAGE_BUFFER_INCREMENT_SIZE);
-		if(new_buffer != NULL)
-		{
-			if(buffer.text)
-			{
-				memcpy(new_buffer, buffer.text, buffer_size);
-				ts_free(buffer.text);
-			}
-			buffer_size += MESSAGE_BUFFER_INCREMENT_SIZE;
-			buffer.text = new_buffer;
-		}
-		else
-		{
-			buffer.length = received = 0;
-			return;
-		}
-	}
-
-	received++;
-	buffer.text[buffer.length++] = c;
-
-	schedule(ASAP);
-}*/
-
-
 void ESerial::receive(uint8_t c)
 {
 	if(buffer.length >= buffer_size)
@@ -238,8 +209,21 @@ void ESerial::run(void)
 
 Message* ESerial::process(Response* response)
 {
-
 	Resource::process(response);
+	char buffer[10];
+	string<MESSAGE_SIZE> body;
+	body.length = 10;
+	body.text = buffer;
+	response->body_file->open();
+	Debug::println("rec");
+	MESSAGE_SIZE read;
+	do
+	{
+		read = response->body_file->read(&body, false);
+		Debug::print(body.text, read);
+	} while(read == 10);
+
+	Debug::println();
 	delete response;
 
 	return NULL;
