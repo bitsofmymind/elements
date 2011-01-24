@@ -40,6 +40,7 @@ template<class T> class ConstFile: public File<T>
 		const char* data;
 	public:
 		ConstFile(const char* data);
+		ConstFile(const char* data, T length);
 
 		virtual T read(string<T>* buffer, bool async);
 		virtual T write(string<T>* buffer, bool async);
@@ -52,6 +53,14 @@ ConstFile<T>::ConstFile(const char* data):
 	data(data)
 {
 	File<T>::size = strlen(data);
+	File<T>::cursor = 0;
+}
+
+template< class T>
+ConstFile<T>::ConstFile(const char* data, T length):
+	data(data)
+{
+	File<T>::size = length;
 	File<T>::cursor = 0;
 }
 

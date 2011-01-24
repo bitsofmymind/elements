@@ -282,7 +282,7 @@ Response* Resource::http_trace( Request* request )
 {
 	Response* response = new Response(OK_200, request );
 	request->Message::serialize();
-	response->body = request->message;
+	//response->body = request->message;
 	string< uint8_t >* value = ( string< uint8_t >* )ts_malloc( sizeof( string< uint8_t > ) );
 	char* content = ( char* )ts_malloc(13);
 	content = (char*)"message/http";

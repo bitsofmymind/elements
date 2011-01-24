@@ -28,11 +28,7 @@ using namespace Elements;
 		}
 
 		Debug::print("   body: ");
-		if(body.text)
-		{
-			Debug::println(body.length, DEC);
-		}
-		else if(body_file)
+		if(body_file)
 		{
 			Debug::println(body_file->size, DEC);
 		}
@@ -45,8 +41,6 @@ using namespace Elements;
 
 Message::Message()
 {
-	body.length = 0;
-	body.text = NULL;
 	message.length = 0;
 	message.text = NULL;
 	body_file = NULL;
@@ -61,11 +55,6 @@ Message::~Message()
 	{
 		ts_free(message.text);
 	}
-	else if(body.length)
-	{
-		ts_free(body.text);
-	}
-
 	if(body_file)
 	{
 		delete body_file;
@@ -130,11 +119,14 @@ char Message::deserialize( string< MESSAGE_SIZE >& buffer, char* index )
 		}
 	}
 
-	index++; //Skips the '\r'
+	index += 2; //Skips the '\r\n'
 	message = buffer;
-	body.length = buffer.length - (index - buffer.text) - 1; /*We do not move past the '\n'
-	in case the message had no body as doing so would cause a buffer overflow.*/
-	body.text = index + 1;
+	MESSAGE_SIZE body_size = buffer.length - (index - buffer.text);
+	if( body_size > 0)
+	{
+		body_file = new ConstFile<MESSAGE_SIZE>(index, body_size);
+	}
+
 
 	return 0;
 }
@@ -154,7 +146,7 @@ MESSAGE_SIZE Message::get_message_length(void)
 	}
 
 	size += 2 /*ForCLRF between the fields and the body*/ \
-		+ body.length;
+		+ body_file->size;
 
 	return size;
 }
@@ -187,7 +179,7 @@ char Message::serialize( char* buffer )
 	}
 	*buffer++ = '\r';
 	*buffer++ = '\n';
-	buffer += body.copy(buffer);
+	//buffer += body.copy(buffer);
 	*buffer = '\0'; //So we can print the message to cout
 	message.length++;
 	return 0;

@@ -56,7 +56,6 @@ class Message
 		TYPE object_type;
 
 		Elements::string< MESSAGE_SIZE > message;
-		Elements::string< MESSAGE_SIZE > body;
 		File<MESSAGE_SIZE>* body_file;
 		Dictionary< Elements::string<uint8_t> > fields;
 
