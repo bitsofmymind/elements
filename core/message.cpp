@@ -19,7 +19,6 @@ using namespace Elements;
 #ifdef DEBUG
 	void Message::print()
 	{
-		Debug::print(fields.items, DEC);
 		for( uint8_t i = 0; i<fields.items ; i++)
 		{
 			Debug::print("   ");
@@ -36,6 +35,10 @@ using namespace Elements;
 		else if(body_file)
 		{
 			Debug::println(body_file->size, DEC);
+		}
+		else
+		{
+			Debug::println(0);
 		}
 	}
 #endif

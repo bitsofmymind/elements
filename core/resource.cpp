@@ -207,17 +207,17 @@ Response* Resource::process( Request* request )
 	#endif
 
 	//if( request->method == get_method)
-	if(!memcmp("get", request->method.text, 3))
+	if(request->method.length == 3 && !memcmp("get", request->method.text, 3))
 	{
 		return http_get( request );
 	}
 	//else if( request->method == head_method )
-	else if(!memcmp("head", request->method.text, 4))
+	else if(request->method.length == 4 &&!memcmp("head", request->method.text, 4))
 	{
 		return http_head( request );
 	}
 	//else if( request->method == trace_method )
-	else if(!memcmp("trace", request->method.text, 5))
+	else if(request->method.length == 5 &&!memcmp("trace", request->method.text, 5))
 	{
 		return http_trace( request );
 	}

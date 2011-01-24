@@ -68,11 +68,10 @@ void* ts_malloc(size_t size)
 	{
 		block = malloc(size);
 	}
-
 	#ifdef DEBUG
 		if(!block)
 		{
-			Debug::print("malloc failed!");
+			Debug::println("malloc failed!");
 		}
 	#endif
 
