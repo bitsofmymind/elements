@@ -53,7 +53,9 @@ class Request: public Message
 
 
 		virtual char deserialize( Elements::string<MESSAGE_SIZE>& buffer, char* index );
-		virtual char serialize( char* buffer );
+		#ifndef NO_REQUEST_SERIALIZATION
+			virtual char serialize( char* buffer );
+		#endif
 		virtual MESSAGE_SIZE get_message_length(void);
 };
 

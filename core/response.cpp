@@ -19,11 +19,10 @@ using namespace Elements;
 	void Response::print(void)
 	{
 		Debug::print("% Response: ");
-		Debug::print(response_code_int, DEC);
-		Debug::print(" ");
-		Debug::print(reason_phrase.text, reason_phrase.length);
 		Debug::print(" HTTP/");
-		Debug::println(http_version, DEC);
+		Debug::print(http_version, DEC);
+		Debug::print(response_code_int, DEC);
+		Debug::println(" ");
 		Message::print();
 	}
 #endif
@@ -38,11 +37,6 @@ Response::Response(
 	object_type = RESPONSE;
 
 	http_version = 0;
-	response_code.text = 0;
-	response_code.length = 0;
-
-	reason_phrase.text = NULL;
-	reason_phrase.length = 0;
 
 	if(_original_request != NULL)
 	{
@@ -69,32 +63,33 @@ Response::~Response()
 	}
 }
 
-char Response::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
-{
-	//Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+#ifndef NO_RESPONSE_DESERIALIZATION
+	char Response::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
+	{
+		//Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
 
-	index += 5; //Jumps HTTP/
+		index += 5; //Jumps HTTP/
 
-	http_version = (*index++ - 48) * 10;
-	index++; //Skips the '.'
-	http_version += *index++ - 48;
+		http_version = (*index++ - 48) * 10;
+		index++; //Skips the '.'
+		http_version += *index++ - 48;
 
-	index++; //Jumps the SP. Check in the specification if there can be more than one SP.
+		index++; //Jumps the SP. Check in the specification if there can be more than one SP.
 
-	response_code.text = index;
-	response_code.length = 3;
+		response_code_int += (*index++ - 48) * 100;
+		response_code_int += (*index++ - 48) * 100;
+		response_code_int += *index++ - 48;
 
-	index += 4; //jumps the response code and the following space.
-	//Check in the specification if there can be more than one SP.
+		index++; //jumps the response code and the following space.
+		//Check in the specification if there can be more than one SP.
 
-	reason_phrase.text = index;
-	while(*index != '\r' && *(index + 1) !='\n' ) {index++; } //Jumps the reason_phrase
-	reason_phrase.length = index - reason_phrase.text;
+		while(*index != '\r' && *(index + 1) !='\n' ) {index++; } //Jumps the reason_phrase
 
-	index += 2; //skips \r\n (CRLF)
+		index += 2; //skips \r\n (CRLF)
 
-	return Message::deserialize(buffer, index);
-}
+		return Message::deserialize(buffer, index);
+	}
+#endif
 
 MESSAGE_SIZE Response::get_message_length(void)
 {
@@ -102,11 +97,12 @@ MESSAGE_SIZE Response::get_message_length(void)
 	return 5 /*For 'HTTP/'*/ \
 		+ 3 /*For the HTTP version*/ \
 		+ 1 /*For a space*/ \
-		+ response_code.length \
+		+ 3 /*For the status code*/ \
 		+ 1 /*For a space*/ \
-		+ reason_phrase.length \
 		+ 2 /*For CLRF between header and fields*/ \
 		+ Message::get_message_length();
+
+		//Reason phrase gets skipped
 }
 
 char Response::serialize( char* buffer)
@@ -116,9 +112,9 @@ char Response::serialize( char* buffer)
 	*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '1';
 	*buffer++ = ' ';
 
-	buffer += response_code.copy(buffer);
+	//buffer += response_code.copy(buffer);
 	*buffer++ = ' ';
-	buffer += reason_phrase.copy(buffer);
+	//buffer += reason_phrase.copy(buffer);
 	*buffer++ = '\r';
 	*buffer++ = '\n';
 
@@ -133,8 +129,8 @@ char Response::serialize( char* buffer)
 //const string<uint8_t> Response::SWITCHING_PROTOCOLS_CODE = { "101", 3 };
 
 //Successful: 2xx
-const string<uint8_t> Response::OK_REASON_PHRASE = MAKE_STRING("OK");
-const string<uint8_t> Response::OK_CODE = MAKE_STRING("200");
+//const string<uint8_t> Response::OK_REASON_PHRASE = MAKE_STRING("OK");
+//const string<uint8_t> Response::OK_CODE = MAKE_STRING("200");
 //const string<uint8_t> Response::CREATED_REASON_PHRASE = { "Created", 201 };
 //const string<uint8_t> Response::CREATED_CODE = { "201", 3 };
 //const string<uint8_t> Response::ACCEPTED_REASON_PHRASE = { "Accepted", 202 };
@@ -166,16 +162,16 @@ const string<uint8_t> Response::OK_CODE = MAKE_STRING("200");
 //const string<uint8_t> Response::TEMPORARY_REDIRECT_CODE = { "307", 3 };
 
 //Client Error: 4xx
-const string<uint8_t> Response::BAD_REQUEST_REASON_PHRASE = MAKE_STRING("Bad Request");
-const string<uint8_t> Response::BAD_REQUEST_CODE = MAKE_STRING("400");
+//const string<uint8_t> Response::BAD_REQUEST_REASON_PHRASE = MAKE_STRING("Bad Request");
+//const string<uint8_t> Response::BAD_REQUEST_CODE = MAKE_STRING("400");
 //const string<uint8_t> Response::UNAUTHORIZED_REASON_PHRASE = { "Unauthorized", 401 };
 //const string<uint8_t> Response::UNAUTHORIZED_CODE = { "401", 3 };
 //const string<uint8_t> Response::PAYMENT_REQUIRED_REASON_PHRASE = { "Payment Required", 402 };
 //const string<uint8_t> Response::PAYMENT_REQUIRED_CODE = { "402", 3 };
 //const string<uint8_t> Response::FORBIDDEN_REASON_PHRASE = { "Forbidden", 403 };
 //const string<uint8_t> Response::FORBIDDEN_CODE = { "403", 3 };
-const string<uint8_t> Response::NOT_FOUND_REASON_PHRASE = MAKE_STRING("Not Found");
-const string<uint8_t> Response::NOT_FOUND_CODE = MAKE_STRING("404");
+//const string<uint8_t> Response::NOT_FOUND_REASON_PHRASE = MAKE_STRING("Not Found");
+//const string<uint8_t> Response::NOT_FOUND_CODE = MAKE_STRING("404");
 //const string<uint8_t> Response::METHOD_NOT_ALLOWED_REASON_PHRASE = { "Mehtod Not Allowed", 405 };
 //const string<uint8_t> Response::METHOD_NOT_ALLOWED_CODE = { "405", 3 };
 //const string<uint8_t> Response::NOT_ACCEPTABLE_REASON_PHRASE = { "Not Allowed", 406 };
@@ -206,8 +202,8 @@ const string<uint8_t> Response::NOT_FOUND_CODE = MAKE_STRING("404");
 //Server error: 5xx
 //const string<uint8_t> Response::INTERNAL_SERVER_ERROR_REASON_PHRASE = { "Internal Server Error", 500 };
 //const string<uint8_t> Response::INTERNAL_SERVER_ERROR_CODE = { "500", 3 };
-const string<uint8_t> Response::NOT_IMPLEMENTED_REASON_PHRASE = MAKE_STRING("Not Implemented");
-const string<uint8_t> Response::NOT_IMPLEMENTED_CODE = MAKE_STRING("501");
+//const string<uint8_t> Response::NOT_IMPLEMENTED_REASON_PHRASE = MAKE_STRING("Not Implemented");
+//const string<uint8_t> Response::NOT_IMPLEMENTED_CODE = MAKE_STRING("501");
 //const string<uint8_t> Response::BAD_GATEWAY_REASON_PHRASE = { "Bad Gateway", 502 };
 //const string<uint8_t> Response::BAD_GATEWAY_CODE = { "502", 3 };
 //const string<uint8_t> Response::SERVICE_UNAVAILABE_REASON_PHRASE = { "Service Unavailable", 503 };

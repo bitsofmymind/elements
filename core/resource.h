@@ -15,7 +15,6 @@
 #include "../elements.h"
 #include "../utils/utils.h"
 #include "../utils/types.h"
-#include <utils/file.h>
 #include <stdint.h>
 
 class Resource
@@ -55,7 +54,7 @@ class Resource
         virtual uint8_t send(Message* message);
 
 		virtual uptime_t get_sleep_clock( void );
-                string<uint8_t>* get_name(Resource* resource);
+        string<uint8_t>* get_name(Resource* resource);
 
 		virtual Resource* find_resource( URL* url );
 

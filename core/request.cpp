@@ -106,27 +106,27 @@ MESSAGE_SIZE Request::get_message_length(void)
 		+ 2 /*For CLRF between header and fields*/ \
 		+ Message::get_message_length();
 }
+#ifndef NO_REQUEST_SERIALIZATION
+	char Request::serialize(char* buffer)
+	{
 
-char Request::serialize(char* buffer)
-{
+		buffer += method.copy(buffer);
+		*buffer++ = ' ';
 
-	buffer += method.copy(buffer);
-	*buffer++ = ' ';
+		buffer += to_url->serialize(buffer);
+		*buffer++ = ' ';
 
-	buffer += to_url->serialize(buffer);
-	*buffer++ = ' ';
+		*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
+		*buffer++ = (http_version / 10) +  48;
+		*buffer++ = '.';
+		*buffer++ = ( http_version - (http_version / 10 ) *10 ) + 48;
 
-	*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
-	*buffer++ = (http_version / 10) +  48;
-	*buffer++ = '.';
-	*buffer++ = ( http_version - (http_version / 10 ) *10 ) + 48;
+		*buffer++ = '\r';
+		*buffer++ = '\n';
 
-	*buffer++ = '\r';
-	*buffer++ = '\n';
-
-	return Message::serialize(buffer);
-}
-
+		return Message::serialize(buffer);
+	}
+#endif
 //const string< uint8_t > Request::ACCEPT = {"accept", 19};
 //const string< uint8_t > Request::ACCEPT_CHARSET = {"accept-string< uint8_t >set", 20};
 //const string< uint8_t > Request::ACCEPT_ENCODING = {"accept-encoding", 21};
