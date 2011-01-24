@@ -415,7 +415,8 @@ DRESULT disk_read (
 
 SDMMC::SDMMC(void):
 		Resource(),
-		request_path(NULL)
+		request_path(NULL),
+		fatfs(NULL)
 {
 	CARD_DETECT_DDR &= ~_BV(CARD_DETECT_PIN);
 	CARD_DETECT_PORT |= _BV(CARD_DETECT_PIN); //Turns on the pull-up for CARD_DETECT_PIN
@@ -461,32 +462,40 @@ Response* SDMMC::http_get(Request* request)
 	Response* response;
 	if(request_path)
 	{
-		response =  http_head(request);
-		FATFile* file = new FATFile(request_path);
-		Debug::print("fetching ");
-		Debug::println(request_path);
-		if(!file)
+		if(Stat)
 		{
-			//Critical error
-			Debug::println("Alloc failed");
-		}
-		else if(file->last_op_result == FR_NO_FILE || file->last_op_result == FR_NO_PATH)
-		{
-			delete file;
-			response = error(NOT_FOUND_404, request);
-		}
-		else if(file->last_op_result != FR_OK)
-		{
-			Debug::print("error opening file ");
-			Debug::println(file->last_op_result, DEC);
-			delete file;
+			//No disk present, disk not initialized of failed to initialize
 			response = error(INTERNAL_SERVER_ERROR_500, request);
+			ts_free(request_path);
 		}
 		else
 		{
-			Debug::println("file opened");
-			response = http_head(request);
-			response->body_file = file;
+			FATFile* file = new FATFile(request_path);
+			Debug::print("fetching ");
+			Debug::println(request_path);
+			if(!file)
+			{
+				//Critical error
+				//Debug::println("Alloc failed");
+			}
+			else if(file->last_op_result == FR_NO_FILE || file->last_op_result == FR_NO_PATH)
+			{
+				delete file;
+				response = error(NOT_FOUND_404, request);
+			}
+			else if(file->last_op_result != FR_OK)
+			{
+				/*Debug::print("error opening file ");
+				Debug::println(file->last_op_result, DEC);*/
+				delete file;
+				response = error(INTERNAL_SERVER_ERROR_500, request);
+			}
+			else
+			{
+				//Debug::println("file opened");
+				response = http_head(request);
+				response->body_file = file;
+			}
 		}
 		request_path = NULL;
 
@@ -510,7 +519,7 @@ void SDMMC::run(void)
 				/*Do nothing. With the setting of STA_NODISK below and the scheduling
 				 * of the next run in 100ms, this will effectively provide a debouncing
 				 * delay.*/
-				Debug::println("Disk inserted");
+				//Debug::println("Disk inserted");
 				Stat &= ~STA_NODISK; //Indicate the presence of disk in the socket
 			}
 			else if(!disk_initialize(0)) //If there is a disk and it has been debounced
@@ -521,7 +530,7 @@ void SDMMC::run(void)
 				if(!fatfs)
 				{
 					//allocation of fatfs failed!
-					Debug::println("Alloc failed");
+					//Debug::println("Alloc failed");
 				}
 				else
 				{
@@ -539,10 +548,11 @@ void SDMMC::run(void)
 	}
 	else //If there is no disk in the socket
 	{
-		Debug::println("No disk");
-		if(!fatfs) //If fatfs was previously allocated
+		if(fatfs) //If fatfs was previously allocated
 		{
+			Debug::println("Disk removed");
 			ts_free(fatfs);
+			fatfs = NULL;
 			f_mount(0, NULL); //unmounts the disk
 			power_off(); //Power it off
 		}

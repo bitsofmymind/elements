@@ -162,24 +162,22 @@ void ESerial::run(void)
 			Request* request = new Request();
 			if(!request)
 			{
-				Debug::println("not enough space");
+				//Debug::println("not enough space");
 			}
 
 			request->message.length = message.length;
 			request->message.text = message.text;
 
-			Debug::println("msg");
-			int8_t res = request->deserialize(message, message.text);
+			//Debug::println("msg");
 
-			if(res)
+			if(request->deserialize(message, message.text))
 			{
-				Debug::print("parsing failed ");
+				Debug::print("Parsing failed");
 				delete request;
-				Debug::println(res, DEC);
 			}
 			else
 			{
-				Debug::println("sent");
+				Debug::println("Request sent");
 				send(request);
 			}
 
@@ -194,7 +192,7 @@ void ESerial::run(void)
 	}
 	else if(timeout <= get_uptime())
 	{
-		Debug::println("timed out");
+		//Debug::println("timed out");
 		ATOMIC
 		{
 			if(buffer.text && buffer.length){ ts_free(buffer.text); }
@@ -214,16 +212,19 @@ Message* ESerial::process(Response* response)
 	string<MESSAGE_SIZE> body;
 	body.length = 10;
 	body.text = buffer;
-	response->body_file->open();
-	Debug::println("rec");
-	MESSAGE_SIZE read;
-	do
+	if(response->body_file)
 	{
-		read = response->body_file->read(&body, false);
-		Debug::print(body.text, read);
-	} while(read == 10);
+		response->body_file->open();
 
-	Debug::println();
+		MESSAGE_SIZE read;
+		do
+		{
+			read = response->body_file->read(&body, false);
+			Debug::print(body.text, read);
+		} while(read == 10);
+
+		Debug::println();
+	}
 	delete response;
 
 	return NULL;
