@@ -38,7 +38,7 @@ class Authority: public Resource
 
         virtual uptime_t get_sleep_clock( void );
 
-		virtual void process_queue(void);
+		void process_queue(void);
 };
 
 

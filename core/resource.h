@@ -32,11 +32,6 @@ class Resource
 		uint8_t child_to_visit;
 
 	public:
-		#ifdef DEBUG
-			char* id;
-		#endif
-
-	public:
 		Resource(void);
 		#ifndef NO_RESOURCE_DESTRUCTION
 			virtual ~Resource(void);

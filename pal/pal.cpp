@@ -14,19 +14,25 @@
 
 }*/
 
+
+#ifdef TIME_KEEPING
+
+	uint64_t system_time = 0;
+
+	uint64_t get_time( void )
+	{
+		//time_in_milliseconds += uptime_in_milliseconds;
+		return system_time;
+	}
+
+	void set_time(uint64_t time)
+	{
+		system_time = time;
+	}
+
+#endif
+
 uptime_t system_uptime = 0;
-uint64_t system_time = 0;
-
-uint64_t get_time( void )
-{
-	//time_in_milliseconds += uptime_in_milliseconds;
-	return system_time;
-}
-
-void set_time(uint64_t time)
-{
-	system_time = time;
-}
 
 uptime_t get_uptime( void )
 {
@@ -46,19 +52,6 @@ void increase_uptime(uptime_t time)
 
 /*This is the Interrupt handling function for time keeping, it should be vectored to every millisecond.*/
 
-static uint32_t number_of_elements = 0;
-
-inline uint32_t get_number_of_elements( void ){ return number_of_elements; }
-
-inline void register_element( void )
-{
-	number_of_elements++;
-}
-
-inline void unregister_element( void )
-{
-	number_of_elements--;
-}
 
 
 void* ts_malloc(size_t size)

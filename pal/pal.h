@@ -34,17 +34,15 @@ extern void init(void);
 #define WEEKS(w) w*DAYS(7)
 #define NEVER MAX_UPTIME
 
-
-extern uint64_t get_time( void );
-extern void set_time(uint64_t time);
+#ifdef TIME_KEEPING
+	extern uint64_t get_time( void );
+	extern void set_time(uint64_t time);
+	inline void initialize_time( void );
+#endif
 uptime_t get_uptime(void);
 void increase_uptime(uptime_t time);
 
 
-inline void initialize_time( void );
-inline uint32_t get_number_of_elements( void );
-inline void register_element( void );
-inline void unregister_element( void );
 extern void processing_wake();
 extern void processing_sleep(uptime_t time);
 
