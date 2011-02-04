@@ -22,14 +22,12 @@ class SDMMC: public Resource
 	private:
 		FATFS* fatfs;
 		FIL* file;
-		char* request_path;
 
 	public:
 		SDMMC();
 
 	protected:
-		virtual Resource* find_resource( URL* url );
-		virtual Response* http_get(Request* request);
+		virtual Response::status_code process( Request* request, Message** return_message );
 		virtual void run(void);
 
 };

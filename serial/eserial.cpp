@@ -205,9 +205,13 @@ void ESerial::run(void)
 
 }
 
-Message* ESerial::process(Response* response)
+Response::status_code ESerial::process(Response* response, Message** return_message)
 {
-	Resource::process(response);
+	Debug::print(response->response_code_int, DEC);
+	Debug::print("  "); //2 spaces because we do not display the reason phrase
+	Debug::print("HTTP/");
+	Debug::println(response->http_version, DEC);
+
 	char buffer[10];
 	string<MESSAGE_SIZE> body;
 	body.length = 10;
@@ -227,7 +231,7 @@ Message* ESerial::process(Response* response)
 	}
 	delete response;
 
-	return NULL;
+	return OK_200;
 }
 
 ISR(USART_RX_vect)

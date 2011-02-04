@@ -136,12 +136,15 @@
 /  When _MAX_SS is larger than 512, GET_SECTOR_SIZE command must be implememted
 /  to the disk_ioctl function. */
 
+#define _MULTI_DRIVE 0 /*0: No support for multiple physical drives or 1: Support
+multiple drives*/
 
 #define	_MULTI_PARTITION	0	/* 0:Single partition or 1:Multiple partition */
 /* When set to 0, each volume is bound to the same physical drive number and
 / it can mount only first primaly partition. When it is set to 1, each volume
 / is tied to the partitions listed in VolToPart[]. */
 
+#define _FAT32_SUPPORT 0 /*0: No support for FAT32 or 1: support for FAT32*/
 
 #define	_USE_ERASE	0	/* 0:Disable or 1:Enable */
 /* To enable sector erase feature, set _USE_ERASE to 1. */

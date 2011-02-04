@@ -95,7 +95,7 @@ uint8_t rcvr_spi (void)
 /*-----------------------------------------------------------------------*/
 
 static
-int wait_ready (void)	/* 1:OK, 0:Timeout */
+uint8_t wait_ready (void)	/* 1:OK, 0:Timeout */
 {
 	uptime_t timer = get_uptime() + 500;	/* Wait for ready in timeout of 500ms */
 	rcvr_spi();
@@ -127,7 +127,7 @@ void deselect (void)
 /*-----------------------------------------------------------------------*/
 
 static
-int select (void)	/* 1:Successful, 0:Timeout */
+uint8_t select (void)	/* 1:Successful, 0:Timeout */
 {
 	CS_LOW();
 
@@ -150,7 +150,7 @@ int select (void)	/* 1:Successful, 0:Timeout */
 /* is nothing to do in these functions and chk_power always returns 1.   */
 
 static
-int power_status(void)		/* Socket power state: 0=off, 1=on */
+uint8_t power_status(void)		/* Socket power state: 0=off, 1=on */
 {
 	return 1;//(PORTE & 0x80) ? 0 : 1;
 }
@@ -196,7 +196,7 @@ void power_off (void)
 /*-----------------------------------------------------------------------*/
 
 static
-int rcvr_datablock (
+uint8_t rcvr_datablock (
 	uint8_t *buff,			/* Data buffer to store received data */
 	UINT btr			/* uint8_t count (must be multiple of 4) */
 )
@@ -279,15 +279,10 @@ uint8_t send_cmd (		/* Returns R1 resp (bit7==1:Send failed) */
 /*-----------------------------------------------------------------------*/
 /* Initialize Disk Drive                                                 */
 /*-----------------------------------------------------------------------*/
-
-DSTATUS disk_initialize (
-	uint8_t drv		/* Physical drive nmuber (0) */
-)
+DSTATUS disk_initialize () /*SD_MMC only support one physical drive*/
 {
 	uint8_t n, cmd, ty, ocr[4];
 
-
-	if (drv) return STA_NOINIT;			/* Supports only single drive */
 	if (Stat & STA_NODISK) return Stat;	/* No card in the socket */
 
 	power_on();							/* Force socket power on */
@@ -352,11 +347,8 @@ DSTATUS disk_initialize (
 /* Get Disk Status                                                       */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS disk_status (
-	uint8_t drv		/* Physical drive nmuber (0) */
-)
+DSTATUS disk_status () /*SD_MMC only support one physical drive*/
 {
-	if (drv) return STA_NOINIT;		/* Supports only single drive */
 	return Stat;
 }
 
@@ -367,13 +359,12 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_read (
-	uint8_t drv,			/* Physical drive nmuber (0) */
 	uint8_t *buff,			/* Pointer to the data buffer to store read data */
 	DWORD sector,		/* Start sector number (LBA) */
 	uint8_t count			/* Sector count (1..255) */
 )
 {
-	if (drv || !count) return RES_PARERR;
+	if (!count) return RES_PARERR;
 	if (Stat & STA_NOINIT) return RES_NOTRDY;
 
 	if (!(CardType & CT_BLOCK)) sector *= 512;	/* Convert to uint8_t address if needed */
@@ -415,7 +406,6 @@ DRESULT disk_read (
 
 SDMMC::SDMMC(void):
 		Resource(),
-		request_path(NULL),
 		fatfs(NULL)
 {
 	CARD_DETECT_DDR &= ~_BV(CARD_DETECT_PIN);
@@ -424,88 +414,86 @@ SDMMC::SDMMC(void):
 	initialization so calling it will take care of booting our disk.*/
 }
 
-Resource* SDMMC::find_resource( URL* url )
+Response::status_code SDMMC::process( Request* request, Message** return_message )
 {
-	Resource* res = Resource::find_resource(url);
+	Response::status_code sc = Resource::process(request, return_message);
 
-	if(!res)
+
+	if(sc == PASS_308)
 	{
 		uint8_t len  = 0;
+		URL* url = request->to_url;
+
+		if(!request->methodcmp("get", 3))
+		{
+			return NOT_IMPLEMENTED_501;
+		}
+		//possible optimization: pass the url object to FILE_FAT object directly.
 		for( uint8_t i = url->cursor; i < url->resources.items; i++)
 		{
 			len += url->resources[i]->length + 1; // for '/'
 		}
 
-		request_path = (char*)ts_malloc(len + 1);
-		if(!request_path)
+		char* path = (char*)ts_malloc(len + 1);
+
+		if(!path)
 		{
 			//Critical error, there is no memory left.
 		}
 		for(uint8_t i = url->cursor, pos = 0; i < url->resources.items; i++)
 		{
-			request_path [pos++] = '/';
-			memcpy((void*)(request_path  + pos), url->resources[i]->text, url->resources[i]->length);
+			path[pos++] = '/';
+			memcpy((void*)(path  + pos), url->resources[i]->text, url->resources[i]->length);
 			pos += url->resources[i]->length;
 		}
 
-		request_path [len] = '\0';
-		url->cursor = url->resources.items;
+		path[len] = '\0';
 
-		return this;
-	}
-
-	return res;
-}
-
-Response* SDMMC::http_get(Request* request)
-{
-	Response* response;
-	if(request_path)
-	{
 		if(Stat)
 		{
 			//No disk present, disk not initialized of failed to initialize
-			response = error(INTERNAL_SERVER_ERROR_500, request);
-			ts_free(request_path);
+			ts_free(path);
+			sc = INTERNAL_SERVER_ERROR_500;
 		}
 		else
 		{
-			FATFile* file = new FATFile(request_path);
+			//Response* response;
+			FATFile* file = new FATFile(path);
 			Debug::print("fetching ");
-			Debug::println(request_path);
+			Debug::println(path);
 			if(!file)
 			{
 				//Critical error
 				//Debug::println("Alloc failed");
 			}
-			else if(file->last_op_result == FR_NO_FILE || file->last_op_result == FR_NO_PATH)
+			if(file->last_op_result == FR_OK)
 			{
-				delete file;
-				response = error(NOT_FOUND_404, request);
-			}
-			else if(file->last_op_result != FR_OK)
-			{
-				/*Debug::print("error opening file ");
-				Debug::println(file->last_op_result, DEC);*/
-				delete file;
-				response = error(INTERNAL_SERVER_ERROR_500, request);
+				*return_message = http_head(request);
+				(*return_message)->body_file = file;
+				sc = OK_200;
 			}
 			else
 			{
-				//Debug::println("file opened");
-				response = http_head(request);
-				response->body_file = file;
+
+				delete file;
+				if(file->last_op_result == FR_NO_FILE || file->last_op_result == FR_NO_PATH)
+				{
+					sc = NOT_FOUND_404;
+				}
+				else
+				{
+					/*Debug::print("error opening file ");
+					Debug::println(file->last_op_result, DEC);*/
+
+					sc = INTERNAL_SERVER_ERROR_500;
+				}
 			}
+
 		}
-		request_path = NULL;
 
 	}
-	else
-	{
-		response =  Resource::http_get(request);
-	}
 
-	return response;
+	return sc;
 }
 
 void SDMMC::run(void)
@@ -522,7 +510,7 @@ void SDMMC::run(void)
 				//Debug::println("Disk inserted");
 				Stat &= ~STA_NODISK; //Indicate the presence of disk in the socket
 			}
-			else if(!disk_initialize(0)) //If there is a disk and it has been debounced
+			else if(!disk_initialize()) //If there is a disk and it has been debounced
 			{
 				//STA_NOINIT was cleared in disk_initialized because it succeeded
 				fatfs = (FATFS*)ts_malloc(sizeof(FATFS)); //Allocates FATFS struct

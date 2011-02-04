@@ -35,7 +35,6 @@ void operator delete(void * ptr)
 #define MS_TO_TIMER2_OVERFLOW 4//1000 / (F_CPU /(TIMER2_PRESCALER * TIMER2_OUTPUT_COMPARE))
 
 static bool volatile wake_up = false;
-volatile uint16_t stack_pointer = RAMEND;
 
 void processing_wake()
 {
@@ -64,7 +63,7 @@ void init(void)
 
 	TCCR2A |= _BV(WGM21); //Timer clear on output match of OCR2A
 	TCCR2B |= _BV(CS22) + _BV(CS21); //Prescaler at 256
-	TIMSK2 |= _BV(OCIE2A) + _BV(OCIE2B); //Interrupt on overflow
+	TIMSK2 |= _BV(OCIE2A); //Interrupt on overflow
 	//Nothing to set for TIFR2
 	//Nothing to set for ASSR
 
@@ -93,11 +92,11 @@ ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)
 	//Interrupts reactivated by compiler
 }
 
-ISR(TIMER2_COMPB_vect)
+/*ISR(TIMER2_COMPB_vect)
 {
 
 	if(_SFR_MEM16(0x5D) < stack_pointer)
 	{
 		stack_pointer = _SFR_MEM16(0x5D);
 	}
-}
+}*/

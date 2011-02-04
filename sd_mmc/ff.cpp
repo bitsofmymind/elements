@@ -87,6 +87,7 @@
 
 #include "ff.h"			/* FatFs configurations and declarations */
 #include "diskio.h"		/* Declarations of low level disk I/O functions */
+#include <string.h>
 
 /*--------------------------------------------------------------------------
 
@@ -321,7 +322,7 @@ void mem_set(void* dst, int val, UINT cnt) {
 }
 
 /* Compare memory to memory */
-static
+/*static
 int mem_cmp(const void* dst, const void* src, UINT cnt) {
 	const uint8_t *d = (const uint8_t *) dst, *s = (const uint8_t *) src;
 	int r = 0;
@@ -329,7 +330,7 @@ int mem_cmp(const void* dst, const void* src, UINT cnt) {
 	while (cnt-- && (r = *d++ - *s++) == 0)
 		;
 	return r;
-}
+}*/
 
 /* Check if chr is contained in the string */
 static
@@ -498,9 +499,16 @@ DWORD sector /* Sector number to make appearance in the fs->win[] */
 			}
 		}
 #endif
-		if (sector) {
+		if (sector)
+		{
+#if _MULTIPLE_DRIVES
 			if (disk_read(fs->drv, fs->win, sector, 1) != RES_OK)
+#else
+			if (disk_read(fs->win, sector, 1) != RES_OK)
+#endif
+			{
 				return FR_DISK_ERR;
+			}
 			fs->winsect = sector;
 		}
 	}
@@ -571,29 +579,30 @@ DWORD clst /* Cluster# to get the link information */
 		return 1;
 
 	switch (fs->fs_type) {
-	case FS_FAT12:
-		bc = (UINT) clst;
-		bc += bc / 2;
-		if (move_window(fs, fs->fatbase + (bc / SS(fs))))
-			break;
-		wc = fs->win[bc % SS(fs)];
-		bc++;
-		if (move_window(fs, fs->fatbase + (bc / SS(fs))))
-			break;
-		wc |= fs->win[bc % SS(fs)] << 8;
-		return (clst & 1) ? (wc >> 4) : (wc & 0xFFF);
+		case FS_FAT12:
+			bc = (UINT) clst;
+			bc += bc / 2;
+			if (move_window(fs, fs->fatbase + (bc / SS(fs))))
+				break;
+			wc = fs->win[bc % SS(fs)];
+			bc++;
+			if (move_window(fs, fs->fatbase + (bc / SS(fs))))
+				break;
+			wc |= fs->win[bc % SS(fs)] << 8;
+			return (clst & 1) ? (wc >> 4) : (wc & 0xFFF);
 
-	case FS_FAT16:
-		if (move_window(fs, fs->fatbase + (clst / (SS(fs) / 2))))
-			break;
-		p = &fs->win[clst * 2 % SS(fs)];
-		return LD_WORD(p);
-
-	case FS_FAT32:
-		if (move_window(fs, fs->fatbase + (clst / (SS(fs) / 4))))
-			break;
-		p = &fs->win[clst * 4 % SS(fs)];
-		return LD_DWORD(p) & 0x0FFFFFFF;
+		case FS_FAT16:
+			if (move_window(fs, fs->fatbase + (clst / (SS(fs) / 2))))
+				break;
+			p = &fs->win[clst * 2 % SS(fs)];
+			return LD_WORD(p);
+#if _FAT32_SUPPORT
+		case FS_FAT32:
+			if (move_window(fs, fs->fatbase + (clst / (SS(fs) / 4))))
+				break;
+			p = &fs->win[clst * 4 % SS(fs)];
+			return LD_DWORD(p) & 0x0FFFFFFF;
+#endif
 	}
 
 	return 0xFFFFFFFF; /* An error occurred at the disk I/O layer */
@@ -778,17 +787,26 @@ WORD idx /* Directory index number */
 	clst = dj->sclust;
 	if (clst == 1 || clst >= dj->fs->n_fatent) /* Check start cluster range */
 		return FR_INT_ERR;
+
+#if _FAT32_SUPPORT
 	if (!clst && dj->fs->fs_type == FS_FAT32) /* Replace cluster# 0 with root cluster# if in FAT32 */
 		clst = dj->fs->dirbase;
+#endif
 
-	if (clst == 0) { /* Static table (root-dir in FAT12/16) */
+	if (clst == 0)
+	{ /* Static table (root-dir in FAT12/16) */
 		dj->clust = clst;
 		if (idx >= dj->fs->n_rootdir) /* Index is out of range */
 			return FR_INT_ERR;
 		dj->sect = dj->fs->dirbase + idx / (SS(dj->fs) / 32); /* Sector# */
-	} else { /* Dynamic table (sub-dirs or root-dir in FAT32) */
+	}
+	else
+	{
+#if _FAT32_SUPPORT
+		/* Dynamic table (sub-dirs or root-dir in FAT32) */
 		ic = SS(dj->fs) / 32 * dj->fs->csize; /* Entries per cluster */
-		while (idx >= ic) { /* Follow cluster chain */
+		while (idx >= ic)
+		{ /* Follow cluster chain */
 			clst = get_fat(dj->fs, clst); /* Get next cluster */
 			if (clst == 0xFFFFFFFF)
 				return FR_DISK_ERR; /* Disk error */
@@ -798,6 +816,9 @@ WORD idx /* Directory index number */
 		}
 		dj->clust = clst;
 		dj->sect = clust2sect(dj->fs, clst) + idx / (SS(dj->fs) / 32); /* Sector# */
+#else
+		return FR_INT_ERR;
+#endif
 	}
 
 	dj->dir = dj->fs->win + (idx % (SS(dj->fs) / 32)) * 32; /* Ptr to the entry in the sector */
@@ -1074,7 +1095,7 @@ static FRESULT dir_find(DIR *dj /* Pointer to the directory object linked to the
 			}
 		}
 #else		/* Non LFN configuration */
-		if (!(dir[DIR_Attr] & AM_VOL) && !mem_cmp(dir, dj->fn, 11)) /* Is it a valid entry? */
+		if (!(dir[DIR_Attr] & AM_VOL) && !memcmp(dir, dj->fn, 11)) /* Is it a valid entry? */
 			break;
 #endif
 		res = dir_next(dj, 0); /* Next entry */
@@ -1650,9 +1671,16 @@ const TCHAR *path /* Full-path string to find a file or directory */
 static uint8_t check_fs( /* 0:The FAT BR, 1:Valid BR but not an FAT, 2:Not a BR, 3:Disk error */
 FATFS *fs, /* File system object */
 DWORD sect /* Sector# (lba) to check if it is an FAT boot record or not */
-) {
+)
+{
+#if _MULTIPLE_DRIVES
 	if (disk_read(fs->drv, fs->win, sect, 1) != RES_OK) /* Load boot record */
+#else
+	if (disk_read(fs->win, sect, 1) != RES_OK) /* Load boot record */
+#endif
+	{
 		return 3;
+	}
 	if (LD_WORD(&fs->win[BS_55AA]) != 0xAA55) /* Check record signature (always placed at offset 510 even if the sector size is >512) */
 		return 2;
 
@@ -1703,8 +1731,13 @@ uint8_t chk_wp /* !=0: Check media write protection for write access */
 
 	ENTER_FF(fs); /* Lock file system */
 
-	if (fs->fs_type) { /* If the logical drive has been mounted */
+	if (fs->fs_type)
+	{ /* If the logical drive has been mounted */
+#if _MULTIPLE_DRIVES
 		stat = disk_status(fs->drv);
+#else
+		stat = disk_status();
+#endif
 		if (!(stat & STA_NOINIT)) { /* and the physical drive is kept initialized (has not been changed), */
 #if !_FS_READONLY
 			if (chk_wp && (stat & STA_PROTECT)) /* Check write protection if needed */
@@ -1718,8 +1751,14 @@ uint8_t chk_wp /* !=0: Check media write protection for write access */
 	/* Following code attempts to mount a volume. (analyze BPB and initialize the fs object) */
 
 	fs->fs_type = 0; /* Clear the file system object */
+#if _MULTIPLE_DRIVES
 	fs->drv = (uint8_t) LD2PD(vol); /* Bind the logical drive and a physical drive */
-	stat = disk_initialize(fs->drv); /* Initialize low level disk I/O layer */
+#endif
+#if _MULTIPLE_DRIVES
+	stat = disk_initialize(CURRENT_DRIVE()); /* Initialize low level disk I/O layer */
+#else
+	stat = disk_initialize(); /* Initialize low level disk I/O layer */
+#endif
 	if (stat & STA_NOINIT) /* Check if the initialization succeeded */
 		return FR_NOT_READY; /* Failed to initialize due to no media or hard error */
 #if _MAX_SS != 512						/* Get disk sector size (variable sector size cfg only) */
@@ -1788,19 +1827,26 @@ uint8_t chk_wp /* !=0: Check media write protection for write access */
 	fmt = FS_FAT12;
 	if (nclst >= MIN_FAT16)
 		fmt = FS_FAT16;
+#if _FAT32_SUPPORT
 	if (nclst >= MIN_FAT32)
 		fmt = FS_FAT32;
+#endif
 
 	/* Boundaries and Limits */
 	fs->n_fatent = nclst + 2; /* Number of FAT entries */
 	fs->database = bsect + sysect; /* Data start sector */
 	fs->fatbase = bsect + nrsv; /* FAT start sector */
-	if (fmt == FS_FAT32) {
+#if _FAT32_SUPPORT
+	if (fmt == FS_FAT32)
+	{
 		if (fs->n_rootdir)
 			return FR_NO_FILESYSTEM; /* (BPB_RootEntCnt must be 0) */
 		fs->dirbase = LD_DWORD(fs->win+BPB_RootClus); /* Root directory start cluster */
 		szbfat = fs->n_fatent * 4; /* (Required FAT size) */
-	} else {
+	}
+	else
+#endif
+	{
 		if (!fs->n_rootdir)
 			return FR_NO_FILESYSTEM; /* (BPB_RootEntCnt must not be 0) */
 		fs->dirbase = fs->fatbase + fasize; /* Root directory start sector */
@@ -1854,9 +1900,14 @@ WORD id /* Member id of the target object to be checked */
 		return FR_INVALID_OBJECT;
 
 	ENTER_FF(fs); /* Lock file system */
-
+#if _MULTIPLE_DRIVE
 	if (disk_status(fs->drv) & STA_NOINIT)
+#else
+	if (disk_status() & STA_NOINIT)
+#endif
+	{
 		return FR_NOT_READY;
+	}
 
 	return FR_OK;
 }
@@ -2074,8 +2125,14 @@ UINT *br /* Pointer to number of uint8_ts read */
 			if (cc) { /* Read maximum contiguous sectors directly */
 				if (csect + cc > fp->fs->csize) /* Clip at cluster boundary */
 					cc = fp->fs->csize - csect;
+#if _MULTIPLE_DRIVES
 				if (disk_read(fp->fs->drv, rbuff, sect, (uint8_t) cc) != RES_OK)
+#else
+				if (disk_read(rbuff, sect, (uint8_t) cc) != RES_OK)
+#endif
+				{
 					ABORT(fp->fs, FR_DISK_ERR);
+				}
 #if !_FS_READONLY && _FS_MINIMIZE <= 2				/* Replace one of the read sectors with cached data if it contains a dirty sector */
 #if _FS_TINY
 				if (fp->fs->wflag && fp->fs->winsect - sect < cc)

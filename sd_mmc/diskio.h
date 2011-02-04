@@ -27,9 +27,15 @@ typedef enum {
 /* Prototypes for disk control functions */
 
 int assign_drives (int, int);
+#if _MULTIPLE_DRIVES
 DSTATUS disk_initialize (uint8_t);
 DSTATUS disk_status (uint8_t);
 DRESULT disk_read (uint8_t, uint8_t*, DWORD, uint8_t);
+#else
+DSTATUS disk_initialize(void);
+DSTATUS disk_status (void);
+DRESULT disk_read (uint8_t*, DWORD, uint8_t);
+#endif
 #if	_READONLY == 0
 DRESULT disk_write (uint8_t, const uint8_t*, DWORD, uint8_t);
 #endif

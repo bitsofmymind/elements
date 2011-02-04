@@ -270,7 +270,9 @@ typedef char TCHAR;
 
 typedef struct {
 	uint8_t	fs_type;		/* FAT sub-type (0:Not mounted) */
+#if _MULTIPLE_DRIVE
 	uint8_t	drv;			/* Physical drive number */
+#endif
 	uint8_t	csize;			/* Sectors per cluster (1,2,4...128) */
 	uint8_t	n_fats;			/* Number of FAT copies (1,2) */
 	uint8_t	wflag;			/* win[] dirty flag (1:must be written back) */
@@ -500,7 +502,9 @@ void ff_rel_grant (_SYNC_t);		/* Unlock sync object */
 
 #define FS_FAT12	1
 #define FS_FAT16	2
-#define FS_FAT32	3
+#if _FAT32_SUPPORT
+	#define FS_FAT32	3
+#endif
 
 
 /* File attribute bits for directory entry */

@@ -34,7 +34,7 @@ class ESerial: public Resource
 
 	protected:
 		void run(void);
-		Message* process(Response* response);
+		virtual Response::status_code process(Response* response, Message** return_message);
 
 };
 
