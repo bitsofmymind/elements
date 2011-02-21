@@ -67,7 +67,7 @@
 #define UIP_BIG_ENDIAN     1234
 #endif /* UIP_BIG_ENDIAN */
 
-#include "../uip-conf.h"
+#include "uip-conf.h"
 
 /*------------------------------------------------------------------------------*/
 
@@ -230,7 +230,7 @@
  *
  * \hideinitializer
  */
-#define UIP_ACTIVE_OPEN 1
+#define UIP_ACTIVE_OPEN 0
 
 /**
  * The maximum number of simultaneously open TCP connections.
