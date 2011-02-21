@@ -67,7 +67,7 @@ typedef   signed long	int64_t;
 #ifndef WIN32
 	// more type redefinitions
 	typedef unsigned char   BOOL;
-	typedef unsigned char	BYTE;
+	typedef unsigned char	uint8_t;
 	typedef unsigned int	WORD;
 	typedef unsigned long	DWORD;
 

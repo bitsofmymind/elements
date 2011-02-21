@@ -82,7 +82,53 @@ void init(void)
 	TCNT2 = 0; //Clears the timer
 	OCR2 = TIMER2_OUTPUT_COMPARE;*/
 
+	uint16_t baud_setting;
+	bool use_u2x;
+
+	// U2X mode is needed for baud rates higher than (CPU Hz / 16)
+	if (BAUD_RATE > F_CPU / 16) {
+	use_u2x = true;
+	} else {
+	// figure out if U2X mode would allow for a better connection
+
+	// calculate the percent difference between the baud-rate specified and
+	// the real baud rate for both U2X and non-U2X mode (0-255 error percent)
+	uint8_t nonu2x_baud_error = abs((int)(255-((F_CPU/(16*(((F_CPU/8/BAUD_RATE-1)/2)+1))*255)/BAUD_RATE)));
+	uint8_t u2x_baud_error = abs((int)(255-((F_CPU/(8*(((F_CPU/4/BAUD_RATE-1)/2)+1))*255)/BAUD_RATE)));
+
+	// prefer non-U2X mode because it handles clock skew better
+	use_u2x = (nonu2x_baud_error > u2x_baud_error);
+	}
+
+	if (use_u2x) {
+	UCSR0A = _BV(U2X0);
+	baud_setting = (F_CPU / 4 / BAUD_RATE - 1) / 2;
+	} else {
+	UCSR0A = 0;
+	baud_setting = (F_CPU / 8 / BAUD_RATE - 1) / 2;
+	}
+
+	// assign the baud_setting, a.k.a. ubbr (USART Baud Rate Register)
+	UBRR0H = baud_setting >> 8;
+	UBRR0L = baud_setting;
+
+	UCSR0B |= _BV(RXCIE0) + _BV(TXEN0) + _BV(RXEN0);
+
+	Debug::println("Waiting...");
+
 	sei();
+}
+
+void Debug::print(char c)
+{
+	  loop_until_bit_is_set(UCSR0A, UDRE0);
+	  UDR0 = c;
+}
+
+void Debug::println()
+{
+	print("\r");
+	print("\n");
 }
 
 ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)

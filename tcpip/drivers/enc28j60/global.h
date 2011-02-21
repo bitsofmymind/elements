@@ -21,7 +21,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#include "uip.h"
+#include "../../uip.h"
 
 // global AVRLIB defines
 #include "avrlibdefs.h"

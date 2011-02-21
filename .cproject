@@ -29,6 +29,13 @@
 <option id="de.innot.avreclipse.compiler.option.debug.level.558543350" name="Generate Debugging Info" superClass="de.innot.avreclipse.compiler.option.debug.level"/>
 <option id="de.innot.avreclipse.compiler.option.optimize.2069111884" name="Optimization Level" superClass="de.innot.avreclipse.compiler.option.optimize" value="de.innot.avreclipse.compiler.optimize.size" valueType="enumerated"/>
 <option id="de.innot.avreclipse.compiler.option.optimize.other.1521319782" name="Other Optimization Flags" superClass="de.innot.avreclipse.compiler.option.optimize.other" value="-ffreestanding -fno-tree-scev-cprop -ffunction-sections -fdata-sections -mcall-prologues -fvtable-gc -static" valueType="string"/>
+<option id="de.innot.avreclipse.compiler.option.incpath.1872496247" name="Include Paths (-I)" superClass="de.innot.avreclipse.compiler.option.incpath" valueType="includePath">
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/avr_utils/tcpip/drivers/enc28j60}&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/avr_utils/tcpip/drivers/interfaces}&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/avr_utils/tcpip/uip}&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/avr_utils/tcpip/atmega}&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/avr_utils/tcpip/apps/simple-httpd}&quot;"/>
+</option>
 <inputType id="de.innot.avreclipse.compiler.winavr.input.1258366662" name="C Source Files" superClass="de.innot.avreclipse.compiler.winavr.input"/>
 </tool>
 <tool id="de.innot.avreclipse.tool.cppcompiler.lib.debug.1186955000" name="AVR C++ Compiler" superClass="de.innot.avreclipse.tool.cppcompiler.lib.debug">
@@ -51,7 +58,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="tcpip|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/apps|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="tcpip/uip-split.h|tcpip/uip-split.cpp|tcpip/apps/dhcpc|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -511,7 +518,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="tcpip|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/apps|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="tcpip/uip-split.h|tcpip/uip-split.cpp|tcpip/apps/dhcpc|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>

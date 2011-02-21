@@ -13,7 +13,7 @@
 
 static ESerial* instance;
 
-ESerial::ESerial(uint16_t baud):
+ESerial::ESerial():
 		Resource(),
 		buffer_size(0),
 		body_started(false),
@@ -24,40 +24,6 @@ ESerial::ESerial(uint16_t baud):
 
 	buffer.length = 0;
 	buffer.text = 0;
-
-	uint16_t baud_setting;
-	bool use_u2x;
-
-	// U2X mode is needed for baud rates higher than (CPU Hz / 16)
-	if (baud > F_CPU / 16) {
-	use_u2x = true;
-	} else {
-	// figure out if U2X mode would allow for a better connection
-
-	// calculate the percent difference between the baud-rate specified and
-	// the real baud rate for both U2X and non-U2X mode (0-255 error percent)
-	uint8_t nonu2x_baud_error = abs((int)(255-((F_CPU/(16*(((F_CPU/8/baud-1)/2)+1))*255)/baud)));
-	uint8_t u2x_baud_error = abs((int)(255-((F_CPU/(8*(((F_CPU/4/baud-1)/2)+1))*255)/baud)));
-
-	// prefer non-U2X mode because it handles clock skew better
-	use_u2x = (nonu2x_baud_error > u2x_baud_error);
-	}
-
-	if (use_u2x) {
-	UCSR0A = _BV(U2X0);
-	baud_setting = (F_CPU / 4 / baud - 1) / 2;
-	} else {
-	UCSR0A = 0;
-	baud_setting = (F_CPU / 8 / baud - 1) / 2;
-	}
-
-	// assign the baud_setting, a.k.a. ubbr (USART Baud Rate Register)
-	UBRR0H = baud_setting >> 8;
-	UBRR0L = baud_setting;
-
-	UCSR0B |= _BV(RXCIE0) + _BV(TXEN0) + _BV(RXEN0);
-
-	Debug::println("Waiting...");
 
 }
 
@@ -94,12 +60,6 @@ void ESerial::receive(uint8_t c)
 	schedule(ASAP);
 }
 
-
-void ESerial::write(uint8_t c)
-{
-  loop_until_bit_is_set(UCSR0A, UDRE0);
-  UDR0 = c;
-}
 
 void ESerial::run(void)
 {
@@ -172,12 +132,16 @@ void ESerial::run(void)
 
 			if(request->deserialize(message, message.text))
 			{
+
 				Debug::print("Parsing failed");
+
 				delete request;
 			}
 			else
 			{
+
 				Debug::println("Request sent");
+
 				send(request);
 			}
 
@@ -207,10 +171,12 @@ void ESerial::run(void)
 
 Response::status_code ESerial::process(Response* response, Message** return_message)
 {
+
 	Debug::print(response->response_code_int, DEC);
 	Debug::print("  "); //2 spaces because we do not display the reason phrase
 	Debug::print("HTTP/");
 	Debug::println(response->http_version, DEC);
+
 
 	char buffer[10];
 	string<MESSAGE_SIZE> body;
@@ -229,6 +195,7 @@ Response::status_code ESerial::process(Response* response, Message** return_mess
 
 		Debug::println();
 	}
+	response->body_file->close();
 	delete response;
 
 	return OK_200;
@@ -239,14 +206,5 @@ ISR(USART_RX_vect)
 	instance->receive(UDR0);
 }
 
-void Debug::print(char c)
-{
-	instance->write(c);
-}
-void Debug::println()
-{
-	print("\r");
-	print("\n");
-}
 
 

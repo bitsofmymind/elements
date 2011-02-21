@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <avr/io.h>
 
-#include <global-conf.h>
-#include <uip_arp.h>
-#include <interfaces/network.h>
-#include <enc28j60/enc28j60.h>
+#include "global-conf.h"
+#include "uip_arp.h"
+#include "network.h"
+#include "drivers/enc28j60/enc28j60.h"
 
-#include <timer.h>
-#include <clock-arch.h>
+#include "timer.h"
+#include "clock-arch.h"
 
 #include <string.h>
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])

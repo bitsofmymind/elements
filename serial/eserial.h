@@ -27,7 +27,7 @@ class ESerial: public Resource
 	uptime_t timeout;
 
 	public:
-		ESerial(uint16_t baud);
+		ESerial();
 
 		void receive(uint8_t c);
 		void write(uint8_t c);
@@ -37,7 +37,5 @@ class ESerial: public Resource
 		virtual Response::status_code process(Response* response, Message** return_message);
 
 };
-
-void print(char c);
 
 #endif /* ESERIAL_H_ */

@@ -17,7 +17,7 @@
 //
 //*****************************************************************************
 
-#include "global-conf.h"
+#include "../../global-conf.h"
 #include <avr/io.h>
 #include <util/delay.h>
 #include "global.h"
