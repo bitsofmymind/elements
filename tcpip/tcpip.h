@@ -15,8 +15,10 @@
 class TCPIPStack: public Resource
 {
 	private:
-	uip_ipaddr_t ipaddr;
-	struct timer periodic_timer, arp_timer;
+		uip_ipaddr_t ipaddr;
+		//struct timer periodic_timer, arp_timer;
+		uptime_t periodic_timer;
+		uptime_t arp_timer;
 
 	public:
 		TCPIPStack();

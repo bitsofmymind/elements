@@ -16,20 +16,22 @@
 #include "network.h"
 #include "drivers/enc28j60/enc28j60.h"
 
-#include "clock-arch.h"
+//#include "clock-arch.h"
 
 #include <string.h>
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])
 
 TCPIPStack::TCPIPStack():
-	Resource()
+	Resource(),
+	periodic_timer(0),
+	arp_timer(0)
 {
 	network_init();
 
-	clock_init();
+	//clock_init();
 
-	timer_set(&periodic_timer, CLOCK_SECOND / 2);
-	timer_set(&arp_timer, CLOCK_SECOND * 10);
+	//timer_set(&periodic_timer, CLOCK_SECOND / 2);
+	//timer_set(&arp_timer, CLOCK_SECOND * 10);
 
 	uip_init();
 
@@ -79,7 +81,7 @@ void TCPIPStack::run(void)
 		}
 
 	}
-	else if(timer_expired(&periodic_timer))
+	/*else if(timer_expired(&periodic_timer))
 	{
 		timer_reset(&periodic_timer);
 
@@ -96,6 +98,26 @@ void TCPIPStack::run(void)
 		if(timer_expired(&arp_timer))
 		{
 			timer_reset(&arp_timer);
+			uip_arp_timer();
+		}
+	}*/
+
+	else if(periodic_timer <= get_uptime() )
+	{
+		periodic_timer = get_uptime() + 500;
+		for(uint8_t i = 0; i < UIP_CONNS; i++)
+		{
+			uip_periodic(i);
+			if(uip_len > 0)
+			{
+				uip_arp_out();
+				network_send();
+			}
+		}
+
+		if( arp_timer <= get_uptime() )
+		{
+			arp_timer = get_uptime() + 10000;
 			uip_arp_timer();
 		}
 	}
