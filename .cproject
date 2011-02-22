@@ -58,7 +58,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="tcpip/timer.h|tcpip/timer.cpp|tcpip/clock-arch.h|tcpip/clock-arch.cpp|tcpip/clock.h|tcpip/uip-split.h|tcpip/uip-split.cpp|tcpip/apps/dhcpc|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="tcpip/simple-httpd.cpp|tcpip/apps-conf.h|tcpip/timer.h|tcpip/timer.cpp|tcpip/clock-arch.h|tcpip/clock-arch.cpp|tcpip/clock.h|tcpip/uip-split.h|tcpip/uip-split.cpp|tcpip/apps/dhcpc|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>
@@ -518,7 +518,7 @@
 </toolChain>
 </folderInfo>
 <sourceEntries>
-<entry excluding="tcpip/timer.h|tcpip/timer.cpp|tcpip/clock-arch.h|tcpip/clock-arch.cpp|tcpip/clock.h|tcpip/uip-split.h|tcpip/uip-split.cpp|tcpip/apps/dhcpc|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+<entry excluding="tcpip/simple-httpd.cpp|tcpip/apps-conf.h|tcpip/timer.h|tcpip/timer.cpp|tcpip/clock-arch.h|tcpip/clock-arch.cpp|tcpip/clock.h|tcpip/uip-split.h|tcpip/uip-split.cpp|tcpip/apps/dhcpc|tcpip/doc|tcpip/uip/uip-split.h|tcpip/uip/uip-split.cpp|tcpip/uip/pt.h|tcpip/uip/psock.h|tcpip/uip/psock.cpp|tcpip/avr|tcpip/avr-uip|sd_mmc/main.cpp|sd_mmc/mmc.cpp|usart.h|usart.cpp|spi.h|spi.cpp|setup.h|sd.h|sd.cpp|interrupts.h|crc.h" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 </sourceEntries>
 </configuration>
 </storageModule>

@@ -104,7 +104,7 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_UDP_CONNS		0
 
 //Include app configuration
-#include "apps-conf.h"
+#include "app.h"
 
 #endif /* __UIP_CONF_H__ */
 

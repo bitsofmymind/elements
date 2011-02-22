@@ -5,10 +5,6 @@
 #include "simple-httpd.h"
 static int handle_connection(struct simple_httpd_state *s);
 
-void simple_httpd_init(void)
-{
-	uip_listen(HTONS(80));
-}
 
 void simple_httpd_appcall(void)
 {
