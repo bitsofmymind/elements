@@ -21,11 +21,15 @@ class TCPIPStack: public Resource
 
 		uint8_t counter;
 
+		List<Response> to_send;
+
 	public:
 		TCPIPStack();
 
 		virtual void run(void);
 		void appcall(void);
+
+		virtual Response::status_code process(Response* response, Message** return_message);
 
 };
 

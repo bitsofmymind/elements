@@ -14,11 +14,15 @@ class Blinker: public Resource
 {
 	uint32_t _interval;
 	uint8_t _pin;
+	bool state;
 	volatile uint8_t* _port;
 
 	public:
 		Blinker(uint32_t interval, uint8_t pin, volatile uint8_t* ddr, volatile uint8_t* port);
-	void run(void);
+		virtual void run(void);
+		virtual File<MESSAGE_SIZE>* render( Request* request );
+		virtual Response::status_code process( Request* request, Message** return_message );
+
 };
 
 class BusyBlinker: public Resource

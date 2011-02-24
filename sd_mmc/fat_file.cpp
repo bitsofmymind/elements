@@ -20,14 +20,14 @@ FATFile::~FATFile()
 	ts_free(name);
 }
 
-uint16_t FATFile::read(string<uint16_t>* buffer, bool async)
+uint16_t FATFile::read(char* buffer, uint16_t length, bool async)
 {
 	uint16_t bytes_read;
-	last_op_result = f_read(&file, buffer->text, buffer->length, &bytes_read);
+	last_op_result = f_read(&file, buffer, length, &bytes_read);
 	cursor += bytes_read;
 	return bytes_read;
 }
-uint16_t FATFile::write(string<uint16_t>* buffer, bool async)
+uint16_t FATFile::write(const char* buffer, uint16_t length,  bool async)
 {
 	return 0;
 }

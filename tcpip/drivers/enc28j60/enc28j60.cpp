@@ -21,7 +21,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "global.h"
-//#include "timer.h"	//Note have been replaced with _delay_us() as this is more convient
+#include <pal/pal.h>
 
 #include "enc28j60.h"
 

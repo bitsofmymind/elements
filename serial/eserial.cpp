@@ -189,7 +189,7 @@ Response::status_code ESerial::process(Response* response, Message** return_mess
 		MESSAGE_SIZE read;
 		do
 		{
-			read = response->body_file->read(&body, false);
+			read = response->body_file->read(body.text, body.length, false);
 			Debug::print(body.text, read);
 		} while(read == 10);
 

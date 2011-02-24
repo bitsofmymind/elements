@@ -22,8 +22,8 @@ class FATFile: public File<uint16_t>
 	FATFile(char* name);
 	~FATFile();
 
-	virtual uint16_t read(string<uint16_t>* buffer, bool async);
-	virtual uint16_t write(string<uint16_t>* buffer, bool async);
+	virtual uint16_t read(char* buffer, uint16_t length, bool async);
+	virtual uint16_t write(const char* buffer, uint16_t length,  bool async);
 	virtual int8_t open(void);
 	virtual void close(void);
 };

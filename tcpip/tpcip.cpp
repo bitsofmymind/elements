@@ -16,9 +16,8 @@
 #include "uip_arp.h"
 #include "network.h"
 #include "drivers/enc28j60/enc28j60.h"
-#include "psock.h"
 
-//#include "clock-arch.h"
+#include <core/request.h>
 
 #include <string.h>
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])
@@ -110,29 +109,116 @@ void TCPIPStack::appcall(void)
 {
 	struct elements_app_state *s = &(uip_conn->appstate);
 
-	string<uint8_t> txt = MAKE_STRING("HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\ncounter is 0");
+	//string<uint8_t> txt = MAKE_STRING("HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\ncounter is 0");
 
-	txt.text[txt.length - 1] = counter++ + 42;
+	//txt.text[txt.length - 1] = counter++ + 42;
+
+	if(uip_aborted())
+	{
+		Debug::println("Aborted");
+	}
+	if(uip_timedout())
+	{
+		Debug::println("Timedout");
+	}
+	if(uip_closed())
+	{
+		Debug::println("Closed");
+	}
+
+	if(uip_closed() || uip_timedout() || uip_aborted())
+	{
+
+	}
 
 	if(uip_connected())
 	{
 		Debug::println("Connection made");
-		s->dataleft = txt.length;
-		s->dataptr = txt.text;
+		/*s->dataleft = txt.length;
+		s->dataptr = txt.text;*/
+		s->buffer.length = 0;
+		s->body_sent = false;
 	}
 
 	if(uip_newdata())
 	{
-		Debug::println("Receiving request");
-		for(uint16_t i = 3; i < uip_datalen(); i++)
+		if(s->buffer.length)
 		{
-			if(((char*)uip_appdata)[i - 3] == '\r' &&
+
+			//char* ptr = (char*)ts_realloc(s->request, s->sz);
+			/*Realloc appears to be causing a failure in memory allocation as sucessive reallocs and frees
+			 * will not yield to symmetrical adresses. There is bug with realloc
+			 * (http://www.mail-archive.com/avr-libc-dev@nongnu.org/msg03679.html)*/
+		}
+		else
+		{
+			for(uint16_t i = 1; i < uip_datalen(); i++)
+			{
+				if(	((char*)uip_appdata)[i - 1] == '\r' &&
+					((char*)uip_appdata)[i] == '\n')
+				{
+					Debug::println("Request received");
+					i += 3; //To add the \r\n and one because we will use i as a length;
+					s->buffer.text = (char*)ts_malloc(i);
+					if(!s->buffer.text)
+					{
+						break;
+					}
+					memcpy(s->buffer.text, uip_appdata, i - 2);
+					s->buffer.length = i;
+					s->buffer.text[i - 2] = '\r';
+					s->buffer.text[i - 1] = '\n';
+
+					return;
+				}
+			}
+			uip_abort();
+			return;
+
+		}
+
+
+		for(uint16_t i = 0; i < uip_datalen(); i++)
+		{
+			Debug::print(((char*)uip_appdata)[i]);
+
+			if(i > 2 &&
+				((char*)uip_appdata)[i - 3] == '\r' &&
 				((char*)uip_appdata)[i - 2] == '\n' &&
 				((char*)uip_appdata)[i - 1] == '\r' &&
 				((char*)uip_appdata)[i] == '\n')
 			{
-				Debug::println("request complete");
-				uip_send(s->dataptr, s->dataleft);
+
+
+				Debug::print("request: ");
+				Debug::print(s->buffer.length, DEC);
+				Debug::print(" ");
+				Debug::println(s->buffer.text, s->buffer.length);
+
+				Request* request = new Request();
+
+				if (!request)
+				{
+
+				}
+				else if(request->deserialize(s->buffer, s->buffer.text))
+				{
+					Debug::println("deserialization failed");
+				}
+				else if(send(request))
+				{
+
+				}
+				else
+				{
+
+					break;
+				}
+				delete request;
+				uip_abort();
+				break;
+
+
 			}
 		}
 	}
@@ -141,16 +227,72 @@ void TCPIPStack::appcall(void)
 	{
 		Debug::println("ack");
 
-		if(s->dataleft < uip_mss())
+		if(!s->body_sent)
 		{
-		  uip_close();
-		  return;
+			if(s->dataleft < uip_mss())
+			{
+				ts_free(s->dataptr);
+				s->body_sent = true;
+				goto next;
+			}
+			s->dataptr += uip_conn->len;
+			s->dataleft -= uip_conn->len;
+			uip_send(s->dataptr, s->dataleft);
 		}
-		s->dataptr += uip_conn->len;
-		s->dataleft -= uip_conn->len;
-		uip_send(s->dataptr, s->dataleft);
-	}
+		else
+		{
+			next:
 
+			uint16_t len = s->body->read((char*)uip_appdata, uip_mss(), true);
+			Debug::print(len, DEC);
+			Debug::print(" ");
+			Debug::print(s->body->cursor, DEC);
+			Debug::print(" ");
+			Debug::println(s->body->size, DEC);
+			if(!len)
+			{
+				uip_close();
+				delete s->body;
+				return;
+			}
+			uip_send(uip_appdata, len);
+		}
+	}
+	if(uip_rexmit())
+	{
+		Debug::println("rexmit");
+	}
+	if(uip_poll())
+	{
+		Debug::println("poll");
+		for(uint8_t i = 0; i < to_send.items; i++ )
+		{
+			if(to_send[i]->original_request->message.text == s->buffer.text)
+			{
+				Debug::println("replying");
+				Response* response = to_send.remove(i);
+				s->dataleft = response->get_message_length();
+				s->dataptr = (char*)ts_malloc(s->dataleft);
+				if(!s->dataptr)
+				{
+					uip_abort();
+				}
+				else
+				{
+					response->serialize(s->dataptr);
+					s->body = response->body_file;
+					Debug::print(s->body->cursor, DEC);
+					Debug::print(" ");
+					Debug::println(s->body->size, DEC);
+					response->body_file = NULL;
+					uip_send(s->dataptr, s->dataleft);
+				}
+
+				delete response;
+				break;
+			}
+		}
+	}
 
 	Debug::println("ret");
 }
@@ -160,4 +302,17 @@ void elements_appcall(void)
 	stack->appcall();
 }
 
+Response::status_code TCPIPStack::process(Response* response, Message** return_message)
+{
+
+	if(response->to_url->cursor >=  response->to_url->resources.items)
+	{
+		Debug::print("msg came");
+		to_send.append(response);
+		Debug::println(" back!");
+		return OK_200;
+	}
+
+	return PASS_308;
+}
 
