@@ -57,6 +57,8 @@ class Request: public Message
 			virtual char serialize( char* buffer );
 		#endif
 		virtual MESSAGE_SIZE get_message_length(void);
+
+		bool methodcmp(const char* m, uint8_t len);
 };
 
 #endif /* REQUEST_H_ */

@@ -145,8 +145,9 @@ MESSAGE_SIZE Message::get_message_length(void)
 			 + 2; //For CLRF
 	}
 
-	size += 2 /*ForCLRF between the fields and the body*/ \
-		+ body_file->size;
+	size += 2; /*ForCLRF between the fields and the body*/
+	/*The size of the body is not included here for the simple reason that in the case of dynamic pages,
+	 * we most of the time do not know the size of the body in advance.*/
 
 	return size;
 }
@@ -180,8 +181,8 @@ char Message::serialize( char* buffer )
 	*buffer++ = '\r';
 	*buffer++ = '\n';
 	//buffer += body.copy(buffer);
-	*buffer = '\0'; //So we can print the message to cout
-	message.length++;
+	//*buffer = '\0'; //So we can print the message to cout
+	//message.length++;
 	return 0;
 }
 

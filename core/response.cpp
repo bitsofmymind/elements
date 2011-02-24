@@ -12,6 +12,9 @@
 //#include "../elements.h"
 #include <pal/pal.h>
 #include <stdint.h>
+#ifndef ITOA
+#include <cstdio>
+#endif
 
 using namespace Elements;
 
@@ -21,8 +24,8 @@ using namespace Elements;
 		Debug::print("% Response: ");
 		Debug::print(" HTTP/");
 		Debug::print(http_version, DEC);
-		Debug::print(response_code_int, DEC);
-		Debug::println(" ");
+		Debug::print(" ");
+		Debug::println(response_code_int, DEC);
 		Message::print();
 	}
 #endif
@@ -111,10 +114,12 @@ char Response::serialize( char* buffer)
 	*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
 	*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '1';
 	*buffer++ = ' ';
-
-	//buffer += response_code.copy(buffer);
-	*buffer++ = ' ';
-	//buffer += reason_phrase.copy(buffer);
+#ifdef ITOA
+	itoa(response_code_int, buffer, 10);
+#else
+	sprintf(buffer, "%d", response_code_int);
+#endif
+	buffer += 3; // for the response code
 	*buffer++ = '\r';
 	*buffer++ = '\n';
 

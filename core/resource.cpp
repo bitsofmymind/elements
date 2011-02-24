@@ -48,86 +48,80 @@ void Resource::visit(void)
 	}
 }
 
-Resource* Resource::find_resource( URL* url )
+Message* Resource::dispatch( Message* message )
 {
-	string<uint8_t>* name = url->resources[url->cursor];
 
-	if(name->text[0] == '.')
+	string<uint8_t>* name;
+
+	while(message->to_url->cursor < message->to_url->resources.items)
 	{
-		if(name->text[1] == '.' && name->length == 2 )
+		name = message->to_url->resources[message->to_url->cursor];
+
+		if(name->text[0] == '.')
 		{
-			return parent;
+			if(name->text[1] == '.' && name->length == 2 )
+			{
+				message->to_url->cursor++;
+				if(parent)
+				{
+					return parent->dispatch(message);
+				}
+				return error(404, message);
+			}
+			if(name->length == 1)
+			{
+				message->to_url->cursor++;
+				continue;
+			}
 		}
-		if(name->length == 1)
-		{
-			return this;
-		}
+		break;
+
 	}
 
-	if(!children)
-	{
-		return NULL;
-	}
 
-	return (Resource*)children->find( *name );
-}
+	Response::status_code sc;
+	Message* return_message = NULL;
 
-Message* Resource::dispatch( Message* message)
-{
-	/*string<uint8_t>* resource_name = message->to_url->resources[message->to_url->cursor];
-	message->to_url->cursor++;
-	if( resource_name == NULL )
+	if(message->object_type == Message::REQUEST)
 	{
-		if( message->object_type == Message::REQUEST)
-		{
-			return process( (Request*) message );
-		}
-		return process( (Response*)message);
-	}
-	if( resource_name->text[0] == '.' && resource_name->text[1] == '.' && resource_name->length == 2 )
-	{
-		if( !message->to_url->is_absolute_path)
-		{
-			message->from_url->resources.append(message->to_url->resources[message->to_url->cursor - 2 ]);
-		}
-		return message;
-	}
-	if( resource_name->text[0] == '.' && resource_name->length == 1 )
-	{
-		return dispatch(message); //RISK OF STACK OVERFLOW IF THERE IS TOO MUCH /./././././././././.
-	}*/
 
-
-	/*f( !message->to_url->is_absolute_path)
-	{
-		message->from_url->resources.append(&parent_resource);
-	}
-	Resource* child_resource = find_resource( resource_name );*/
-
-	if(message->to_url->cursor >= message->to_url->resources.items)
-	{
-		if( message->object_type == Message::REQUEST)
-		{
-			return process( (Request*) message );
-		}
-		return process( (Response*)message);
-	}
-
-	Resource* next = find_resource( message->to_url);
-	message->to_url->cursor++;
-
-	if(next == this)
-	{
-		return dispatch(message);
-	}
-	if(next == NULL )
-	{
-		return error(NOT_FOUND_404, message);
+		sc = process((Request*)message, &return_message);
 	}
 	else
 	{
-		message = next->dispatch(message);
+		sc = process((Response*)message, &return_message);
 	}
+
+
+	switch(sc)
+	{
+		case OK_200:
+			break;
+		case PASS_308:
+			if(children)
+			{
+				if(message->to_url->cursor < message->to_url->resources.items)
+				{
+					Resource* next = children->find( *(message->to_url->resources[message->to_url->cursor++]) );
+					if(next)
+					{
+						return next->dispatch(message);
+					}
+				}
+			}
+			sc = NOT_FOUND_404;
+			return_message = NULL;
+			//No break here
+		default:
+			if(!return_message)
+			{
+				//PROBLEM! = Message is not necessarily a Request
+				return_message = error(sc, (Request*)message);
+			}
+	}
+
+
+	return return_message;
 }
 
 uint8_t Resource::send(Message* message)
@@ -196,41 +190,49 @@ Resource* Resource::remove_child(string<uint8_t> name)
 	return orphan;
 }
 
-/*string<uint8_t> get_method = MAKE_STRING("get");
-string<uint8_t> head_method = MAKE_STRING("head");
-string<uint8_t> trace_method = MAKE_STRING("trace");*/
-
-Response* Resource::process( Request* request )
+Response::status_code Resource::process( Request* request, Message** return_message )
 {
-	#ifdef DEBUG
-		print_transaction(request);
-	#endif
 
-	//if( request->method == get_method)
-	if(request->method.length == 3 && !memcmp("get", request->method.text, 3))
+	if(request->to_url->cursor >=  request->to_url->resources.items)
 	{
-		return http_get( request );
-	}
-	//else if( request->method == head_method )
-	else if(request->method.length == 4 &&!memcmp("head", request->method.text, 4))
-	{
-		return http_head( request );
-	}
-	//else if( request->method == trace_method )
-	else if(request->method.length == 5 &&!memcmp("trace", request->method.text, 5))
-	{
-		return http_trace( request );
+		#ifdef DEBUG
+			print_transaction(request);
+		#endif
+		if(request->methodcmp("get", 3))
+		{
+			 *return_message = http_get( request );
+		}
+		else if(request->methodcmp("head", 4))
+		{
+			*return_message = http_head( request );
+		}
+		else if(request->methodcmp("trace", 5))
+		{
+			*return_message = http_trace( request );
+		}
+		else
+		{
+			return NOT_IMPLEMENTED_501;
+		}
+
+		return ((Response*)(*return_message))->response_code_int;
 	}
 
-	return error(NOT_IMPLEMENTED_501, request);
+	return PASS_308;
+
 }
 
-Message* Resource::process(Response* response)
+Response::status_code Resource::process(Response* response, Message** return_message)
 {
-	#ifdef DEBUG
-		print_transaction(response);
-	#endif
-	return NULL;
+	if(response->to_url->cursor >=  response->to_url->resources.items)
+	{
+		#ifdef DEBUG
+			print_transaction(response);
+		#endif
+		delete response;
+		return OK_200;
+	}
+	return PASS_308;
 }
 
 #ifdef DEBUG
@@ -271,10 +273,10 @@ Response* Resource::http_head(Request* request)
 {
 	Response* response =  new Response(OK_200, request );
 	//response->body = render( request );
-	/*string< uint8_t >* content_type = ( string< uint8_t >* )ts_malloc( sizeof( string< uint8_t > ) );
-	content_type->length = sizeof("text/html");
+	string< uint8_t >* content_type = ( string< uint8_t >* )ts_malloc( sizeof( string< uint8_t > ) );
+	content_type->length = sizeof("text/html") - 1;
 	content_type->text = (char*)"text/html";
-	response->fields.add(Message::CONTENT_TYPE, content_type);*/
+	response->fields.add(Message::CONTENT_TYPE, content_type);
 	return response;
 }
 
@@ -287,7 +289,7 @@ Response* Resource::http_trace( Request* request )
 	char* content = ( char* )ts_malloc(13);
 	content = (char*)"message/http";
 	value->text = content;
-	value->length = sizeof( "message/http");
+	value->length = sizeof("message/http") - 1;
 	response->fields.add( Message::CONTENT_TYPE, value );
 	return response;
 }
@@ -337,7 +339,7 @@ File<MESSAGE_SIZE>* Resource::render( Request* request )
 	//string<MESSAGE_SIZE> buffer = MAKE_STRING("<html><body>There are currently no representation associated with this resource.</body></html>");
 	//const char* cmsg = "<html><body>There are currently no representation associated with this resource.</body></html>";
 	//char* msg = (char*)malloc(sizeof("<html><body>There are currently no representation associated with this resource.</body></html>"));
-	return new ConstFile<MESSAGE_SIZE>("//");//string<MESSAGE_SIZE>::make("//");
+	return new ConstFile<MESSAGE_SIZE>("<html><body>There are currently no representation associated with this resource.</body></html>");
 }
 
 Resource* Resource::get_next_child_to_visit(void)

@@ -79,6 +79,16 @@ void ts_free(void* block)
 	}
 }
 
+void* ts_realloc(void* ptr, size_t size)
+{
+	void* block;
+	ATOMIC
+	{
+		block = realloc(ptr, size);
+	}
+	return block;
+}
+
 /*
 It would be a great idea to build a bunch of functions for elements to register with interrupts, EEPROM adresses and system registers. The problem, there is no memory security
 ( at least on the AVR) to begin with and keeping track of who owns what memory appears to be too resource intensive for now.
@@ -100,7 +110,7 @@ bool unregister_interrupt_handler( void ( *handler_pointer )( void ), void* vect
 	return false;
 }
 */
-
+#ifdef DEBUG
 void printNumber(uint32_t n, uint8_t base)
 {
   unsigned char buf[8 * sizeof(int32_t)]; // Assumes 8-bit chars.
@@ -231,3 +241,4 @@ void Debug::println(uint32_t n, uint8_t base)
 	Debug::print(n, base);
 	Debug::println();
 }
+#endif

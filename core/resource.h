@@ -51,10 +51,8 @@ class Resource
 		virtual uptime_t get_sleep_clock( void );
         string<uint8_t>* get_name(Resource* resource);
 
-		virtual Resource* find_resource( URL* url );
-
-		virtual Response* process( Request* request );
-		virtual Message* process( Response* response );
+        virtual Response::status_code process( Request* request, Message** return_message );
+        virtual Response::status_code process( Response* response, Message** return_message );
 
 		virtual Response* http_get(Request* request);
 		Response* http_head(Request* request);

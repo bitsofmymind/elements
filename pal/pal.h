@@ -49,6 +49,7 @@ extern void processing_sleep(uptime_t time);
 
 void* ts_malloc(size_t size);
 void ts_free(void* block);
+void* ts_realloc(void* ptr, size_t size);
 
 #ifdef MULTITHREADING
 	void lock();
@@ -65,7 +66,7 @@ void ts_free(void* block);
 #define BIN 2
 #define BYTE 0
 
-
+#ifdef DEBUG
 namespace Debug
 {
 	extern void print(char);
@@ -91,5 +92,5 @@ namespace Debug
 	void println(uint32_t, uint8_t = DEC);
 	//void println(double, int = 2);
 }
-
+#endif
 #endif /* PAL_H_ */

@@ -27,8 +27,9 @@ template<class T> class File//: public Device<T>
 		T size;
 		T cursor;
 
-		virtual T read(string<T>* buffer, bool async) = 0;
-		virtual T write(string<T>* buffer, bool async) = 0;
+		virtual T read(char* buffer, T length, bool async) = 0;
+		T extract(char* buffer);
+		virtual T write(const char* buffer, T length, bool async) = 0;
 		virtual int8_t open(void) = 0;
 		virtual void close(void) = 0;
 };
@@ -42,10 +43,11 @@ template<class T> class ConstFile: public File<T>
 		ConstFile(const char* data);
 		ConstFile(const char* data, T length);
 
-		virtual T read(string<T>* buffer, bool async);
-		virtual T write(string<T>* buffer, bool async);
+		virtual T read(char* buffer, T length, bool async);
+		virtual T write(const char* buffer, T length, bool async);
 		virtual int8_t open(void);
 		virtual void close(void);
 };
+
 
 #endif //FILE_H_

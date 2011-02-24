@@ -13,6 +13,7 @@
 #include "url.h"
 #include <stdint.h>
 #include <pal/pal.h>
+#include <ctype.h>
 
 using namespace Elements;
 
@@ -65,7 +66,12 @@ char Request::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
 		{
 			return 1;
 		}
+		if(*index >= 'A' && *index <= 'Z')
+		{
+			*index += 32;
+		}
 		index++;
+
 	}
 
 	url.text = ++index;
@@ -74,22 +80,24 @@ char Request::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
 	url.length = to_url->url.length;
 	from_url->is_absolute_path = to_url->is_absolute_path;
 
-	while(*index++ != '\r')
+	index += to_url->url.length + 1; //Jumps to HTTP/1.x part
+
+	if(*index == 'H')
 	{
-		if(*index == 'H')
-		{
-			index += to_url->url.length + 1 + 5; //Jumps the URL, the space and 'HTTP/'
-			http_version = (*index++ - 48) * 10;
-			index++; //Skips the '.'
-			http_version += *index++ - 48;
-		}
-		else if (index > (buffer.text + buffer.length))
-		{
-			return 1;
-		}
+		index += 5; //Jumps the 'HTTP/'
+		http_version = (*index++ - 48) * 10;
+		index++; //Skips the '.'
+		http_version += *index++ - 48;
+	}
+	else
+	{
+		return 1;
 	}
 
-	index++; //skips \n (CRLF)
+	if(*index++ != '\r' || *index++ != '\n')
+	{
+		return 1;
+	}
 
 	return Message::deserialize( buffer, index );
 }
@@ -127,6 +135,11 @@ MESSAGE_SIZE Request::get_message_length(void)
 		return Message::serialize(buffer);
 	}
 #endif
+
+bool Request::methodcmp(const char * m, uint8_t len)
+{
+	return method.length == len && !memcmp(m, method.text, 3);
+}
 //const string< uint8_t > Request::ACCEPT = {"accept", 19};
 //const string< uint8_t > Request::ACCEPT_CHARSET = {"accept-string< uint8_t >set", 20};
 //const string< uint8_t > Request::ACCEPT_ENCODING = {"accept-encoding", 21};

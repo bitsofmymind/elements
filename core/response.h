@@ -21,7 +21,10 @@ class Response: public Message
 	public:
 
 		//STATUS CODES DEFINITIONS
+		typedef uint16_t status_code;
 		#define OK_200 200
+
+		#define PASS_308 308
 
 		#define BAD_REQUEST_400 400
 		#define NOT_FOUND_404 404
@@ -90,7 +93,7 @@ class Response: public Message
 //static const string<uint8_t> PARTIAL_CONTENT_REASON_PHRASE;
 //static const string<uint8_t> PARTIAL_CONTENT_CODE;
 
-//Redirection: 4xx
+//Redirection: 3xx
 //static const string<uint8_t> MULTIPLE_CHOICES_REASON_PHRASE;
 //static const string<uint8_t> MULTIPLE_CHOICES_CODE;
 //static const string<uint8_t> MOVED_PERMANENTLY_REASON_PHRASE;
