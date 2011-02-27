@@ -22,8 +22,7 @@ using namespace Elements;
 	void Response::print(void)
 	{
 		Debug::print("% Response: ");
-		Debug::print(" HTTP/");
-		Debug::print(http_version, DEC);
+		Debug::print(" HTTP/1.0");
 		Debug::print(" ");
 		Debug::println(response_code_int, DEC);
 		Message::print();
@@ -38,8 +37,7 @@ Response::Response(
 			original_request(_original_request)
 {
 	object_type = RESPONSE;
-
-	http_version = 0;
+	content_type = NULL;
 
 	if(_original_request != NULL)
 	{
@@ -67,63 +65,102 @@ Response::~Response()
 }
 
 #ifndef NO_RESPONSE_DESERIALIZATION
-	char Response::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
+	Message::PARSER_RESULT Response::parse_header(const char* line, MESSAGE_SIZE size)
 	{
-		//Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+		if(line[size - 2] != '\r' && line[size - 1] != '\n')
+		{
+			return LINE_INCOMPLETE;
+		}
 
-		index += 5; //Jumps HTTP/
+		if(!header.text)
+		{
+			header.text = (char*)ts_malloc(size - 2); /*We substract two because the
+			\r\n is implicit*/
+			if(!header.text)
+			{
+				return Message::OUT_OF_MEMORY;
+			}
+			header.length = size - 2;
+			memcpy(header.text, line , size - 2);
 
-		http_version = (*index++ - 48) * 10;
-		index++; //Skips the '.'
-		http_version += *index++ - 48;
+			/*We do not really care about the HTTP version here, in fact, we could avoir saving it entirely*/
 
-		index++; //Jumps the SP. Check in the specification if there can be more than one SP.
+			char* index = header.text;
 
-		response_code_int += (*index++ - 48) * 100;
-		response_code_int += (*index++ - 48) * 100;
-		response_code_int += *index++ - 48;
+			while(true)
+			{
+				if( *index == ' ' )
+				{
+					response_code_int = atoi(++index);
+					break;
+				}
+				else if (index > (header.text + header.length))
+				{
+					return HEADER_MALFORMED;
+				}
+				index++;
+			}
+			Message::PARSER_RESULT res = PARSING_SUCESSFUL;
 
-		index++; //jumps the response code and the following space.
-		//Check in the specification if there can be more than one SP.
+			/*We do not really care about the reason phrase here, in fact, we could avoir saving it entirely*/
 
-		while(*index != '\r' && *(index + 1) !='\n' ) {index++; } //Jumps the reason_phrase
+			return PARSING_SUCESSFUL;
+		}
 
-		index += 2; //skips \r\n (CRLF)
+		//Here we would parse for headers we want to keep
 
-		return Message::deserialize(buffer, index);
+		return Message::parse_header(line, size);
 	}
 #endif
 
-MESSAGE_SIZE Response::get_message_length(void)
+MESSAGE_SIZE Response::get_header_length(void)
 {
-	//The 3 and 5 are for 'HTTP/' and the version
-	return 5 /*For 'HTTP/'*/ \
-		+ 3 /*For the HTTP version*/ \
-		+ 1 /*For a space*/ \
-		+ 3 /*For the status code*/ \
-		+ 1 /*For a space*/ \
-		+ 2 /*For CLRF between header and fields*/ \
-		+ Message::get_message_length();
+	MESSAGE_SIZE length = 5 /*For 'HTTP/'*/ \
+			+ 3 /*For the HTTP version*/ \
+			+ 1 /*For a space*/ \
+			+ 3 /*For the status code*/ \
+			+ 1 /*For a space*/ \
+			+ 2 /*For CLRF between header and fields*/ \
+			+ Message::get_header_length();
 
-		//Reason phrase gets skipped
+	//Reason phrase gets skipped
+
+	if(content_type)
+	{
+		length += CONTENT_TYPE.length + 2 /*For ": "*/ + content_type->length + 2/*For \r\n*/;
+	}
+
+	return length;
 }
 
-char Response::serialize( char* buffer)
+void Response::serialize( char* buffer)
 {
 
 	*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
-	*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '1';
+	*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '0';
 	*buffer++ = ' ';
 #ifdef ITOA
 	itoa(response_code_int, buffer, 10);
 #else
 	sprintf(buffer, "%d", response_code_int);
 #endif
-	buffer += 3; // for the response code
+	buffer += 3; //Moved the pointer after the response code
 	*buffer++ = '\r';
 	*buffer++ = '\n';
 
-	return Message::serialize(buffer);
+	if(content_type)
+	{
+		CONTENT_TYPE.copy(buffer);
+		buffer += CONTENT_TYPE.length; //Moves the pointer after "Content-Type"
+		*buffer++ = ':';
+		*buffer++ = ' ';
+		content_type->copy(buffer);
+		buffer += content_type->length; //Moves the pointer after the content type
+		*buffer++ = '\r';
+		*buffer++ = '\n';
+	}
+
+	Message::serialize(buffer);
 }
 
 //STATUS CODE DEFINITIONS

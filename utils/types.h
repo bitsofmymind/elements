@@ -18,7 +18,7 @@ namespace Elements
 
 		static string<T> make( const char* str );
 		static string<T> convert(char* str);
-		T copy( char* destination );
+		T copy( char* destination ) const;
 
 		bool operator==( string<T>& right ) const;
 		char& operator[]( T index );
@@ -58,7 +58,7 @@ namespace Elements
 	};*/
 
 	template<class T>
-	T string<T>::copy(char* destination )
+	T string<T>::copy(char* destination ) const
 	{
 		for( T i = 0; i < length ; i++ )
 		{

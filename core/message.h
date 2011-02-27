@@ -24,6 +24,13 @@ class Message
 {
 	public:
 		enum TYPE { REQUEST, RESPONSE, UNKNOWN };
+		enum PARSER_RESULT { PARSING_COMPLETE,
+			PARSING_SUCESSFUL,
+			LINE_INCOMPLETE,
+			LINE_MALFORMED,
+			LINE_OVERFLOW,
+			HEADER_MALFORMED,
+			OUT_OF_MEMORY };
 
 		//General header fields
 		//static const string< uint8_t > CACHE_CONTROL;
@@ -39,13 +46,18 @@ class Message
 		//Entity header fields
 		//static const string< uint8_t > CONTENT_ENCODING;
 		//static const string< uint8_t > CONTENT_LANGUAGE;
-		//static const string< uint8_t > CONTENT_LENGTH;
+		static const string< uint8_t > CONTENT_LENGTH;
 		//static const string< uint8_t > CONTENT_LOCATION;
 		//static const string< uint8_t > CONTENT_MD5;
 		//static const string< uint8_t > CONTENT_RANGE;
 		static const Elements::string< uint8_t > CONTENT_TYPE;
 		//static const string< uint8_t > EXPIRES;
 		//static const string< uint8_t > LAST_MODIFIED;
+
+		typedef const string<uint8_t> mime;
+
+		static mime TEXT_HTML;
+		static mime MESSAGE_HTTP;
 
 		//Elements header fields
 		static const Elements::string< uint8_t > FROM_URL;
@@ -55,9 +67,10 @@ class Message
 
 		TYPE object_type;
 
-		Elements::string< MESSAGE_SIZE > message;
 		File<MESSAGE_SIZE>* body_file;
-		Dictionary< Elements::string<uint8_t> > fields;
+		MESSAGE_SIZE content_length;
+		string<uint8_t> header;
+		string<MESSAGE_SIZE> current_line;
 
 	public:
 		Message();
@@ -66,11 +79,18 @@ class Message
 		#ifdef DEBUG
 			virtual void print();
 		#endif
- 		virtual MESSAGE_SIZE get_message_length(void);
-		virtual char deserialize(Elements::string<MESSAGE_SIZE>& buffer, char* index );
-		char deserialize();
-		char serialize(void);
-		virtual char serialize( char* buffer );
+
+ 		virtual MESSAGE_SIZE get_header_length(void);
+
+		virtual void serialize( char* buffer );
+
+		Message::PARSER_RESULT parse(const char* buffer);
+		Message::PARSER_RESULT parse(const char* buffer, MESSAGE_SIZE size);
+		virtual Message::PARSER_RESULT parse_header(const char* line, MESSAGE_SIZE size);
+		//int8_t parse_body(const char* buffer);
+
+	protected:
+
 };
 
 #endif /* MESSAGE_H_ */

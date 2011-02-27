@@ -12,20 +12,22 @@
 #include "../utils/utils.h"
 #include "../utils/types.h"
 #include <pal/pal.h>
-
+#ifndef ITOA
+#include <cstdio>
+#endif
 
 using namespace Elements;
 
 #ifdef DEBUG
 	void Message::print()
 	{
-		for( uint8_t i = 0; i<fields.items ; i++)
+		/*for( uint8_t i = 0; i<fields.items ; i++)
 		{
 			Debug::print("   ");
 			Debug::print(fields[i]->key.text, fields[i]->key.length);
 			Debug::print(": ");
 			Debug::println(fields[i]->value->text, fields[i]->value->length);
-		}
+		}*/
 
 		Debug::print("   body: ");
 		if(body_file)
@@ -39,151 +41,230 @@ using namespace Elements;
 	}
 #endif
 
-Message::Message()
+Message::Message():
+		content_length(0)
 {
-	message.length = 0;
-	message.text = NULL;
 	body_file = NULL;
+	header.length = 0;
+	header.text = NULL;
+	current_line.length = 0;
 }
 Message::~Message()
 {
-	while(fields.items)
+	/*while(fields.items)
 	{
 		ts_free(fields.remove(fields[0]->key));
-	}
-	if(message.length)
+	}*/
+	if(header.length)
 	{
-		ts_free(message.text);
+		ts_free(header.text);
 	}
 	if(body_file)
 	{
 		delete body_file;
 	}
+	if(current_line.length)
+	{
+		ts_free(current_line.text);
+	}
 }
 
-char Message::deserialize(void)
+
+MESSAGE_SIZE Message::get_header_length(void)
 {
-	return deserialize( message, message.text );
-}
+	MESSAGE_SIZE size = 2; //For \r\n at end of the headers
 
-char Message::deserialize( string< MESSAGE_SIZE >& buffer, char* index )
-{
-	char* start = index;
-	string<uint8_t> name;
-	string<uint8_t>* value;
-	bool is_name = true;
-
-	for(;;)
+	if(content_length)
 	{
-		if( *index >= 'A' && *index <= 'Z' )
-		{
-			*index += 32;
-		}
-		else if( is_name && *index == ':' )
-		{
-			name.text = start;
-			name.length = index - start;
-			while(*++index == ' ');
-			start = index;
-			is_name = false;
-		}
-		else if(*index == '\r' && *(index + 1) == '\n' )
-		{
-			if(!is_name)
-			{
-				value = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
-				value->text = start;
-				value->length = index - start;
-				fields.add( name, value );
-			}
-			else
-			{
-				index -= 2;
-			}
+		/*itoa(content_length) will not produce more chars than the type that can
+		contain it plus a null termination.*/
+		#if MESSAGE_SIZE == uint16_t
+			char content_string[5 + 1];
+		#elif MESSAGE_SIZE == uint32_t
+			char content_string[10 + 1];
+		#elif MESSAGE_SIZE == uint64_t
+			char content_string[20 + 1];
+		#else
+			#error "MESSAGE_SIZE is of unknown type"
+		#endif
 
-			index += 2;
-			if( *index == '\r' && *(index + 1) == '\n' )
-			{
-				break;
-			}
-			start = index;
-			is_name = true;
-		}
-		else if(index >= (buffer.text + buffer.length))
-		{
-			return -1;
-		}
-		else
-		{
-				index++;
-		}
+		#ifdef ITOA
+			itoa(content_length, content_string, 10);
+		#else
+			sprintf(content_string, "%d", content_length);
+		#endif
+		size += CONTENT_LENGTH.length + 2/*For ": "*/+ strlen(content_string) + 2/*For \r\n*/;
+
 	}
-
-	index += 2; //Skips the '\r\n'
-	message = buffer;
-	MESSAGE_SIZE body_size = buffer.length - (index - buffer.text);
-	if( body_size > 0)
-	{
-		body_file = new ConstFile<MESSAGE_SIZE>(index, body_size);
-	}
-
-
-	return 0;
-}
-
-MESSAGE_SIZE Message::get_message_length(void)
-{
-	key_value_pair<string<uint8_t>*>* kv;
-	MESSAGE_SIZE size = 0;
-
-	for( uint8_t i = 0; i < fields.items; i++)
-	{
-		 kv = fields[i];
-		 size += kv->key.length \
-			 + 2 /*For ': '*/ \
-			 + kv->value->length \
-			 + 2; //For CLRF
-	}
-
-	size += 2; /*ForCLRF between the fields and the body*/
-	/*The size of the body is not included here for the simple reason that in the case of dynamic pages,
-	 * we most of the time do not know the size of the body in advance.*/
-
+	//Add fields here.
 	return size;
 }
 
-char Message::serialize(void)
+void Message::serialize( char* buffer )
 {
-	if(message.text != NULL )
+	if(content_length)
 	{
-		ts_free(message.text);
+		CONTENT_LENGTH.copy(buffer);
+		buffer += CONTENT_LENGTH.length; //Moves the pointer after "Content-Length"
+		*buffer++ = ':';
+		*buffer++ =' ';
+		#ifdef ITOA
+			itoa(content_length, buffer, 10);
+		#else
+			sprintf(buffer, "%d", content_length);
+		#endif
+		buffer += strlen(buffer); /*Moves the pointer after the length. The terminating
+		character gets discarded because strlen() does not count it.*/
 	}
 
-	message.length = get_message_length();
-	message.text = (char*)ts_malloc( message.length );
+	//Serialize other fields here
 
-	return serialize( message.text );
+	*buffer++ = '\r';
+	*buffer = '\n';
 }
 
-char Message::serialize( char* buffer )
+Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 {
-	key_value_pair<Elements::string<uint8_t>*>* kv;
+	MESSAGE_SIZE line_end = 1;
+	MESSAGE_SIZE line_start = 0;
 
-	for( uint8_t i = 0; i < fields.items; i++)
+
+	while(true)
 	{
-		 kv = fields[i];
-		 buffer += kv->key.copy(buffer);
-		 *buffer++ = ':'; *buffer++ = ' ';
-		 buffer += kv->value->copy(buffer);
-		 *buffer++ = '\r';
-		 *buffer++ = '\n';
+		if(data[line_end - 1] == '\r' && data[line_end] == '\n')
+		{
+			PARSER_RESULT res;
+			if(current_line.length)
+			{
+				//Part of a line was previously saved
+				char* line = (char*)ts_malloc(line_end + current_line.length);
+				//Stack allocation coud be used here.
+				if(!line)
+				{
+					return OUT_OF_MEMORY;
+				}
+				memcpy(line, current_line.text, current_line.length);
+				memcpy(line + current_line.length, data, line_end + 1);
+				ts_free(current_line.text);
+				res = parse_header(line, current_line.length + line_end + 1 );
+				ts_free(line);
+				current_line.length = 0;
+			}
+			else
+			{
+				res = parse_header(data + line_start, line_end - line_start + 1);
+			}
+
+			switch(res)
+			{
+				case PARSING_COMPLETE:
+
+					return PARSING_COMPLETE;
+					break;
+				case PARSING_SUCESSFUL:
+					line_start = ++line_end;
+					break;
+				default:
+					return res;
+			}
+		}
+		if(line_end == size)
+		{
+			if(line_start == line_end)
+			{
+				//The current line ended on the buffer's bounds, no need to save anything
+
+			}
+			else
+			{
+				/*The current line ends in the next buffer, we need to save the current line for the next call
+				 * to this method.*/
+				if(current_line.length) //The end of the line was not located within this buffer
+				{
+					char* line = (char*)ts_malloc(line_end + current_line.length);
+					if(!line)
+					{
+						return OUT_OF_MEMORY;
+					}
+					memcpy( line, current_line.text, current_line.length);
+					memcpy( line + current_line.length, data, size);
+					ts_free(current_line.text);
+					current_line.text = line;
+					current_line.length += size;
+				}
+				else
+				{
+					current_line.length = line_end - line_start;
+					current_line.text = (char*)ts_malloc(current_line.length);
+					if(!current_line.text)
+					{
+						return OUT_OF_MEMORY;
+					}
+					memcpy(current_line.text, data + line_start, current_line.length);
+				}
+			}
+			return PARSING_SUCESSFUL;
+		}
+		line_end++;
 	}
-	*buffer++ = '\r';
-	*buffer++ = '\n';
-	//buffer += body.copy(buffer);
-	//*buffer = '\0'; //So we can print the message to cout
-	//message.length++;
-	return 0;
+}
+
+Message::PARSER_RESULT Message::parse( const char* buffer )
+{
+
+	uint8_t line_size = 1;
+	Message::PARSER_RESULT res;
+
+	while(*++buffer != '\0')
+	{
+
+		if(*(buffer - 1) == '\r' && *buffer == '\n')
+		{
+			res = parse_header(buffer - line_size, line_size + 1);
+			if(res == PARSING_COMPLETE)
+			{
+				break;
+			}
+			if(res == PARSING_SUCESSFUL)
+			{
+				line_size = 0;
+				continue;
+			}
+			else
+			{
+				return res;
+			}
+		}
+		line_size++;
+	}
+
+	if(content_length)
+	{
+		//body present
+		body_file = new ConstFile<MESSAGE_SIZE>(buffer);
+	}
+
+	return PARSING_COMPLETE;
+}
+
+Message::PARSER_RESULT Message::parse_header(const char* line, MESSAGE_SIZE size)
+{
+	//Overrides of this method should have checked if the line was correcly formed
+	if(size == 2)
+	{
+		return PARSING_COMPLETE;
+	}
+
+	/*The content length line gets special treatment, for the rest of the fields, we should proceed normally
+	 * and store them in a buffer.*/
+	if(!strncmp(CONTENT_LENGTH.text, line, CONTENT_LENGTH.length)) //Could use memcmp
+	{
+		content_length = atoi(line + CONTENT_LENGTH.length + 2);
+	}
+
+	//Store fields in buffers
+
+	return PARSING_SUCESSFUL;
 }
 
 
@@ -199,12 +280,14 @@ char Message::serialize( char* buffer )
 
 //const string< uint8_t > Message::CONTENT_ENCODING = {"content-encoding", 10 };
 //const string< uint8_t > Message::CONTENT_LANGUAGE = {"content-language", 11 };
-//const string< uint8_t > Message::CONTENT_LENGTH = {"content-length", 12 };
+const string< uint8_t > Message::CONTENT_LENGTH = MAKE_STRING("Content-Length");
 //const string< uint8_t > Message::CONTENT_LOCATION = {"content-location", 13 };
 //const string< uint8_t > Message::CONTENT_MD5 = {"content-md5", 14 };
 //const string< uint8_t > Message::CONTENT_RANGE = {"content-range", 15 };
-const string< uint8_t > Message::CONTENT_TYPE = MAKE_STRING("content-type");
+const string< uint8_t > Message::CONTENT_TYPE = MAKE_STRING("Content-Type");
 //const string< uint8_t > Message::EXPIRES = {"expires", 17 };
 //const string< uint8_t > Message::LAST_MODIFIED = {"last-modified", 18 };
 //const string< uint8_t > Message::FROM_URL = {"from-url", 48 };
 
+Message::mime Message::TEXT_HTML = MAKE_STRING("text/html");
+Message::mime Message::MESSAGE_HTTP = MAKE_STRING("message/http");

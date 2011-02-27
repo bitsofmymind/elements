@@ -49,9 +49,9 @@ class Response: public Message
 	public:
 
 
-		uint8_t http_version;
-		uint16_t response_code_int;
 
+		uint16_t response_code_int;
+		mime* content_type;
 		Request* original_request;
 
 	public:
@@ -62,11 +62,11 @@ class Response: public Message
 			virtual void print();
 		#endif
 
-		virtual MESSAGE_SIZE get_message_length(void);
+		virtual MESSAGE_SIZE get_header_length(void);
 		#ifndef NO_RESPONSE_DESERIALIZATION
-			virtual char deserialize( Elements::string<MESSAGE_SIZE>& buffer, char* index );
+			virtual Message::PARSER_RESULT parse_header(const char* line, MESSAGE_SIZE size);
 		#endif
-		virtual char serialize(char* buffer);
+		virtual void serialize(char* buffer);
 
 };
 

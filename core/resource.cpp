@@ -266,6 +266,7 @@ Response* Resource::http_get(Request* request)
 {
 	Response* response =  http_head(request);
 	response->body_file = render( request );
+	response->content_length = response->body_file->size;
 	return response;
 }
 
@@ -273,24 +274,16 @@ Response* Resource::http_head(Request* request)
 {
 	Response* response =  new Response(OK_200, request );
 	//response->body = render( request );
-	string< uint8_t >* content_type = ( string< uint8_t >* )ts_malloc( sizeof( string< uint8_t > ) );
-	content_type->length = sizeof("text/html") - 1;
-	content_type->text = (char*)"text/html";
-	response->fields.add(Message::CONTENT_TYPE, content_type);
+	response->content_type = &Message::TEXT_HTML;
 	return response;
 }
 
 Response* Resource::http_trace( Request* request )
 {
 	Response* response = new Response(OK_200, request );
-	request->Message::serialize();
+	//request->Message::serialize();
 	//response->body = request->message;
-	string< uint8_t >* value = ( string< uint8_t >* )ts_malloc( sizeof( string< uint8_t > ) );
-	char* content = ( char* )ts_malloc(13);
-	content = (char*)"message/http";
-	value->text = content;
-	value->length = sizeof("message/http") - 1;
-	response->fields.add( Message::CONTENT_TYPE, value );
+	response->content_type = &Message::MESSAGE_HTTP;
 	return response;
 }
 

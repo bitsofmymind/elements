@@ -41,8 +41,7 @@ class Request: public Message
 
 
 		Elements::string< uint8_t > method;
-		Elements::string< uint8_t > url;
-		uint8_t http_version;
+
 
 		Request();
 		~Request();
@@ -52,11 +51,12 @@ class Request: public Message
 		#endif
 
 
-		virtual char deserialize( Elements::string<MESSAGE_SIZE>& buffer, char* index );
 		#ifndef NO_REQUEST_SERIALIZATION
-			virtual char serialize( char* buffer );
+			virtual void serialize( char* buffer );
 		#endif
-		virtual MESSAGE_SIZE get_message_length(void);
+
+		virtual MESSAGE_SIZE get_header_length(void);
+		virtual Message::PARSER_RESULT parse_header(const char* line, MESSAGE_SIZE size);
 
 		bool methodcmp(const char* m, uint8_t len);
 };

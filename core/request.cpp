@@ -26,9 +26,7 @@ Request::Request():
 
 	method.text = NULL;
 	method.length = 0;
-	url.text = NULL;
-	url.length = 0;
-	http_version = 0;
+
 }
 
 Request::~Request()
@@ -43,68 +41,14 @@ Request::~Request()
 		Debug::print(" % Request: ");
 		Debug::print(method.text, method.length);
 		Debug::print(" ");
-		Debug::print(url.text, url.length);
-		Debug::print(" HTTP/");
-		Debug::println(http_version, DEC);
+		Debug::print(to_url->url.text, to_url->url.length);
+		Debug::println(" HTTP/1.0");
 		Message::print();
 	}
 #endif
 
-char Request::deserialize(string<MESSAGE_SIZE>& buffer, char* index)
+MESSAGE_SIZE Request::get_header_length(void)
 {
-	char* start = index;
-
-	while(true)
-	{
-		if( *index == ' ' )
-		{
-			method.text = start;
-			method.length = index - start;
-			break;
-		}
-		else if (index > (buffer.text + buffer.length))
-		{
-			return 1;
-		}
-		if(*index >= 'A' && *index <= 'Z')
-		{
-			*index += 32;
-		}
-		index++;
-
-	}
-
-	url.text = ++index;
-
-	to_url->deserialize( index );
-	url.length = to_url->url.length;
-	from_url->is_absolute_path = to_url->is_absolute_path;
-
-	index += to_url->url.length + 1; //Jumps to HTTP/1.x part
-
-	if(*index == 'H')
-	{
-		index += 5; //Jumps the 'HTTP/'
-		http_version = (*index++ - 48) * 10;
-		index++; //Skips the '.'
-		http_version += *index++ - 48;
-	}
-	else
-	{
-		return 1;
-	}
-
-	if(*index++ != '\r' || *index++ != '\n')
-	{
-		return 1;
-	}
-
-	return Message::deserialize( buffer, index );
-}
-
-MESSAGE_SIZE Request::get_message_length(void)
-{
-	//The 3 and 5 are for 'HTTP/' and the version
 	return method.length /*For 'HTTP/'*/ \
 		+ 1 /*For a space*/ \
 		+ to_url->get_length() \
@@ -112,10 +56,11 @@ MESSAGE_SIZE Request::get_message_length(void)
 		+ 5 /*For 'HTTP/'*/
 		+ 3 /*for the HTTP version*/ \
 		+ 2 /*For CLRF between header and fields*/ \
-		+ Message::get_message_length();
+		+ Message::get_header_length();
+
 }
 #ifndef NO_REQUEST_SERIALIZATION
-	char Request::serialize(char* buffer)
+	void Request::serialize(char* buffer)
 	{
 
 		buffer += method.copy(buffer);
@@ -125,16 +70,75 @@ MESSAGE_SIZE Request::get_message_length(void)
 		*buffer++ = ' ';
 
 		*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
-		*buffer++ = (http_version / 10) +  48;
+		*buffer++ = '1';
 		*buffer++ = '.';
-		*buffer++ = ( http_version - (http_version / 10 ) *10 ) + 48;
+		*buffer++ = '0';
 
 		*buffer++ = '\r';
 		*buffer++ = '\n';
 
-		return Message::serialize(buffer);
+		Message::serialize(buffer);
 	}
 #endif
+
+Message::PARSER_RESULT Request::parse_header(const char* line, MESSAGE_SIZE size)
+{
+
+	if(line[size - 2] != '\r' && line[size - 1] != '\n')
+	{
+		return LINE_INCOMPLETE;
+	}
+
+	if(!header.text)
+	{
+		header.text = (char*)ts_malloc(size - 2); /*We substract two because the
+		\r\n is implicit*/
+		if(!header.text)
+		{
+			return Message::OUT_OF_MEMORY;
+		}
+		header.length = size - 2;
+		memcpy(header.text, line , size - 2);
+
+		char* index = header.text;
+
+
+		while(true)
+		{
+			if( *index == ' ' )
+			{
+				method.text = header.text;
+				method.length = index - header.text;
+				break;
+			}
+			else if (index > (header.text + header.length))
+			{
+				return HEADER_MALFORMED;
+			}
+			if(*index >= 'A' && *index <= 'Z')
+			{
+				*index += 32;
+			}
+			index++;
+		}
+		Message::PARSER_RESULT res = PARSING_SUCESSFUL;
+
+		to_url->deserialize( ++index );
+		//Should checl is url parsing was sucessful
+		from_url->is_absolute_path = to_url->is_absolute_path;
+
+		/*We do not really care about the HTTP version here, in fact, we could avoir saving it entirely*/
+		if(res != PARSING_SUCESSFUL)
+		{
+			return HEADER_MALFORMED;
+		}
+		return PARSING_SUCESSFUL;
+	}
+
+	//Here we would parse for headers we want to keep
+
+	return Message::parse_header(line, size);
+}
 
 bool Request::methodcmp(const char * m, uint8_t len)
 {
