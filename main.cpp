@@ -9,20 +9,17 @@
 #include <iostream>
 //using namespace std;
 #include <posix_socket_interface.h>
-#include <root.h>
-#include <thread.h>
 #include <pthread.h>
 #include <core/resource.h>
 #include <core/authority.h>
+#include <core/processing.h>
 #include <utils/types.h>
+#include <pal/pal.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <signal.h>
 
-Root* root;
-PosixThreadManager* thread_manager;
-Authority* auth0, * auth1, * auth2;
-Processing* proc0;
-Resource* res0, * res1, * res2, * res3, * res4, * res5;
+
 
 void exit_function( int i )
 {
@@ -32,40 +29,18 @@ void exit_function( int i )
 
 int main(int argc, char* argv[])
 {
-	PosixSocketInterface* posix_socket_interface;
-
-
 	signal(SIGINT, exit_function);
+	init();
+
 	std::cout << "Starting Elements test executable." << std::endl;
 	std::cout << "Creating Resources...";
-	root = new Root();
-	root->id = "root";
-	//thread_manager = new PosixThreadManager(root, 0);
-	posix_socket_interface = new PosixSocketInterface( atoi(argv[1]) );
-	posix_socket_interface->id = "posix_socket_interface";
 
-	auth0 = new Authority();
-	auth0->id = "auth0";
-	auth1 = new Authority();
-	auth1->id = "auth1";
-	auth2 = new Authority();
-	auth2->id = "auth2";
+	Authority* root = new Authority();
+	Authority* auth0 = new Authority();
+	Processing* proc0 = new Processing(NULL);
+	Resource* res0 = new Resource(), * res1 = new Resource(), * res2 = new Resource();
+	PosixSocketInterface* posix_socket_interface = new PosixSocketInterface( atoi(argv[1]));
 
-	proc0 = new PosixMainThread();
-	proc0->id = "proc0";
-
-	res0 = new Resource();
-	res0->id = "res0";
-	res1 = new Resource();
-	res1->id = "res1";
-	res2 = new Resource();
-	res2->id = "res2";
-	res3 = new Resource();
-	res3->id = "res3";
-	res4 = new Resource();
-	res4->id = "res4";
-	res5 = new Resource();
-	res5->id = "res5";
 	std::cout << "[DONE]" << std::endl;
 
 	std::cout << "Creating Resource Tree...";
@@ -75,13 +50,9 @@ int main(int argc, char* argv[])
 	root->add_child(Elements::string<uint8_t>::make("auth0"), auth0);
 	root->add_child(Elements::string<uint8_t>::make("res0"), res0);
 
-	auth0->add_child(Elements::string<uint8_t>::make("auth1"), auth1);
 	auth0->add_child(Elements::string<uint8_t>::make("res1"), res1);
-	auth1->add_child(Elements::string<uint8_t>::make("res2"), res2);
-	res1->add_child(Elements::string<uint8_t>::make("auth2"), auth2);
-	auth2->add_child(Elements::string<uint8_t>::make("res3"), res3);
-	auth2->add_child(Elements::string<uint8_t>::make("res4"), res4);
-	res4->add_child(Elements::string<uint8_t>::make("res5"), res5);
+	auth0->add_child(Elements::string<uint8_t>::make("res2"), res2);
+
 	std::cout << "[DONE]" << std::endl;
 
 	std::cout << "Starting processing...[DONE]" << std::endl;
