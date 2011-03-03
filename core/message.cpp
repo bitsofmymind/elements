@@ -115,6 +115,9 @@ void Message::serialize( char* buffer )
 		#endif
 		buffer += strlen(buffer); /*Moves the pointer after the length. The terminating
 		character gets discarded because strlen() does not count it.*/
+
+		*buffer++ = '\r';
+		*buffer++ = '\n';
 	}
 
 	//Serialize other fields here
@@ -125,19 +128,22 @@ void Message::serialize( char* buffer )
 
 Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 {
-	MESSAGE_SIZE line_end = 1;
+	MESSAGE_SIZE line_end = 0;
 	MESSAGE_SIZE line_start = 0;
 
 
 	while(true)
 	{
-		if(data[line_end - 1] == '\r' && data[line_end] == '\n')
+		/*To account for cases where a buffer ends at \r, we only consider the \n to
+		 * detect a new line. If the line is misformed and \r was omitted, it will be detected by
+		 * the line parser.*/
+		if(data[line_end] == '\n')
 		{
 			PARSER_RESULT res;
 			if(current_line.length)
 			{
 				//Part of a line was previously saved
-				char* line = (char*)ts_malloc(line_end + current_line.length);
+				char* line = (char*)ts_malloc(line_end + 1 + current_line.length);
 				//Stack allocation coud be used here.
 				if(!line)
 				{
@@ -158,7 +164,8 @@ Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 			switch(res)
 			{
 				case PARSING_COMPLETE:
-
+					//The remainder of the buffer is part of the the body so we store it.
+					store_body(data + line_end, size - line_end);
 					return PARSING_COMPLETE;
 					break;
 				case PARSING_SUCESSFUL:
@@ -265,6 +272,45 @@ Message::PARSER_RESULT Message::parse_header(const char* line, MESSAGE_SIZE size
 	//Store fields in buffers
 
 	return PARSING_SUCESSFUL;
+}
+
+Message::BODY_STORAGE_RESULT Message::store_body(const char* buffer, MESSAGE_SIZE size)
+{
+	if(!content_length)
+	{
+		return CONTENT_LENGTH_IS_0;
+	}
+	if(!current_line.length)
+	{
+		current_line.text = (char*)ts_malloc(content_length);
+		if(!current_line.text)
+		{
+			return NO_MORE_MEMORY;
+		}
+	}
+
+	if(size > content_length - current_line.length)
+	{
+		size = content_length - current_line.length;
+	}
+
+	memcpy(current_line.text + current_line.length, buffer, size);
+	current_line.length += size;
+
+	if(current_line.length >= content_length)
+	{
+		body_file = new MemFile<MESSAGE_SIZE>(current_line.text, current_line.length);
+		current_line.length = 0;
+		if(!body_file)
+		{
+			ts_free(current_line.text);
+			return NO_MORE_MEMORY;
+		}
+
+		return DONE;
+	}
+
+	return MORE;
 }
 
 

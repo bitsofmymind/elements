@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define DEBUG
 //#define VERBOSE 1
 #define MESSAGE_SIZE uint32_t
 //#define NO_RESOURCE_DESTRUCTION
@@ -19,7 +20,7 @@
 #define TIME_KEEPING
 
 typedef uint64_t uptime_t;
-#define MAX_UPTIME __UINT64_C(18446744073709551615)
+#define MAX_UPTIME 18446744073709551615ULL
 
 #define ATOMIC
 

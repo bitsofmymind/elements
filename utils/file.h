@@ -49,5 +49,22 @@ template<class T> class ConstFile: public File<T>
 		virtual void close(void);
 };
 
+template<class T> class MemFile: public File<T>
+{
+
+	protected:
+		char* data;
+	public:
+		MemFile(char* data);
+		MemFile(char* data, T length);
+
+		~MemFile();
+
+		virtual T read(char* buffer, T length, bool async);
+		virtual T write(const char* buffer, T length, bool async);
+		virtual int8_t open(void);
+		virtual void close(void);
+};
+
 
 #endif //FILE_H_

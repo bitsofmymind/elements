@@ -48,6 +48,23 @@ int8_t GenericList::insert(void* item, uint8_t position)
     return 0;
 }
 
+void* GenericList::remove_item( void* item )
+{
+	for(uint8_t i = 0; i < items; i++)
+	{
+		if(list[i] == item)
+		{
+			list[i] = NULL;
+			compact();
+			items--;
+			return item;
+		}
+	}
+
+
+	return NULL;
+}
+
 void* GenericList::remove( uint8_t index )
 {
 	if(index > CAPACITY) { return NULL; }

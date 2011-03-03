@@ -28,6 +28,7 @@ class GenericList
 
 		int8_t append( void* item );
         int8_t insert(void* item, uint8_t position);
+        void* remove_item( void* item );
 		void* remove( uint8_t index );
 		void* operator[](uint8_t i);
 	protected:
@@ -38,7 +39,8 @@ template< class T> class List: public GenericList
 {
 	public:
 		int8_t append( T* item );
-                int8_t insert(T* item, uint8_t position);
+        int8_t insert(T* item, uint8_t position);
+        T* remove_item( T* item );
 		T* remove( uint8_t index );
 		T* operator[](uint8_t i);
 };
@@ -141,6 +143,11 @@ template<class T>
 int8_t  List<T>::insert(T* item, uint8_t position)
 {
     return GenericList::insert((void*)item, position);
+}
+template< class T>
+T* List<T>::remove_item( T* item )
+{
+	return (T*)GenericList::remove_item( (void*)item );
 }
 template< class T>
 T* List<T>::remove( uint8_t index )
