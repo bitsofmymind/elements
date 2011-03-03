@@ -11,11 +11,13 @@
 #include <core/processing.h>
 #include <utils/utils.h>
 #include <pthread.h>
-#include "root.h"
 #include <time.h>
 
 class PosixMainThread: public Processing
 {
+	public:
+		PosixMainThread(Resource* bound);
+
 	protected:
 		virtual void processing_sleep(uint32_t milliseconds);
 };
@@ -33,7 +35,7 @@ class PosixThread: public Processing
 
 	public:
 
-		PosixThread( );
+		PosixThread( Resource* bound );
 		virtual ~PosixThread();
 
 		virtual void start(void);
@@ -47,7 +49,6 @@ class PosixThreadManager: public Resource
 
 	protected:
 		Dictionary<PosixThread> threads;
-		Root* root;
 	public:
 		PosixThreadManager( Root* root, uint32_t initial_number_of_threads );
 

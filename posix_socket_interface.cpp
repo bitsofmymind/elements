@@ -11,7 +11,7 @@ using namespace std;
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <utils/types.h>
+#include <pal/pal.h>
 #include <core/request.h>
 #include <core/response.h>
 
@@ -35,43 +35,37 @@ Elements::string<uint8_t> connection_address_type = MAKE_STRING("ipv4_addr");
 void* PosixSocketInterface::dispatch( void* args )
 {
 
-	int new_socket_file_descriptor;
 	int socket_file_descriptor = ((PosixSocketInterface*)args)->file_descriptor;
 	PosixSocketInterface* interface = (PosixSocketInterface*)args;
 	int number_of_characters_exchanged;
-	char* buffer;
-	struct sockaddr_in client_address;
-	int client_address_length = sizeof( client_address );
-	Elements::string<uint8_t> connection_key;
+	char buffer[1024];
+	socklen_t client_address_length;
+	Connection c;
 
 	while( true )
 	{
-
-		new_socket_file_descriptor= accept(
+		client_address_length = sizeof(sockaddr_in);
+		c.request = NULL;
+		c.response = NULL;
+		c.file_descriptor = accept(
 				socket_file_descriptor,
-				(struct sockaddr*)&client_address,
-				(socklen_t*)&client_address_length);
+				(sockaddr*)&c.addr,
+				&client_address_length);
 
-		if( new_socket_file_descriptor < 0)
+		if( c.file_descriptor < 0)
 		{
 			cerr << "Error on accept." << endl;
 			exit(1);
 		}
 
-		cout << "Accepted connection from client at address " << \
-		(uint8_t)((&client_address.sin_addr.s_addr)[3]) << '.' << \
-		(uint8_t)((&client_address.sin_addr.s_addr)[2]) << '.' << \
-		(uint8_t)((&client_address.sin_addr.s_addr)[1]) << '.' << \
-		(uint8_t)((&client_address.sin_addr.s_addr)[0]) \
-		<< " from port " << client_address.sin_port << endl;
-		//((char*)&client_address.sin_addr.s_addr)[3] << "." << \
-		//((char*)&client_address.sin_addr.s_addr)[2] << "." << \
-		//((char*)&client_address.sin_addr.s_addr)[1] << "." << \
-		//((char*)&client_address.sin_addr.s_addr)[0] \
+		/*cout << "Accepted connection from client at address " << \
+		(uint8_t)((&c->addr.sin_addr.s_addr)[3]) << '.' << \
+		(uint8_t)((&c->addr.sin_addr.s_addr)[2]) << '.' << \
+		(uint8_t)((&c->addr.sin_addr.s_addr)[1]) << '.' << \
+		(uint8_t)((&c->addr.sin_addr.s_addr)[0]) \
+		<< " from port " << client_address.sin_port << endl;*/
 
-		buffer = (char*)malloc(2048);
-		bzero( buffer, 2048);
-		number_of_characters_exchanged = read( new_socket_file_descriptor, buffer, 2048);
+		number_of_characters_exchanged = read( c.file_descriptor, buffer, 1024);
 
 		if( number_of_characters_exchanged < 0 )
 		{
@@ -79,23 +73,39 @@ void* PosixSocketInterface::dispatch( void* args )
 			pthread_exit(NULL);
 		}
 
-		cout << buffer << endl;
-		connection_key = make_connection_key( client_address );
-		interface->connections.add( connection_key , &new_socket_file_descriptor );
-		Message* message;
-		if(buffer[4] == '/' && buffer[3] == 'P')
+		Connection* current = NULL;
+
+		for(int i = 0; i < interface->connections.items; i++)
 		{
-			message = new Response();
+			if(c.file_descriptor == interface->connections[i]->file_descriptor)
+			{
+				current = interface->connections[i];
+			}
 		}
-		else
+		if(current == NULL)
 		{
-			message = new Request();
+			current = (Connection*)malloc(sizeof(Connection));
+			*current = c;
+			current->request = new Request();
+			interface->connections.append(current);
 		}
-		message->message.length = number_of_characters_exchanged;
-		message->fields.add( connection_address_type, &connection_key );
-		message->message.text = buffer;
-        interface->receive(message);
-        cout << "New message has arrived!" << endl;
+
+		switch(current->request->parse(buffer, number_of_characters_exchanged))
+		{
+			case Message::PARSING_SUCESSFUL:
+				break;
+			case Message::PARSING_COMPLETE:
+				interface->send(current->request);
+				cout << "New message has arrived!" << endl;
+				break;
+			default:
+				cout << "Parsing failed!" << endl;
+				delete current->request;
+				interface->connections.remove_item(current);
+				free(current);
+				continue;
+		}
+
 	}
 	pthread_exit(NULL);
 }
@@ -135,6 +145,7 @@ PosixSocketInterface::PosixSocketInterface( int port_number ):
 		cerr << "Error creating thread." << endl;
 		return;
 	}
+
 }
 PosixSocketInterface::~PosixSocketInterface()
 {
@@ -143,93 +154,82 @@ PosixSocketInterface::~PosixSocketInterface()
 
 void PosixSocketInterface::run()
 {
-    Message* message;
-    
-    while( interface_out.items )
+    Connection* c;
+
+    schedule(NEVER);
+    for(int i = 0; i < connections.items; i++)
     {
-        message = interface_out.dequeue();
-        if(message->deserialize())
-        {
-           /*The message was not correctly formed, we should reply with an
-            HTTP error.*/
-            delete message;
-        }
-        else
-        {
-
-        	if(message_queue->queue(message))
-            {
-                interface_out.queue(message);
-            }
-        	schedule(NULL, Elements::e_time_t::MIN);
-
-        }
+    	if(connections[i]->response != NULL)
+    	{
+    		Connection* c = connections.remove(i);
+    		reply(c);
+    		free(c);
+    	}
 
     }
+
 }
 
-Message* PosixSocketInterface::process(Response* response)
+Response::status_code PosixSocketInterface::process( Response* response, Message** return_message )
 {
-	/*Solely responses for requests that originated from this interface can be sent back. For now
-	the HTTP standards mandates a response can only be in reply to a request, but in the future, this
-	may change so this method will have to account for that by checking if there is a host fileld
-	in the lone response.*/
 
-	if( response->original_request != NULL )
+	for(int i = 0; i < connections.items; i++)
 	{
-		if( response->original_request->fields.find(connection_address_type) )
+		if(connections[i]->request == response->original_request)
 		{
-			reply(response);
-			return NULL;
+			connections[i]->response = response;
+			schedule(ASAP);
+			return OK_200;
 		}
 	}
-	return Authority::process(response);
-}
 
-Response* PosixSocketInterface::process(Request* request)
-{
-	if(request->to_url->is_absolute_url)
-	{
-		send(request);
-		return NULL;
-	}
-
-	return Authority::process(request);
-}
-
-void PosixSocketInterface::receive(Message* message)
-{
-    interface_out.queue(message);
-    schedule(Elements::e_time_t::MIN);
-}
-
-void PosixSocketInterface::send(Request* request)
-{
+	delete response;
+	return OK_200;
 
 }
 
-void PosixSocketInterface::reply(Response* response)
+
+void PosixSocketInterface::reply(Connection* c)
 {
-	int file_descriptor;
-	int number_of_characters_exchanged;
 
-	file_descriptor = *connections.find(*response->original_request->fields.find(connection_address_type));
 
-	response->Message::serialize();
-	cout << "Sending:" << endl;
-	cout << response->message.text << endl;
-	cout << "total-length:" << response->message.length << endl;
-	number_of_characters_exchanged = write(file_descriptor,
-			response->message.text, response->message.length);
+	MESSAGE_SIZE length = c->response->get_header_length();
+	char buffer[1500];//header_length];
+	c->response->serialize(buffer);
+	length += c->response->body_file->read(buffer+length - 1, 1500 - length, true);
+	Debug::println(buffer, length - 1);
+	//char* buffer = "HTTP/1.0 200\r\nContent-Type: text/html\r\nContent-Length: 94\r\n\r\n<html><body>There are currently no representation associated with this resource.</body></html>";
 
-	if( number_of_characters_exchanged < 0)
+
+	if(!write(c->file_descriptor, buffer, length - 1 ))
 	{
 		cerr << "Writing to the socket caused and error." << endl;
 		exit(1);
 	}
+	/*if(c->response->body_file)
+	{
+		char body_buffer[1500];
+		MESSAGE_SIZE body_buffer_length;
 
-	delete response;
-	close(file_descriptor);
+		while(true)
+		{
+			body_buffer_length = c->response->body_file->read(body_buffer, 1500, true);
+			if(!write(c->file_descriptor, body_buffer, body_buffer_length))
+			{
+				cerr << "Writing to the socket caused and error." << endl;
+				exit(1);
+			}
+			if(body_buffer_length < 1500)
+			{
+				break;
+			}
+		}
+	}*/
+
+	cout << "Reply sent" << endl;
+
+	delete c->response;
+	close(c->file_descriptor);
 }
 
 

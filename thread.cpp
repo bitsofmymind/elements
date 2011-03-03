@@ -16,13 +16,18 @@
 #include <stdlib.h>
 using namespace std;
 
+PosixMainThread::PosixMainThread(Resource* bound): Processing(bound)
+		{
+
+		}
+
 void PosixMainThread::processing_sleep(uint32_t milliseconds)
 {
 	usleep(milliseconds);
 }
 
-PosixThread::PosixThread():
-	Processing(),
+PosixThread::PosixThread(Resource* bound):
+	Processing(bound),
 	disposing(false)
 {
 	id = (pthread_t)ids.items;

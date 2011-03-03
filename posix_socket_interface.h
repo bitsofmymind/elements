@@ -19,15 +19,20 @@
 class PosixSocketInterface: public Authority
 {
     protected:
-        Queue<Message> interface_out;
-
-        public:
-		struct connection
+		struct Connection
 		{
 			int file_descriptor;
+			Request* request;
+			Response* response;
+			struct sockaddr_in addr;
 		};
+		Queue<Message>* filler; /*interface_out, for some reason, is at the same address as Authority::messageQueue. This makes no sense
+		and could be a linker bug*/
 
-		Dictionary<int> connections;
+    public:
+
+
+		List<Connection> connections;
 		struct sockaddr_in server_address;
 		int port_number;
 		int file_descriptor;
@@ -40,13 +45,8 @@ class PosixSocketInterface: public Authority
 		static void* dispatch( void* args );
 
         virtual void run(void);
-		virtual Message* process(Response*);
-		virtual Response* process(Request*);
-
-                void receive(Message*);
-
-		void send(Request*);
-		void reply(Response*);
+        virtual Response::status_code process( Response* response, Message** return_message );
+		void reply(Connection*);
 
 };
 
