@@ -43,9 +43,9 @@ TCPIPStack::TCPIPStack():
 #ifdef __DHCPC_H__
 	dhcpc_init(&mac, 6);
 #else
-	uip_ipaddr(ipaddr, 192,167,0,2);
+	uip_ipaddr(ipaddr, 10,0,0,2);
 	uip_sethostaddr(ipaddr);
-	uip_ipaddr(ipaddr, 192,167,0,1);
+	uip_ipaddr(ipaddr, 10,0,0,1);
 	uip_setdraddr(ipaddr);
 	uip_ipaddr(ipaddr, 255,255,255,0);
 	uip_setnetmask(ipaddr);
@@ -128,134 +128,98 @@ void TCPIPStack::appcall(void)
 
 	if(uip_closed() || uip_timedout() || uip_aborted())
 	{
-
+		if(s->body)
+		{
+			delete s->body;
+		}
+		if(s->header)
+		{
+			delete s->header;
+		}
+		else if(s->request)
+		{
+			delete s->request;
+		}
 	}
 
 	if(uip_connected())
 	{
 		Debug::println("Connection made");
-		/*s->dataleft = txt.length;
-		s->dataptr = txt.text;*/
-		s->buffer.length = 0;
-		s->body_sent = false;
+		s->request = new Request();
+		s->receiving_body = false;
+		s->body = NULL;
+		s->header = NULL;
+		if(!s->request)
+		{
+			uip_abort();
+			return;
+		}
 	}
 
 	if(uip_newdata())
 	{
-		if(s->buffer.length)
+		if(s->receiving_body)
 		{
-
-			//char* ptr = (char*)ts_realloc(s->request, s->sz);
-			/*Realloc appears to be causing a failure in memory allocation as sucessive reallocs and frees
-			 * will not yield to symmetrical adresses. There is bug with realloc
-			 * (http://www.mail-archive.com/avr-libc-dev@nongnu.org/msg03679.html)*/
+			Message::BODY_STORAGE_RESULT res = s->request->store_body((const char*)uip_appdata, uip_len);
+			switch(res)
+			{
+				case Message::DONE:
+					send(s->request);
+					break;
+				case Message::MORE:
+					break;
+				default:
+					Debug::println("Body reception error");
+					uip_abort();
+					return;
+			}
 		}
 		else
 		{
-			for(uint16_t i = 1; i < uip_datalen(); i++)
+			Message::PARSER_RESULT res = s->request->parse((const char*)uip_appdata, uip_len);
+			switch(res)
 			{
-				if(	((char*)uip_appdata)[i - 1] == '\r' &&
-					((char*)uip_appdata)[i] == '\n')
-				{
-					Debug::println("Request received");
-					i += 3; //To add the \r\n and one because we will use i as a length;
-					s->buffer.text = (char*)ts_malloc(i);
-					if(!s->buffer.text)
+				case Message::PARSING_COMPLETE:
+					if(s->request->content_length)
 					{
-						break;
+						s->receiving_body = true;
 					}
-					memcpy(s->buffer.text, uip_appdata, i - 2);
-					s->buffer.length = i;
-					s->buffer.text[i - 2] = '\r';
-					s->buffer.text[i - 1] = '\n';
-
-					return;
-				}
-			}
-			uip_abort();
-			return;
-
-		}
-
-
-		for(uint16_t i = 0; i < uip_datalen(); i++)
-		{
-			Debug::print(((char*)uip_appdata)[i]);
-
-			if(i > 2 &&
-				((char*)uip_appdata)[i - 3] == '\r' &&
-				((char*)uip_appdata)[i - 2] == '\n' &&
-				((char*)uip_appdata)[i - 1] == '\r' &&
-				((char*)uip_appdata)[i] == '\n')
-			{
-
-
-				Debug::print("request: ");
-				Debug::print(s->buffer.length, DEC);
-				Debug::print(" ");
-				Debug::println(s->buffer.text, s->buffer.length);
-
-				Request* request = new Request();
-
-				if (!request)
-				{
-
-				}
-				else if(request->deserialize(s->buffer, s->buffer.text))
-				{
-					Debug::println("deserialization failed");
-				}
-				else if(send(request))
-				{
-
-				}
-				else
-				{
-
+					else
+					{
+						send(s->request);
+					}
 					break;
-				}
-				delete request;
-				uip_abort();
-				break;
-
-
+				case Message::PARSING_SUCESSFUL:
+					break;
+				default:
+					Debug::println("Parsing Error");
+					uip_abort();
+					return;
 			}
 		}
+
 	}
 
 	if(uip_acked())
 	{
-		Debug::println("ack");
+		MESSAGE_SIZE sent = 0;
 
-		if(!s->body_sent)
+		if(s->header->cursor != s->header->size)
 		{
-			if(s->dataleft < uip_mss())
-			{
-				ts_free(s->dataptr);
-				s->body_sent = true;
-				goto next;
-			}
-			s->dataptr += uip_conn->len;
-			s->dataleft -= uip_conn->len;
-			uip_send(s->dataptr, s->dataleft);
+			sent += s->header->read((char*)uip_appdata, uip_mss(), true);
 		}
-		else
+		if(s->body &&
+				s->header->cursor == s->header->size &&
+				sent < uip_mss())
 		{
-			next:
-
-			uint16_t len = s->body->read((char*)uip_appdata, uip_mss(), true);
-			Debug::print(len, DEC);
-			Debug::print(" ");
-			Debug::print(s->body->cursor, DEC);
-			Debug::print(" ");
-			Debug::println(s->body->size, DEC);
-			if(!len)
-			{
-				uip_close();
-				delete s->body;
-				return;
-			}
-			uip_send(uip_appdata, len);
+			sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent ,true);
+		}
+		uip_send(uip_appdata, sent);
+		if(s->header->cursor == s->header->size
+				&& s->body
+				&& s->body->cursor == s->body->size)
+		{
+			uip_close();
 		}
 	}
 	if(uip_rexmit())
@@ -267,27 +231,38 @@ void TCPIPStack::appcall(void)
 		Debug::println("poll");
 		for(uint8_t i = 0; i < to_send.items; i++ )
 		{
-			if(to_send[i]->original_request->message.text == s->buffer.text)
+			if(to_send[i]->original_request == s->request)
 			{
 				Debug::println("replying");
 				Response* response = to_send.remove(i);
-				s->dataleft = response->get_message_length();
-				s->dataptr = (char*)ts_malloc(s->dataleft);
-				if(!s->dataptr)
+				MESSAGE_SIZE size = response->get_header_length();
+				char* buffer = (char*)ts_malloc(size);
+				if(!buffer)
 				{
 					uip_abort();
 				}
-				else
+				response->serialize(buffer);
+				s->header = new MemFile<MESSAGE_SIZE>(buffer, size);
+				if(!s->header)
 				{
-					response->serialize(s->dataptr);
-					s->body = response->body_file;
-					Debug::print(s->body->cursor, DEC);
-					Debug::print(" ");
-					Debug::println(s->body->size, DEC);
-					response->body_file = NULL;
-					uip_send(s->dataptr, s->dataleft);
+					ts_free(buffer);
+					uip_abort();
 				}
-
+				if(response->body_file)
+				{
+					s->body = response->body_file;
+					response->body_file = NULL;
+				}
+				MESSAGE_SIZE sent = 0;
+				sent += s->header->read((char*)uip_appdata, uip_mss(), true);
+				if(s->body &&
+						s->header->cursor == s->header->size &&
+						sent < uip_mss())
+				{
+					sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent, true);
+				}
+				uip_send(uip_appdata, sent);
+				Debug::println("reply");
 				delete response;
 				break;
 			}

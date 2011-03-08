@@ -5,13 +5,14 @@
 #include <utils/types.h>
 #include <elements.h>
 #include <utils/file.h>
+#include <core/request.h>
 
-typedef struct elements_app_state {
-	char* dataptr;
-	MESSAGE_SIZE dataleft;
-	Elements::string<MESSAGE_SIZE> buffer;
-	bool body_sent;
-	File<MESSAGE_SIZE> * body;
+typedef struct elements_app_state
+{
+	Request* request;
+	File<MESSAGE_SIZE>* header;
+	File<MESSAGE_SIZE>* body;
+	bool receiving_body;
 } uip_tcp_appstate_t;
 
 void elements_appcall(void);
