@@ -7,7 +7,6 @@
 //============================================================================
 
 #include <iostream>
-//using namespace std;
 #include <posix_socket_interface.h>
 #include <pthread.h>
 #include <core/resource.h>
@@ -18,7 +17,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <signal.h>
-
+#include "hello_world.h"
 
 
 void exit_function( int i )
@@ -40,6 +39,7 @@ int main(int argc, char* argv[])
 	Processing* proc0 = new Processing(NULL);
 	Resource* res0 = new Resource(), * res1 = new Resource(), * res2 = new Resource();
 	PosixSocketInterface* posix_socket_interface = new PosixSocketInterface( atoi(argv[1]));
+	HelloWorld* hw = new HelloWorld();
 
 	std::cout << "[DONE]" << std::endl;
 
@@ -49,6 +49,7 @@ int main(int argc, char* argv[])
 	root->add_child(Elements::string<uint8_t>::make("posix_socket_interface"), posix_socket_interface);
 	root->add_child(Elements::string<uint8_t>::make("auth0"), auth0);
 	root->add_child(Elements::string<uint8_t>::make("res0"), res0);
+	root->add_child(Elements::string<uint8_t>::make("hw"), hw);
 
 	auth0->add_child(Elements::string<uint8_t>::make("res1"), res1);
 	auth0->add_child(Elements::string<uint8_t>::make("res2"), res2);
