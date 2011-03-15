@@ -192,39 +192,34 @@ Response::status_code PosixSocketInterface::process( Response* response, Message
 void PosixSocketInterface::reply(Connection* c)
 {
 
-
 	MESSAGE_SIZE length = c->response->get_header_length();
-	char buffer[1500];//header_length];
-	c->response->serialize(buffer);
-	length += c->response->body_file->read(buffer+length - 1, 1500 - length, true);
-	Debug::println(buffer, length - 1);
-	//char* buffer = "HTTP/1.0 200\r\nContent-Type: text/html\r\nContent-Length: 94\r\n\r\n<html><body>There are currently no representation associated with this resource.</body></html>";
-
-
-	if(!write(c->file_descriptor, buffer, length - 1 ))
+	char header[length];
+	c->response->serialize(header);
+	if(!write(c->file_descriptor, header, length))
 	{
 		cerr << "Writing to the socket caused and error." << endl;
 		exit(1);
 	}
-	/*if(c->response->body_file)
-	{
-		char body_buffer[1500];
-		MESSAGE_SIZE body_buffer_length;
 
+	if(c->response->body_file)
+	{
+		MESSAGE_SIZE len;
+		const int sz = 100;
+		char buffer[sz];
 		while(true)
 		{
-			body_buffer_length = c->response->body_file->read(body_buffer, 1500, true);
-			if(!write(c->file_descriptor, body_buffer, body_buffer_length))
+			len = c->response->body_file->read(buffer, sz, true);
+			if(len != 0 &&!write(c->file_descriptor, buffer, len))
 			{
 				cerr << "Writing to the socket caused and error." << endl;
 				exit(1);
 			}
-			if(body_buffer_length < 1500)
+			if(len < sz)
 			{
 				break;
 			}
 		}
-	}*/
+	}
 
 	cout << "Reply sent" << endl;
 
