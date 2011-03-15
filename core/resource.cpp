@@ -329,9 +329,6 @@ void Resource::schedule(uptime_t time)
 
 File<MESSAGE_SIZE>* Resource::render( Request* request )
 {
-	//string<MESSAGE_SIZE> buffer = MAKE_STRING("<html><body>There are currently no representation associated with this resource.</body></html>");
-	//const char* cmsg = "<html><body>There are currently no representation associated with this resource.</body></html>";
-	//char* msg = (char*)malloc(sizeof("<html><body>There are currently no representation associated with this resource.</body></html>"));
 	return new ConstFile<MESSAGE_SIZE>("<html><body>There are currently no representation associated with this resource.</body></html>");
 }
 

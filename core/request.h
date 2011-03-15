@@ -59,6 +59,10 @@ class Request: public Message
 		virtual Message::PARSER_RESULT parse_header(const char* line, MESSAGE_SIZE size);
 
 		bool methodcmp(const char* m, uint8_t len);
+
+		#ifdef BODY_ARGS_PARSING
+			uint8_t find_arg(const char* key, char* value, uint8_t max_size);
+		#endif
 };
 
 #endif /* REQUEST_H_ */

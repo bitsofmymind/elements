@@ -165,7 +165,7 @@ Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 			{
 				case PARSING_COMPLETE:
 					//The remainder of the buffer is part of the the body so we store it.
-					store_body(data + line_end, size - line_end);
+					store_body(data + line_end + 1, size - line_end + 1);
 					return PARSING_COMPLETE;
 					break;
 				case PARSING_SUCESSFUL:

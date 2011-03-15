@@ -144,6 +144,65 @@ bool Request::methodcmp(const char * m, uint8_t len)
 {
 	return method.length == len && !memcmp(m, method.text, 3);
 }
+
+#ifdef BODY_ARGS_PARSING
+uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
+{
+
+	if(!body_file)
+	{
+		return 0;
+	}
+
+	enum STATE {KEY, VALUE, SEPARATOR} state = KEY;
+	uint8_t read;
+	char buffer;
+	uint8_t index = 0;
+
+	body_file->cursor = 0;
+
+	do
+	{
+		read = body_file->read(&buffer, 1, true);
+		switch(state)
+		{
+			case KEY:
+				if(buffer != key[index])
+				{
+					state = SEPARATOR;
+				}
+				if( key[index++] == '\0' && buffer == '=')
+				{
+					index = 0;
+					state = VALUE;
+				}
+				break;
+			case SEPARATOR:
+				if(buffer == '&')
+				{
+					state = KEY;
+					index = 0;
+				}
+				break;
+			case VALUE:
+				if(buffer == '&' || read == 0)
+				{
+					return index - 1;
+				}
+				value[index++] = buffer;
+				if(index == max_size)
+				{
+					return index;
+				}
+				break;
+		}
+
+	}
+	while(read);
+
+	return 0;
+}
+#endif
 //const string< uint8_t > Request::ACCEPT = {"accept", 19};
 //const string< uint8_t > Request::ACCEPT_CHARSET = {"accept-string< uint8_t >set", 20};
 //const string< uint8_t > Request::ACCEPT_ENCODING = {"accept-encoding", 21};
