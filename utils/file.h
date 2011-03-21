@@ -27,6 +27,8 @@ template<class T> class File//: public Device<T>
 		T size;
 		T cursor;
 
+		virtual ~File();
+
 		#ifdef DEBUG
 			void print();
 		#endif
@@ -61,7 +63,7 @@ template<class T> class MemFile: public File<T>
 		MemFile(char* data);
 		MemFile(char* data, T length);
 
-		~MemFile();
+		virtual ~MemFile();
 
 		virtual T read(char* buffer, T length, bool async);
 		virtual T write(const char* buffer, T length, bool async);

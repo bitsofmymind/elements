@@ -8,6 +8,10 @@
 #include "file.h"
 #include "../elements.h"
 
+template< class T >
+File<T>::~File(void)
+{}
+
 #ifdef DEBUG
 template< class T >
 void File<T>::print(void)
