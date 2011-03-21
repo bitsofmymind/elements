@@ -10,6 +10,7 @@
 #include <pal/pal.h>
 #include <utils/pgmspace_file.h>
 #include <stdlib.h>
+#include <utils/template.h>
 
 Blinker::Blinker(uint32_t interval, uint8_t pin, volatile uint8_t* ddr, volatile uint8_t* port):
 	Resource(),
@@ -42,9 +43,9 @@ void Blinker::run(void)
 		You can use the following form to adjust the blinking interval in milliseconds of the LED and turn it on or off.</br>\
 		<br/>\
 		<form method=\"post\">\
-			Interval: <input type=\"text\" name=\"interval\" value=\"500\"/><br/>\
-			ON<input type=\"radio\" name=\"state\" value=\"on\"/><br/>\
-			OFF<input type=\"radio\" name=\"state\" value=\"off\"/><br/>\
+			<b>Interval</b>: <input type=\"text\" name=\"i\" value=\"~\"/><br/>\
+			ON<input type=\"radio\" name=\"st\" ~ value=\"1\"/><br/>\
+			OFF<input type=\"radio\" name=\"st\" ~ value=\"0\"/><br/>\
 			<input type=\"submit\" value=\"Submit\" />\
 		</form>\
 	</body>\
@@ -55,41 +56,82 @@ char content_P[] PROGMEM = CONTENT;
 
 File<MESSAGE_SIZE>* Blinker::render( Request* request )
 {
-	return new PGMSpaceFile(content_P, CONTENT_SIZE);
+	File<MESSAGE_SIZE>* file = new PGMSpaceFile(content_P, CONTENT_SIZE);
+	if(!file)
+	{
+		return NULL;
+	}
+
+	char val[6];
+	itoa(_interval, val , 10);
+	uint8_t val_len = strlen(val);
+
+	MESSAGE_SIZE data_len = val_len + 1 + strlen("checked=\"checked\"") + 1 + 1;
+	char* data = (char*)ts_malloc(data_len);
+	if(!data)
+	{
+		return NULL;
+	}
+
+	char* ptr = data + val_len + 1;
+	memcpy(data, val, val_len + 1 );
+	if(state)
+	{
+		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\"") + 1);
+		ptr += strlen("checked=\"checked\"") + 1;
+		*ptr = '\0';
+	}
+	else
+	{
+		*ptr++ = '\0';;
+		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\"") + 1);
+	}
+
+	File<MESSAGE_SIZE>* temp =  new Template<MESSAGE_SIZE>(file, data, data_len, 3);
+	if(!temp)
+	{
+		delete file;
+		ts_free(data);
+		return NULL;
+	}
+	return temp;
+
 }
 
 Response::status_code Blinker::process( Request* request, Message** return_message )
 {
 	Response::status_code sc = Resource::process(request, return_message);
+	Debug::println(sc, DEC);
 	if(sc == NOT_IMPLEMENTED_501)
 	{
 		if(request->methodcmp("post", 4))
 		{
-			string<uint8_t>* value;
-
+			Debug::print("post rec ");
+			char buffer[8];
+			uint8_t len = request->find_arg("i", buffer, 7);
+			Debug::print(len, DEC);
+			Debug::print(" ");
+			if(len)
 			{
-				string<uint8_t> key = MAKE_STRING("state");
-				value = request->to_url->arguments->find(key);
+				buffer[len] = '\0';
+				Debug::println(atoi(buffer));
+				_interval = atoi(buffer);
 			}
-			if(value)
+
+			len = request->find_arg("st", buffer, 1);
+
+			if(len)
 			{
-				if(value->text[0] == 'o' && value->text[1] == 'n')
+				if(buffer[0] == '1')
 				{
 					state = true;
 				}
-				else if(value->text[0] == 'o' && value->text[1] == 'f' && value->text[2] == 'f')
+				else if(buffer[0] == '0')
 				{
 					state = false;
 				}
 			}
-			{
-				string<uint8_t> key = MAKE_STRING("interval");
-				value = request->to_url->arguments->find(key);
-			}
-			if(value)
-			{
-				_interval = atoi(value->text);
-			}
+
 			*return_message = http_get( request );
 		}
 	}

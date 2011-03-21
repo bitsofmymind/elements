@@ -131,14 +131,17 @@ void TCPIPStack::appcall(void)
 		if(s->body)
 		{
 			delete s->body;
+			s->body = NULL;
 		}
 		if(s->header)
 		{
 			delete s->header;
+			s->header = NULL;
 		}
 		else if(s->request)
 		{
 			delete s->request;
+			s->request = NULL;
 		}
 	}
 
@@ -158,46 +161,32 @@ void TCPIPStack::appcall(void)
 
 	if(uip_newdata())
 	{
-		if(s->receiving_body)
+		Message::PARSER_RESULT res = s->request->parse((const char*)uip_appdata, uip_len);
+		switch(res)
 		{
-			Message::BODY_STORAGE_RESULT res = s->request->store_body((const char*)uip_appdata, uip_len);
-			switch(res)
-			{
-				case Message::DONE:
-					send(s->request);
-					break;
-				case Message::MORE:
-					break;
-				default:
-					Debug::println("Body reception error");
-					uip_abort();
-					return;
-			}
+			case Message::PARSING_COMPLETE:
+				if(s->request->content_length)
+				{
+					s->receiving_body = true; //now useless
+					Debug::print("has body");
+					s->request->body_file->print();
+					//char c[4];
+					//s->request->body_file->read(c, 4, true);
+					//Debug::println((size_t)s->request->body_file, DEC);
+				}
+				else
+				{
+					Debug::println("no body");
+				}
+				send(s->request);
+				break;
+			case Message::PARSING_SUCESSFUL:
+				break;
+			default:
+				Debug::println("Parsing Error");
+				uip_abort();
+				return;
 		}
-		else
-		{
-			Message::PARSER_RESULT res = s->request->parse((const char*)uip_appdata, uip_len);
-			switch(res)
-			{
-				case Message::PARSING_COMPLETE:
-					if(s->request->content_length)
-					{
-						s->receiving_body = true;
-					}
-					else
-					{
-						send(s->request);
-					}
-					break;
-				case Message::PARSING_SUCESSFUL:
-					break;
-				default:
-					Debug::println("Parsing Error");
-					uip_abort();
-					return;
-			}
-		}
-
 	}
 
 	if(uip_acked())
