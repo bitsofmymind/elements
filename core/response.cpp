@@ -119,7 +119,6 @@ MESSAGE_SIZE Response::get_header_length(void)
 			+ 3 /*For the HTTP version*/ \
 			+ 1 /*For a space*/ \
 			+ 3 /*For the status code*/ \
-			+ 1 /*For a space*/ \
 			+ 2 /*For CLRF between header and fields*/ \
 			+ Message::get_header_length();
 

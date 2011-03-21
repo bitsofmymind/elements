@@ -18,7 +18,8 @@ Template<T>::Template(File<T>* file, char* args, MESSAGE_SIZE arglen, uint8_t ar
 		previous_read_length(0)
 {
 	File<T>::cursor = 0;
-	File<T>::size = file->size + arglen - argc;
+	File<T>::size = file->size + arglen - 2 * argc; /*argc is substracted two times to remove the ~
+	and the null characters that separates the arguments.*/
 }
 
 template< class T>

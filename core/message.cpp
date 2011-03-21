@@ -169,12 +169,17 @@ Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 			{
 				case PARSING_COMPLETE:
 					//The remainder of the buffer is part of the the body so we store it.
-					if(line_end + 1 < size)
+					return store_body(data + line_end + 1, size - (line_end + 1));
+					/*if(line_end + 1 < size)
 					{
 						return store_body(data + line_end + 1, size - line_end + 1);
 					}
+					else if(content_length)
+					{
+						return PARSING_SUCESSFUL;
+					}
 					return PARSING_COMPLETE;
-					break;
+					break;*/
 				case PARSING_SUCESSFUL:
 					line_start = ++line_end;
 					break;
@@ -252,11 +257,11 @@ Message::PARSER_RESULT Message::parse( const char* buffer )
 		line_size++;
 	}
 
-	if(content_length)
+	/*if(content_length)
 	{
 		//body present
 		body_file = new ConstFile<MESSAGE_SIZE>(buffer);
-	}
+	}*/
 
 	return PARSING_COMPLETE;
 }
@@ -283,6 +288,7 @@ Message::PARSER_RESULT Message::parse_header(const char* line, MESSAGE_SIZE size
 
 Message::PARSER_RESULT Message::store_body(const char* buffer, MESSAGE_SIZE size)
 {
+
 	if(!content_length)
 	{
 		return PARSING_COMPLETE;
