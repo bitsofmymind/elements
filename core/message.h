@@ -31,7 +31,6 @@ class Message
 			LINE_OVERFLOW,
 			HEADER_MALFORMED,
 			OUT_OF_MEMORY };
-		enum BODY_STORAGE_RESULT{ DONE, MORE, NO_MORE_MEMORY, CONTENT_LENGTH_IS_0 };
 
 		//General header fields
 		//static const string< uint8_t > CACHE_CONTROL;
@@ -88,7 +87,7 @@ class Message
 		Message::PARSER_RESULT parse(const char* buffer);
 		Message::PARSER_RESULT parse(const char* buffer, MESSAGE_SIZE size);
 		virtual Message::PARSER_RESULT parse_header(const char* line, MESSAGE_SIZE size);
-		Message::BODY_STORAGE_RESULT store_body(const char* buffer, MESSAGE_SIZE size);
+		Message::PARSER_RESULT store_body(const char* buffer, MESSAGE_SIZE size);
 
 
 	protected:

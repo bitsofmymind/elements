@@ -164,6 +164,7 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 	do
 	{
 		read = body_file->read(&buffer, 1, true);
+
 		switch(state)
 		{
 			case KEY:

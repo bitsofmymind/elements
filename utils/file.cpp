@@ -8,6 +8,21 @@
 #include "file.h"
 #include "../elements.h"
 
+#ifdef DEBUG
+template< class T >
+void File<T>::print(void)
+{
+	T prev_cursor = cursor;
+	char c;
+	while(read(&c, 1, false))
+	{
+		Debug::print(c);
+	}
+	Debug::println();
+	cursor = prev_cursor;
+}
+#endif
+
 template< class T >
 T File<T>::extract(char* buffer)
 {

@@ -27,6 +27,9 @@ template<class T> class File//: public Device<T>
 		T size;
 		T cursor;
 
+		#ifdef DEBUG
+			void print();
+		#endif
 		virtual T read(char* buffer, T length, bool async) = 0;
 		T extract(char* buffer);
 		virtual T write(const char* buffer, T length, bool async) = 0;

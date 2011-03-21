@@ -131,6 +131,10 @@ Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 	MESSAGE_SIZE line_end = 0;
 	MESSAGE_SIZE line_start = 0;
 
+	if(body_file)
+	{
+		return store_body(data, size);
+	}
 
 	while(true)
 	{
@@ -165,7 +169,10 @@ Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 			{
 				case PARSING_COMPLETE:
 					//The remainder of the buffer is part of the the body so we store it.
-					store_body(data + line_end + 1, size - line_end + 1);
+					if(line_end + 1 < size)
+					{
+						return store_body(data + line_end + 1, size - line_end + 1);
+					}
 					return PARSING_COMPLETE;
 					break;
 				case PARSING_SUCESSFUL:
@@ -274,18 +281,18 @@ Message::PARSER_RESULT Message::parse_header(const char* line, MESSAGE_SIZE size
 	return PARSING_SUCESSFUL;
 }
 
-Message::BODY_STORAGE_RESULT Message::store_body(const char* buffer, MESSAGE_SIZE size)
+Message::PARSER_RESULT Message::store_body(const char* buffer, MESSAGE_SIZE size)
 {
 	if(!content_length)
 	{
-		return CONTENT_LENGTH_IS_0;
+		return PARSING_COMPLETE;
 	}
 	if(!current_line.length)
 	{
 		current_line.text = (char*)ts_malloc(content_length);
 		if(!current_line.text)
 		{
-			return NO_MORE_MEMORY;
+			return OUT_OF_MEMORY;
 		}
 	}
 
@@ -304,13 +311,13 @@ Message::BODY_STORAGE_RESULT Message::store_body(const char* buffer, MESSAGE_SIZ
 		if(!body_file)
 		{
 			ts_free(current_line.text);
-			return NO_MORE_MEMORY;
+			return OUT_OF_MEMORY;
 		}
 
-		return DONE;
+		return PARSING_COMPLETE;
 	}
 
-	return MORE;
+	return PARSING_SUCESSFUL;
 }
 
 
