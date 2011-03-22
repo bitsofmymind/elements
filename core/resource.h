@@ -54,9 +54,15 @@ class Resource
         virtual Response::status_code process( Request* request, Message** return_message );
         virtual Response::status_code process( Response* response, Message** return_message );
 
-		virtual Response* http_get(Request* request);
+#if HTTP_GET
+        Response* http_get(Request* request);
+#endif
+#if HTTP_HEAD
 		Response* http_head(Request* request);
+#endif
+#if HTTP_TRACE
 		Response* http_trace(Request* request);
+#endif
 
 		void schedule(volatile uptime_t* timer, uptime_t time );
         void schedule(uptime_t time);

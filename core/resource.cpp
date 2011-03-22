@@ -210,19 +210,24 @@ Response::status_code Resource::process( Request* request, Message** return_mess
 	if(request->to_url->cursor >=  request->to_url->resources.items)
 	{
 		print_transaction(request);
-
+#if HTTP_GET
 		if(request->methodcmp("get", 3))
 		{
 			 *return_message = http_get( request );
 		}
+#endif
+#if HTTP_HEAD
 		else if(request->methodcmp("head", 4))
 		{
 			*return_message = http_head( request );
 		}
+#endif
+#if HTTP_TRACE
 		else if(request->methodcmp("trace", 5))
 		{
 			*return_message = http_trace( request );
 		}
+#endif
 		else
 		{
 			return NOT_IMPLEMENTED_501;
@@ -234,6 +239,51 @@ Response::status_code Resource::process( Request* request, Message** return_mess
 	return PASS_308;
 
 }
+#if HTTP_GET
+Response* Resource::http_get(Request* request)
+{
+	Response* response =  new Response(OK_200, request );
+	if(!response)
+	{
+		return NULL;
+	}
+	response->body_file = render( request );
+	response->content_type = &Message::TEXT_HTML;
+	if(response->body_file)
+	{
+		response->content_length = response->body_file->size;
+	}
+	else
+	{
+		response->content_length = 0;
+		ERROR_PRINTLN("Fail to render body");
+	}
+	return response;
+}
+#endif
+#if HTTP_HEAD
+Response* Resource::http_head(Request* request)
+{
+	Response* response =  new Response(OK_200, request );
+	if(!response)
+	{
+		return NULL;
+	}
+	//response->body = render( request );
+	response->content_type = &Message::TEXT_HTML;
+	return response;
+}
+#endif
+#if HTTP_TRACE
+Response* Resource::http_trace( Request* request )
+{
+	Response* response = new Response(OK_200, request );
+	//request->Message::serialize();
+	//response->body = request->message;
+	response->content_type = &Message::MESSAGE_HTTP;
+	return response;
+}
+#endif
 
 Response::status_code Resource::process(Response* response, Message** return_message)
 {
@@ -256,39 +306,6 @@ void Resource::run( void )
 uptime_t Resource::get_sleep_clock( void )
 {
 	return children_sleep_clock > own_sleep_clock ? own_sleep_clock:children_sleep_clock;
-}
-
-Response* Resource::http_get(Request* request)
-{
-	Response* response =  http_head(request);
-	response->body_file = render( request );
-	if(response->body_file)
-	{
-		response->content_length = response->body_file->size;
-	}
-	else
-	{
-		response->content_length = 0;
-		WARNING_PRINTLN("Fail to render body");
-	}
-	return response;
-}
-
-Response* Resource::http_head(Request* request)
-{
-	Response* response =  new Response(OK_200, request );
-	//response->body = render( request );
-	response->content_type = &Message::TEXT_HTML;
-	return response;
-}
-
-Response* Resource::http_trace( Request* request )
-{
-	Response* response = new Response(OK_200, request );
-	//request->Message::serialize();
-	//response->body = request->message;
-	response->content_type = &Message::MESSAGE_HTTP;
-	return response;
 }
 
 void Resource::schedule( volatile uptime_t* timer, uptime_t time )

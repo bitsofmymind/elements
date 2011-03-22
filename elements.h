@@ -29,4 +29,9 @@ typedef uint64_t uptime_t;
 #define OUTPUT_WARNINGS 1
 #define VERBOSITY 0
 
+/*Default methods controls*/
+#define HTTP_TRACE 0
+#define HTTP_HEAD 0
+#define HTTP_GET 1
+
 #endif /* ELEMENTS_H_ */
