@@ -468,8 +468,15 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 			}
 			if(file->last_op_result == FR_OK)
 			{
-				*return_message = http_head(request);
-				(*return_message)->body_file = file;
+				Response* response =  new Response(OK_200, request );
+				if(!response)
+				{
+					return NULL;
+				}
+				//response->body = render( request );
+				response->content_type = &Message::TEXT_HTML;
+				response->body_file = file;
+				*return_message = response;
 				sc = OK_200;
 			}
 			else
