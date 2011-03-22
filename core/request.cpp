@@ -188,7 +188,7 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 			case VALUE:
 				if(buffer == '&' || read == 0)
 				{
-					return index - 1;
+					return index;
 				}
 				value[index++] = buffer;
 				if(index == max_size)

@@ -24,7 +24,8 @@ class Message
 {
 	public:
 		enum TYPE { REQUEST, RESPONSE, UNKNOWN };
-		enum PARSER_RESULT { PARSING_COMPLETE,
+		enum PARSER_RESULT { NOT_PARSED,
+			PARSING_COMPLETE,
 			PARSING_SUCESSFUL,
 			LINE_INCOMPLETE,
 			LINE_MALFORMED,
@@ -71,10 +72,11 @@ class Message
 		MESSAGE_SIZE content_length;
 		string<uint8_t> header;
 		string<MESSAGE_SIZE> current_line;
+		bool parsing_body;
 
 	public:
 		Message();
-		~Message();
+		virtual ~Message();
 
 		#ifdef DEBUG
 			virtual void print();

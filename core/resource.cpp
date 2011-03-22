@@ -266,7 +266,15 @@ Response* Resource::http_get(Request* request)
 {
 	Response* response =  http_head(request);
 	response->body_file = render( request );
-	response->content_length = response->body_file->size;
+	if(response->body_file)
+	{
+		response->content_length = response->body_file->size;
+	}
+	else
+	{
+		response->content_length = 0;
+		Debug::println("body render fail");
+	}
 	return response;
 }
 
@@ -329,7 +337,7 @@ void Resource::schedule(uptime_t time)
 
 File<MESSAGE_SIZE>* Resource::render( Request* request )
 {
-	return new ConstFile<MESSAGE_SIZE>("<html><body>There are currently no representation associated with this resource.</body></html>");
+	return new ConstFile<MESSAGE_SIZE>("o");//<html><body>There are currently no representation associated with this resource.</body></html>");
 }
 
 Resource* Resource::get_next_child_to_visit(void)

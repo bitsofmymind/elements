@@ -42,7 +42,8 @@ using namespace Elements;
 #endif
 
 Message::Message():
-		content_length(0)
+		content_length(0),
+		parsing_body(false)
 {
 	body_file = NULL;
 	header.length = 0;
@@ -131,7 +132,7 @@ Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 	MESSAGE_SIZE line_end = 0;
 	MESSAGE_SIZE line_start = 0;
 
-	if(body_file)
+	if(parsing_body)
 	{
 		return store_body(data, size);
 	}
@@ -169,17 +170,8 @@ Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 			{
 				case PARSING_COMPLETE:
 					//The remainder of the buffer is part of the the body so we store it.
+					parsing_body = true;
 					return store_body(data + line_end + 1, size - (line_end + 1));
-					/*if(line_end + 1 < size)
-					{
-						return store_body(data + line_end + 1, size - line_end + 1);
-					}
-					else if(content_length)
-					{
-						return PARSING_SUCESSFUL;
-					}
-					return PARSING_COMPLETE;
-					break;*/
 				case PARSING_SUCESSFUL:
 					line_start = ++line_end;
 					break;
