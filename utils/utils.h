@@ -45,6 +45,12 @@ template< class T> class List: public GenericList
 		T* operator[](uint8_t i);
 };
 
+template< class U > struct key_value_pair
+{
+	const char* key;
+	U value;
+};
+
 class GenericDictionary
 {
 
@@ -55,18 +61,18 @@ class GenericDictionary
 
 		GenericDictionary();
 
-		int8_t add(Elements::string< uint8_t > key, void* value );
+		int8_t add(const char* key, void* value );
 		//virtual bool insert( char* key, uint8_t length, T* value );
 		//virtual bool insert( char* key, T* value );
-		void* remove( Elements::string< uint8_t >& key);
-		void* find( Elements::string< uint8_t >& key );
-        Elements::string<uint8_t>* find( void* value );
+		void* remove( const char* key);
+		void* find( const char* key );
+        const char* find_val( void* value );
 		key_value_pair<void*>* operator[](uint8_t i);
 		//virtual T* operator[]( string<uint8_t> key);
 		//virtual T* operator[]( char* key );
 
 	protected:
-		key_value_pair<void*>* get(  Elements::string< uint8_t >& key );
+		key_value_pair<void*>* get(  const char* key );
 		void compact( void );
 
 };
@@ -74,12 +80,12 @@ class GenericDictionary
 template< class T> class Dictionary: public GenericDictionary
 {
 	public:
-		int8_t add(Elements::string< uint8_t > key, T* value );
+		int8_t add(const char*, T* value );
 		//virtual bool insert( char* key, uint8_t length, T* value );
 		//virtual bool insert( char* key, T* value );
-		T* remove( Elements::string< uint8_t >& key);
-		T* find( Elements::string< uint8_t > key );
-                Elements::string<uint8_t>* find( T* value );
+		T* remove( const char* key);
+		T* find( const char* key );
+        const char* find_val( T* value );
 		key_value_pair<T*>* operator[](uint8_t i);
 		//virtual T* operator[]( string<uint8_t> key);
 		//virtual T* operator[]( char* key );
@@ -162,27 +168,27 @@ T* List<T>::operator[](uint8_t i)
 }
 
 template< class T>
-int8_t Dictionary<T>::add( Elements::string< uint8_t > key, T* value)
+int8_t Dictionary<T>::add( const char* key, T* value)
 {
-	return GenericDictionary::add( key, value);
+	return GenericDictionary::add( key, (void*)value);
 }
 
 template< class T>
-T* Dictionary< T >::remove( Elements::string< uint8_t >& key )
+T* Dictionary< T >::remove( const char* key )
 {
 	return (T*)GenericDictionary::remove(key);
 }
 
 template< class T>
-T* Dictionary< T >::find( Elements::string< uint8_t > key )
+T* Dictionary< T >::find( const char* key )
 {
 	return (T*)GenericDictionary::find(key);
 }
 
 template< class T>
-Elements::string< uint8_t >* Dictionary< T >::find( T* value )
+const char* Dictionary< T >::find_val( T* value )
 {
-	return GenericDictionary::find((void*)value);
+	return GenericDictionary::find_val((void*)value);
 }
 
 template< class T>

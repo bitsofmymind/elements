@@ -125,7 +125,7 @@ Message::PARSER_RESULT Request::parse_header(const char* line, MESSAGE_SIZE size
 		}
 		Message::PARSER_RESULT res = PARSING_SUCESSFUL;
 
-		to_url->deserialize( ++index );
+		to_url->parse( ++index );
 		//Should checl is url parsing was sucessful
 		from_url->is_absolute_path = to_url->is_absolute_path;
 

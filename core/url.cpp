@@ -38,15 +38,12 @@ URL::~URL()
 		}
 		delete authorities;
 	}
-	while(resources.items)
-	{
-		ts_free(resources.remove(0));
-	}
+	//delete args if necessary
 }
 
-void URL::deserialize(char* url_string)
+void URL::parse(char* str)
 {
-	url.text = url_string;
+	url.text = str;
 
 	uint8_t index = 0;
 	string<uint8_t>* temp;
@@ -128,6 +125,8 @@ void URL::deserialize(char* url_string)
 		port.length = 0;
 	}
 
+	char end_of_resources_char = '\0';
+
 	//RESOURCE PART
 	if( url.text[index] != '?' || url.text[index] != '#' || url.text[index] != ' ' )
 	{
@@ -147,30 +146,26 @@ void URL::deserialize(char* url_string)
 		{
 			if( url.text[index] == '/' )
 			{
-				temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
-				temp->text = url.text + start;
-				temp->length = index - start;
-				resources.append( temp );
+				url.text[index] = '\0';
+				resources.append( url.text + start );
 				start = index + 1;
 			}
 			else if( url.text[index] == '?' || url.text[index] == '#' || url.text[index] == ' ' )
 			{
+				end_of_resources_char = url.text[index];
 				if( url.text[index-1] == '/' )
 				{
 					if( resources.items == 0 ){ break; }
-					temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
-					temp->text = url.text + index;
-					temp->length = 1;
-					resources.append( temp );
+
+					url.text[index-1] = '\0';
+					resources.append(url.text + index);
 				}
 				else
 				{
 					/*There is necessarily a resource present because it was verified
 					at the beginning of this part.*/
-					temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
-					temp->text = url.text + start;
-					temp->length = index - start;
-					resources.append( temp );
+					url.text[index] = '\0';
+					resources.append( url.text + start );
 				}
 				break;
 			}
@@ -186,22 +181,22 @@ void URL::deserialize(char* url_string)
 
 
 	//ARGUMENT PART
-	if( url.text[index] == '?')
+	if( end_of_resources_char == '?')
 	{
 		index++; //jumps the '?'
 		uint8_t start = index;
 		bool is_key = true;
-		string<uint8_t> key;
-		arguments = new Dictionary< string< uint8_t > >();
+		const char* key;
+		arguments = new Dictionary< const char >();
 		for(;;)
 		{
 			if( is_key )
 			{
 				if( url.text[index] == '=' )
 				{
+					url.text[index] = '\0';
 					is_key = false;
-					key.text = url.text + start;
-					key.length = index - start;
+					key = url.text + start;
 					start = index + 1;
 				}
 			}
@@ -209,19 +204,18 @@ void URL::deserialize(char* url_string)
 			{
 				if( url.text[index] == '&' )
 				{
+					url.text[index] = '\0';
 					is_key = true;
 					temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
-					temp->text = url.text + start;
-					temp->length = index - start;
-					arguments->add( key, temp );
+					arguments->add( key, url.text+start );
 					start = index + 1;
 				}
 				else if( url.text[index] == '#' || url.text[index] == ' ' )
 				{
-					temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
-					temp->text = url.text + start;
-					temp->length = index - start;
-					arguments->add( key, temp );
+
+					end_of_resources_char = url.text[index];
+					url.text[index] = '\0';
+					arguments->add( key, url.text + start );
 					break;
 				}
 
@@ -231,7 +225,7 @@ void URL::deserialize(char* url_string)
 	}
 
 	//FRAGMENT PART
-	if(url.text[index] == '#')
+	if(end_of_resources_char == '#')
 	{
 		fragment.text = url.text + index + 1;
 		uint8_t start = index + 1;
@@ -279,7 +273,7 @@ void URL::print(void)
 	}
 	for(uint8_t i = 0; i < resources.items; i++)
 	{
-		DEBUG_NPRINT(resources[i]->text, resources[i]->length);
+		DEBUG_PRINT(resources[i]);
 		DEBUG_PRINT_BYTE('/');
 	}
 
@@ -315,19 +309,22 @@ int8_t URL::serialize_resource( char* destination )
 
 	for(uint8_t i = 0; i< resources.items; i++)
 	{
-		destination += resources[i]->copy(destination);
+		strcpy(destination, resources[i]);
+		destination += strlen(destination);
 		*destination++ = '/';
 	}
 	if (arguments )
 	{
-		key_value_pair<string<uint8_t>*>* kv;
+		key_value_pair<const char*>* kv;
 		*destination++ = '?';
 		for(uint8_t i = 0; i< arguments->items; i++)
 		{
 			kv = (*arguments)[i];
-			destination += kv->key.copy(destination);
+			strcpy(destination, kv->key);
+			destination += strlen(destination);
 			*destination++ = '=';
-			destination += kv->value->copy(destination);
+			strcpy(destination, kv->value);
+			destination += strlen(destination);
 			*destination++ = '&';
 		}
 		if(arguments->items)
@@ -369,17 +366,17 @@ uint8_t URL::get_length(void)
 	for(uint8_t i = 0; i<resources.items; i++ )
 	{
 		length++; //For the '/'
-		length += resources[i]->length;
+		length += strlen(resources[i]);
 	}
 	if(arguments)
 	{
-		key_value_pair<string<uint8_t>*>* kv;
+		key_value_pair<const char*>* kv;
 		length++; //For the '?'
 		for(uint8_t i = 0; i< arguments->items; i++)
 		{
 			kv = (*arguments)[i];
-			length += kv->key.length;
-			length += kv->value->length;
+			length += strlen(kv->key);
+			length += strlen(kv->value);
 		}
 		if( arguments->items)
 		{

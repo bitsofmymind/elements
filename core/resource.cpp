@@ -51,15 +51,15 @@ void Resource::visit(void)
 Message* Resource::dispatch( Message* message )
 {
 
-	string<uint8_t>* name;
+	const char* name;
 
 	while(message->to_url->cursor < message->to_url->resources.items)
 	{
 		name = message->to_url->resources[message->to_url->cursor];
 
-		if(name->text[0] == '.')
+		if(name[0] == '.')
 		{
-			if(name->text[1] == '.' && name->length == 2 )
+			if(name[1] == '.' && name[2] == '\0' )
 			{
 				message->to_url->cursor++;
 				if(parent)
@@ -68,7 +68,7 @@ Message* Resource::dispatch( Message* message )
 				}
 				return error(404, message);
 			}
-			if(name->length == 1)
+			if(name[1] == '\0')
 			{
 				message->to_url->cursor++;
 				continue;
@@ -102,7 +102,7 @@ Message* Resource::dispatch( Message* message )
 			{
 				if(message->to_url->cursor < message->to_url->resources.items)
 				{
-					Resource* next = children->find( *(message->to_url->resources[message->to_url->cursor++]) );
+					Resource* next = children->find( message->to_url->resources[message->to_url->cursor++] );
 					if(next)
 					{
 						return next->dispatch(message);
@@ -128,32 +128,32 @@ uint8_t Resource::send(Message* message)
 {
     if(parent)
     {
-        string<uint8_t>* name = parent->get_name(this);
-        string<uint8_t>* new_name = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
+        const char* name = parent->get_name(this);
+        char* new_name = (char*)ts_malloc(strlen(name));
 
-        *new_name = *name;
+        strcpy(new_name, name);
 
         if(!message->to_url->is_absolute_path)
         {
-            message->to_url->resources.insert(new_name,0);
+            message->to_url->resources.insert((const char *)new_name,0);
         }
-        message->from_url->resources.insert(new_name,0);
+        message->from_url->resources.insert((const char *)new_name,0);
         return parent->send(message);
     }
     return 1;
 }
 
 
-string<uint8_t>* Resource::get_name(Resource* resource)
+const char* Resource::get_name(Resource* resource)
 {
     if(children)
     {
-        return children->find(resource);
+        return children->find_val(resource);
     }
     return NULL;
 }
 
-int8_t Resource::add_child(string<uint8_t> name, Resource* child )
+int8_t Resource::add_child(const char* name, Resource* child )
 {
 	if( children == NULL )
 	{
@@ -183,7 +183,8 @@ uint8_t Resource::get_number_of_children()
 {
 	return !children ? 0 : children->items;
 }
-Resource* Resource::remove_child(string<uint8_t> name)
+
+Resource* Resource::remove_child(const char* name)
 {
 	Resource* orphan = !children ? NULL: (Resource*)children->remove(name);
 	orphan->parent = NULL;

@@ -38,8 +38,8 @@ class Resource
 		#endif
 
 
-		int8_t add_child(Elements::string<uint8_t> name, Resource* child);
-		Resource* remove_child(Elements::string<uint8_t> name);
+		int8_t add_child(const char* name, Resource* child);
+		Resource* remove_child(const char* name);
 		uint8_t get_number_of_children(void);
 
 	public: //:protected
@@ -49,7 +49,7 @@ class Resource
         virtual uint8_t send(Message* message);
 
 		virtual uptime_t get_sleep_clock( void );
-        string<uint8_t>* get_name(Resource* resource);
+        const char* get_name(Resource* resource);
 
         virtual Response::status_code process( Request* request, Message** return_message );
         virtual Response::status_code process( Response* response, Message** return_message );

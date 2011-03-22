@@ -24,12 +24,6 @@ namespace Elements
 		char& operator[]( T index );
 	};
 
-	template< class U > struct key_value_pair
-	{
-		string<uint8_t> key;
-		U value;
-	};
-
 	/*struct e_time_t
 	{
 		static const e_time_t MAX;

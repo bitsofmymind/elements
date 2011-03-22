@@ -29,8 +29,8 @@ class URL
 		Elements::string<uint8_t> protocol;
 		List< Elements::string<uint8_t> >* authorities;
 		Elements::string< uint8_t> port;
-		List< Elements::string<uint8_t> > resources;
-		Dictionary< Elements::string< uint8_t > >* arguments;
+		List< const char > resources;
+		Dictionary< const char >* arguments;
 		Elements::string<uint8_t> fragment;
 		bool valid;
 		bool is_absolute_url;
@@ -41,7 +41,7 @@ class URL
 		URL();
 		~URL();
 
-		void deserialize(char* url_string);
+		void parse(char* str);
 		int8_t serialize( char* destination );
 		int8_t serialize_authority( char* destination );
 		int8_t serialize_resource( char* destination );

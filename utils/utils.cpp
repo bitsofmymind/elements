@@ -100,7 +100,7 @@ GenericDictionary::GenericDictionary( void )
 }
 
 
-int8_t GenericDictionary::add( string< uint8_t > key, void* value)
+int8_t GenericDictionary::add( const char* key, void* value )
 {
 	if(items == CAPACITY){ return 1; }
 
@@ -118,33 +118,33 @@ int8_t GenericDictionary::add( string< uint8_t > key, void* value)
 }
 
 
-void* GenericDictionary::remove( string< uint8_t >& key )
+void* GenericDictionary::remove( const char* key )
 {
 	key_value_pair<void*>* kv = get(key);
 	if(kv == NULL){ return NULL; }
 	void* value = kv->value;
 	kv->value = NULL;
-	kv->key.text = NULL;
+	kv->key = NULL;
 	items--;
 	compact();
 
 	return value;
 }
 
-void* GenericDictionary::find( string< uint8_t >& key ) //&
+void* GenericDictionary::find( const char* key )
 {
 	key_value_pair<void*>* kv = get( key );
 	if(kv == NULL){ return NULL; }
 	return kv->value;
 }
 
-Elements::string< uint8_t >* GenericDictionary::find( void* value )
+const char* GenericDictionary::find_val( void* value )
 {
     for(uint8_t i = 0; i < items; i++)
     {
         if(list[i].value == value)
         {
-            return &list[i].key;
+            return list[i].key;
         }
     }
 
@@ -152,15 +152,13 @@ Elements::string< uint8_t >* GenericDictionary::find( void* value )
 }
 
 
-key_value_pair<void*>* GenericDictionary::get( string< uint8_t >& key )//&
+key_value_pair<void*>* GenericDictionary::get( const char* key )
 {
-	string< uint8_t >* local_key;
+	const char* local_key;
 	for(uint8_t i = 0; i < items; i++)
 	{
-		local_key = &list[i].key;
-		if( local_key->length != key.length ) { continue; }
-		if(local_key->text == NULL){ break; }
-		if(!memcmp(local_key->text, key.text, key.length))
+		local_key = list[i].key;
+		if(!strcmp(local_key, key))
 		{
 			return &list[i];
 		}
@@ -178,10 +176,10 @@ void GenericDictionary::compact()
 {
 	for(uint8_t i = 0; i < CAPACITY - 1; i++)
 	{
-		if(list[i].key.text != NULL){ continue; }
+		if(list[i].key != NULL){ continue; }
 		list[i].key = list[i + 1].key;
 		list[i].value = list[i + 1].value;
-		list[i + 1].key.text = NULL;
+		list[i + 1].key = NULL;
 		list[i + 1].value = NULL;
 	}
 }
