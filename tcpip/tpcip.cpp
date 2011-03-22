@@ -149,6 +149,8 @@ void TCPIPStack::appcall(void)
 	{
 		Debug::println("Connection made");
 		s->request = new Request();
+		Debug::print("request addr ");
+		Debug::println((size_t)s->request, DEC);
 		s->receiving_body = false;
 		s->body = NULL;
 		s->header = NULL;
@@ -237,6 +239,7 @@ void TCPIPStack::appcall(void)
 					ts_free(buffer);
 					uip_abort();
 				}
+				s->header->print();
 				if(response->body_file)
 				{
 					s->body = response->body_file;
@@ -252,6 +255,9 @@ void TCPIPStack::appcall(void)
 				}
 				uip_send(uip_appdata, sent);
 				Debug::println("reply");
+
+				/*This is a bit messy, people should not have to know whether to delete a request object or not*/
+				s->request = NULL;
 				delete response;
 				break;
 			}
