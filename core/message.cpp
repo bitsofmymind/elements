@@ -18,28 +18,19 @@
 
 using namespace Elements;
 
-#ifdef DEBUG
-	void Message::print()
-	{
-		/*for( uint8_t i = 0; i<fields.items ; i++)
-		{
-			Debug::print("   ");
-			Debug::print(fields[i]->key.text, fields[i]->key.length);
-			Debug::print(": ");
-			Debug::println(fields[i]->value->text, fields[i]->value->length);
-		}*/
 
-		Debug::print("   body: ");
-		if(body_file)
-		{
-			Debug::println(body_file->size, DEC);
-		}
-		else
-		{
-			Debug::println(0);
-		}
+void Message::print()
+{
+	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
+	 * this method should be optimizes away by the compiler.*/
+
+	if(content_length)
+	{
+		DEBUG_PRINT("Content-Length: ");
+		DEBUG_PRINTLN_DEC(content_length);
 	}
-#endif
+}
+
 
 Message::Message():
 		content_length(0),

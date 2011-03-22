@@ -58,9 +58,9 @@ class Response: public Message
 		Response( const uint16_t response_code,	Request* request );
 		~Response();
 
-		#ifdef DEBUG
-			virtual void print();
-		#endif
+
+		virtual void print();
+
 
 		virtual MESSAGE_SIZE get_header_length(void);
 		#ifndef NO_RESPONSE_DESERIALIZATION

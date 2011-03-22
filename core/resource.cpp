@@ -190,14 +190,27 @@ Resource* Resource::remove_child(string<uint8_t> name)
 	return orphan;
 }
 
+void Resource::print_transaction(Message* message)
+{
+	/*If VERBOSITYis undefined, this method should be optimizes away by the compiler.*/
+
+	VERBOSE_PRINT("from: ");
+	message->from_url->print();
+	VERBOSE_PRINTLN();
+	VERBOSE_PRINT("to: ");
+	message->to_url->print();
+	VERBOSE_PRINTLN();
+	message->print();
+	VERBOSE_PRINTLN();
+}
+
 Response::status_code Resource::process( Request* request, Message** return_message )
 {
 
 	if(request->to_url->cursor >=  request->to_url->resources.items)
 	{
-		#ifdef DEBUG
-			print_transaction(request);
-		#endif
+		print_transaction(request);
+
 		if(request->methodcmp("get", 3))
 		{
 			 *return_message = http_get( request );
@@ -226,30 +239,13 @@ Response::status_code Resource::process(Response* response, Message** return_mes
 {
 	if(response->to_url->cursor >=  response->to_url->resources.items)
 	{
-		#ifdef DEBUG
-			print_transaction(response);
-		#endif
+		print_transaction(response);
 		delete response;
 		return OK_200;
 	}
 	return PASS_308;
 }
 
-#ifdef DEBUG
-	void Resource::print_transaction(Message* message)
-	{
-		Debug::println("# Received: ");
-		Debug::print("from: ");
-		message->from_url->print();
-		Debug::println();
-		Debug::print("to: ");
-		message->to_url->print();
-		Debug::println();
-		message->print();
-		Debug::println();
-	}
-
-#endif
 
 void Resource::run( void )
 {
@@ -273,7 +269,7 @@ Response* Resource::http_get(Request* request)
 	else
 	{
 		response->content_length = 0;
-		Debug::println("body render fail");
+		WARNING_PRINTLN("Fail to render body");
 	}
 	return response;
 }

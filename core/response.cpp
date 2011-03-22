@@ -18,16 +18,24 @@
 
 using namespace Elements;
 
-#ifdef DEBUG
-	void Response::print(void)
+
+void Response::print(void)
+{
+	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
+	 * this method should be optimizes away by the compiler.*/
+
+	DEBUG_PRINT("% Response: ");
+	DEBUG_PRINT(" HTTP/1.0");
+	DEBUG_PRINT_BYTE(' ');
+	DEBUG_PRINTLN_DEC(response_code_int);
+	if(content_type)
 	{
-		Debug::print("% Response: ");
-		Debug::print(" HTTP/1.0");
-		Debug::print(" ");
-		Debug::println(response_code_int, DEC);
-		Message::print();
+		DEBUG_PRINT("Content-Type: ");
+		DEBUG_NPRINTLN(content_type->text, content_type->length);
 	}
-#endif
+	Message::print();
+}
+
 
 Response::Response(
 		const uint16_t _response_code,

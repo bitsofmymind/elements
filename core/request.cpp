@@ -35,17 +35,19 @@ Request::~Request()
 	delete from_url;
 }
 
-#ifdef DEBUG
-	void Request::print(void)
-	{
-		Debug::print(" % Request: ");
-		Debug::print(method.text, method.length);
-		Debug::print(" ");
-		Debug::print(to_url->url.text, to_url->url.length);
-		Debug::println(" HTTP/1.0");
-		Message::print();
-	}
-#endif
+
+void Request::print(void)
+{
+	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
+	 * this method should be optimizes away by the compiler.*/
+	DEBUG_PRINT(" % Request: ");
+	DEBUG_NPRINT(method.text, method.length);
+	DEBUG_PRINT_BYTE(' ');
+	DEBUG_NPRINT(to_url->url.text, to_url->url.length);
+	DEBUG_PRINTLN(" HTTP/1.0");
+	Message::print();
+}
+
 
 MESSAGE_SIZE Request::get_header_length(void)
 {

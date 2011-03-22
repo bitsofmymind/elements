@@ -24,4 +24,9 @@ typedef uint64_t uptime_t;
 
 #define ATOMIC
 
+/*Verbosity controls*/
+#define OUTPUT_ERRORS 1
+#define OUTPUT_WARNINGS 1
+#define VERBOSITY 0
+
 #endif /* ELEMENTS_H_ */

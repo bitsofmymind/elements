@@ -61,12 +61,12 @@ void* ts_malloc(size_t size)
 	{
 		block = malloc(size);
 	}
-	#ifdef DEBUG
-		if(!block)
-		{
-			Debug::println("malloc failed!");
-		}
-	#endif
+
+	if(!block)
+	{
+		//This should be optimized away by the compiler when ERROR_OUTPUT is defined to 0
+		ERROR_PRINTLN("Malloc failed!");
+	}
 
 	return block;
 }
@@ -110,7 +110,7 @@ bool unregister_interrupt_handler( void ( *handler_pointer )( void ), void* vect
 	return false;
 }
 */
-#ifdef DEBUG
+#if OUTPUT_ERRORS || OUTPUT_WARNING || VERBOSITY
 void printNumber(uint32_t n, uint8_t base)
 {
   unsigned char buf[8 * sizeof(int32_t)]; // Assumes 8-bit chars.
@@ -194,9 +194,9 @@ void Debug::print(uint32_t n, uint8_t base)
   printFloat(n, digits);
 }*/
 
-void Debug::println(const char* c)
+void Debug::println(const char* str)
 {
-	Debug::print(c);
+	Debug::print(str);
 	Debug::println();
 }
 

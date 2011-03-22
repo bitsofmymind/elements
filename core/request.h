@@ -46,9 +46,9 @@ class Request: public Message
 		Request();
 		~Request();
 
-		#ifdef DEBUG
-			virtual void print();
-		#endif
+
+		virtual void print();
+
 
 
 		#ifndef NO_REQUEST_SERIALIZATION

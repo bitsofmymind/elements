@@ -20,9 +20,8 @@ void File<T>::print(void)
 	char c;
 	while(read(&c, 1, false))
 	{
-		Debug::print(c);
+		DEBUG_PRINT_BYTE(c);
 	}
-	Debug::println();
 	cursor = prev_cursor;
 }
 #endif

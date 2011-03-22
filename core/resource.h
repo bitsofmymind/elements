@@ -65,12 +65,9 @@ class Resource
 
 		Resource* get_next_child_to_visit();
 
-		#ifdef DEBUG
-              void print_transaction(Message* message);
-		#endif
-
 	protected:
         Response* error(uint16_t error, Message* message);
+        void print_transaction(Message* message);
 };
 
 #endif /* RESOURCE_H_ */

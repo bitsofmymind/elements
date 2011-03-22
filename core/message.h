@@ -78,9 +78,8 @@ class Message
 		Message();
 		virtual ~Message();
 
-		#ifdef DEBUG
-			virtual void print();
-		#endif
+
+		virtual void print();
 
  		virtual MESSAGE_SIZE get_header_length(void);
 

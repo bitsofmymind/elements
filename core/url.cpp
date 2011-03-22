@@ -250,41 +250,42 @@ int8_t URL::serialize(char* destination)
 	return serialize_resource(destination);
 }
 
-#ifdef DEBUG
-
 void URL::print(void)
 {
+	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
+	 * this method should be optimizes away by the compiler.*/
+
 	if(protocol.length)
 	{
-		Debug::print(protocol.text, protocol.length);
-		Debug::print(":");
+		DEBUG_NPRINT(protocol.text, protocol.length);
+		DEBUG_PRINT_BYTE(':');
 	}
 	if(authorities)
 	{
 		for(uint8_t i = 0; i < authorities->items; i++)
 		{
-			Debug::print((*authorities)[i]->text, (*authorities)[i]->length);
-			Debug::print(".");
+			DEBUG_NPRINT((*authorities)[i]->text, (*authorities)[i]->length);
+			DEBUG_PRINT_BYTE('.');
 		}
 	}
 	if(port.length)
 	{
-		Debug::print(":");
-		Debug::print(port.text, port.length);
+		DEBUG_PRINT_BYTE(':');
+		DEBUG_NPRINT(port.text, port.length);
 	}
 	if(is_absolute_path)
 	{
-		Debug::print("/");
+
 	}
 	for(uint8_t i = 0; i < resources.items; i++)
 	{
-		Debug::print(resources[i]->text, resources[i]->length);
-		Debug::print("/");
+		DEBUG_NPRINT(resources[i]->text, resources[i]->length);
+		DEBUG_PRINT_BYTE('/');
 	}
 
-}
+	//TODO: print the rest of the url
 
-#endif
+}
 
 int8_t URL::serialize_authority( char* destination )
 {
