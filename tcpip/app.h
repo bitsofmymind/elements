@@ -12,7 +12,6 @@ typedef struct elements_app_state
 	Request* request;
 	File<MESSAGE_SIZE>* header;
 	File<MESSAGE_SIZE>* body;
-	bool receiving_body;
 } uip_tcp_appstate_t;
 
 void elements_appcall(void);

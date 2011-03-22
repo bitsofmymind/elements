@@ -114,22 +114,11 @@ void init(void)
 
 	UCSR0B |= _BV(RXCIE0) + _BV(TXEN0) + _BV(RXEN0);
 
-	Debug::println("Waiting...");
+	VERBOSE_PRINTLN_P("Ready...");
 
 	sei();
 }
 
-void Debug::print(char c)
-{
-	  loop_until_bit_is_set(UCSR0A, UDRE0);
-	  UDR0 = c;
-}
-
-void Debug::println()
-{
-	print("\r");
-	print("\n");
-}
 
 ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)
 {
@@ -146,3 +135,49 @@ ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)
 		stack_pointer = _SFR_MEM16(0x5D);
 	}
 }*/
+
+#if OUTPUT_ERRORS || OUTPUT_WARNING || VERBOSITY
+//Should be able to deactivate from a avr implementation specific config file
+
+void Debug::print(char c)
+{
+	  loop_until_bit_is_set(UCSR0A, UDRE0);
+	  UDR0 = c;
+}
+
+void Debug::println()
+{
+	print("\r");
+	print("\n");
+}
+
+void Debug_P::print(const prog_char* str)
+{
+	char c;
+	do
+	{
+		c = pgm_read_byte(str++);
+		Debug::print((char)c);
+	}while(c);
+}
+void Debug_P::print(const prog_char* str, uint16_t length)
+{
+	char c;
+	while(length--)
+	{
+		c = pgm_read_byte(str++);
+		Debug::print(c);
+	}
+}
+void Debug_P::println(const prog_char* str)
+{
+	Debug_P::print(str);
+	Debug::println();
+}
+
+void Debug_P::println(const prog_char* str, uint16_t length)
+{
+	Debug_P::print(str, length);
+	Debug::println();
+}
+#endif

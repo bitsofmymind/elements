@@ -18,6 +18,7 @@
 #include "drivers/enc28j60/enc28j60.h"
 
 #include <core/request.h>
+#include <avr_pal.h>
 
 #include <string.h>
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])
@@ -31,6 +32,7 @@ TCPIPStack::TCPIPStack():
 	stack = this;
 
 	network_init();
+	VERBOSE_PRINTLN_P("Network initialized");
 
 	uip_init();
 
@@ -43,15 +45,25 @@ TCPIPStack::TCPIPStack():
 #ifdef __DHCPC_H__
 	dhcpc_init(&mac, 6);
 #else
+	uip_ipaddr_t ipaddr;
+
 	uip_ipaddr(ipaddr, 10,0,0,2);
 	uip_sethostaddr(ipaddr);
+	VERBOSE_PRINT_P("Host address: ");
+	printip(ipaddr);
+	VERBOSE_PRINTLN();
 	uip_ipaddr(ipaddr, 10,0,0,1);
+	VERBOSE_PRINT_P("Default router: ");
+	printip(ipaddr);
+	VERBOSE_PRINTLN();
 	uip_setdraddr(ipaddr);
 	uip_ipaddr(ipaddr, 255,255,255,0);
+	VERBOSE_PRINT_P("Netmask: ");
+	printip(ipaddr);
+	VERBOSE_PRINTLN();
 	uip_setnetmask(ipaddr);
 #endif /*__DHCPC_H__*/
 
-	Debug::println("Network initialized");
 	schedule(ASAP);
 }
 
@@ -73,7 +85,7 @@ void TCPIPStack::run(void)
 		}
 		else if(BUF->type == htons(UIP_ETHTYPE_ARP))
 		{
-			Debug::println("arp");
+			VERBOSE_PRINTLN_P("ARP Received");
 			uip_arp_arpin();
 			if(uip_len > 0)
 			{
@@ -105,6 +117,19 @@ void TCPIPStack::run(void)
 	schedule(ASAP);
 }
 
+void TCPIPStack::printip(uip_ipaddr_t addr)
+{
+	/*If VERBOSITY is undefined, this method should be optimizes away by the compiler.*/
+
+	VERBOSE_PRINT_DEC(((uint8_t*)addr)[0]);
+	VERBOSE_PRINT_BYTE('.');
+	VERBOSE_PRINT_DEC(((uint8_t*)addr)[1]);
+	VERBOSE_PRINT_BYTE('.');
+	VERBOSE_PRINT_DEC(((uint8_t*)addr)[2]);
+	VERBOSE_PRINT_BYTE('.');
+	VERBOSE_PRINT_DEC(((uint8_t*)addr)[3]);
+}
+
 void TCPIPStack::appcall(void)
 {
 	struct elements_app_state *s = &(uip_conn->appstate);
@@ -115,15 +140,21 @@ void TCPIPStack::appcall(void)
 
 	if(uip_aborted())
 	{
-		Debug::println("Aborted");
+		VERBOSE_PRINT_P("Connection from ");
+		printip(uip_conn->ripaddr);
+		VERBOSE_PRINTLN_P(" aborted");
 	}
 	if(uip_timedout())
 	{
-		Debug::println("Timedout");
+		VERBOSE_PRINT_P("Connection from ");
+		printip(uip_conn->ripaddr);
+		VERBOSE_PRINTLN_P(" timed out");
 	}
 	if(uip_closed())
 	{
-		Debug::println("Closed");
+		VERBOSE_PRINT_P("Connection from ");
+		printip(uip_conn->ripaddr);
+		VERBOSE_PRINTLN_P(" closed");
 	}
 
 	if(uip_closed() || uip_timedout() || uip_aborted())
@@ -147,11 +178,10 @@ void TCPIPStack::appcall(void)
 
 	if(uip_connected())
 	{
-		Debug::println("Connection made");
+		printip(uip_conn->ripaddr);
+		VERBOSE_PRINTLN_P(" connected");
+
 		s->request = new Request();
-		Debug::print("request addr ");
-		Debug::println((size_t)s->request, DEC);
-		s->receiving_body = false;
 		s->body = NULL;
 		s->header = NULL;
 		if(!s->request)
@@ -164,28 +194,19 @@ void TCPIPStack::appcall(void)
 	if(uip_newdata())
 	{
 		Message::PARSER_RESULT res = s->request->parse((const char*)uip_appdata, uip_len);
+		VERBOSE_PRINT_P("New data from ");
+		printip(uip_conn->ripaddr);
+		VERBOSE_PRINTLN();
 		switch(res)
 		{
 			case Message::PARSING_COMPLETE:
-				if(s->request->content_length)
-				{
-					s->receiving_body = true; //now useless
-					Debug::print("has body");
-					s->request->body_file->print();
-					//char c[4];
-					//s->request->body_file->read(c, 4, true);
-					//Debug::println((size_t)s->request->body_file, DEC);
-				}
-				else
-				{
-					Debug::println("no body");
-				}
+				VERBOSE_PRINTLN_P("Parsing_complete, sending");
 				send(s->request);
 				break;
 			case Message::PARSING_SUCESSFUL:
 				break;
 			default:
-				Debug::println("Parsing Error");
+				VERBOSE_PRINTLN_P("Parsing Error");
 				uip_abort();
 				return;
 		}
@@ -215,16 +236,20 @@ void TCPIPStack::appcall(void)
 	}
 	if(uip_rexmit())
 	{
-		Debug::println("rexmit");
+		VERBOSE_PRINT_P("Connection from ");
+		printip(uip_conn->ripaddr);
+		VERBOSE_PRINTLN_P(" retransmit");
 	}
 	if(uip_poll())
 	{
-		Debug::println("poll");
+		VERBOSE_PRINT_P("Polling for ");
+		printip(uip_conn->ripaddr);
+		VERBOSE_PRINTLN();
+
 		for(uint8_t i = 0; i < to_send.items; i++ )
 		{
 			if(to_send[i]->original_request == s->request)
 			{
-				Debug::println("replying");
 				Response* response = to_send.remove(i);
 				MESSAGE_SIZE size = response->get_header_length();
 				char* buffer = (char*)ts_malloc(size);
@@ -239,7 +264,7 @@ void TCPIPStack::appcall(void)
 					ts_free(buffer);
 					uip_abort();
 				}
-				s->header->print();
+
 				if(response->body_file)
 				{
 					s->body = response->body_file;
@@ -254,7 +279,7 @@ void TCPIPStack::appcall(void)
 					sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent, true);
 				}
 				uip_send(uip_appdata, sent);
-				Debug::println("reply");
+				VERBOSE_PRINTLN_P("Sending reply packet");
 
 				/*This is a bit messy, people should not have to know whether to delete a request object or not*/
 				s->request = NULL;
@@ -263,8 +288,6 @@ void TCPIPStack::appcall(void)
 			}
 		}
 	}
-
-	Debug::println("ret");
 }
 
 void elements_appcall(void)
@@ -277,9 +300,9 @@ Response::status_code TCPIPStack::process(Response* response, Message** return_m
 
 	if(response->to_url->cursor >=  response->to_url->resources.items)
 	{
-		Debug::print("msg came");
 		to_send.append(response);
-		Debug::println(" back!");
+		VERBOSE_PRINTLN_P("Received response: ");
+		print_transaction(response);
 		return OK_200;
 	}
 

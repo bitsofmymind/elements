@@ -9,6 +9,7 @@
 #include <avr/io.h>
 #include "diskio.h"
 #include <pal/pal.h>
+#include <avr_pal.h>
 
 /*--------------------------------------------------------------------------
 
@@ -103,7 +104,6 @@ uint8_t wait_ready (void)	/* 1:OK, 0:Timeout */
 	do
 		if (rcvr_spi() == 0xFF) return 1;
 	while (get_uptime() < timer);
-	Debug::println("init");
 	return 0;
 }
 
@@ -459,8 +459,8 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 		{
 			//Response* response;
 			FATFile* file = new FATFile(path);
-			Debug::print("fetching ");
-			Debug::println(path);
+			VERBOSE_PRINT_P("Fetching ");
+			VERBOSE_PRINTLN(path);
 			if(!file)
 			{
 				//Critical error
@@ -514,7 +514,7 @@ void SDMMC::run(void)
 			{
 				//STA_NOINIT was cleared in disk_initialized because it succeeded
 				fatfs = (FATFS*)ts_malloc(sizeof(FATFS)); //Allocates FATFS struct
-				Debug::println("Disk initialized");
+				VERBOSE_PRINTLN_P("Disk initialized");
 				if(!fatfs)
 				{
 					//allocation of fatfs failed!
@@ -527,7 +527,7 @@ void SDMMC::run(void)
 			}
 			else
 			{
-				Debug::println("Disk fail");
+				ERROR_PRINTLN_P("Disk fail");
 			}
 			//Initialization will be attempted again in 100ms if it failed.
 
@@ -538,7 +538,7 @@ void SDMMC::run(void)
 	{
 		if(fatfs) //If fatfs was previously allocated
 		{
-			Debug::println("Disk removed");
+			VERBOSE_PRINTLN_P("Disk removed");
 			ts_free(fatfs);
 			fatfs = NULL;
 			f_mount(0, NULL); //unmounts the disk

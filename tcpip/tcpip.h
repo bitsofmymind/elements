@@ -14,8 +14,6 @@
 class TCPIPStack: public Resource
 {
 	private:
-		uip_ipaddr_t ipaddr;
-
 		uptime_t periodic_timer;
 		uptime_t arp_timer;
 
@@ -30,6 +28,8 @@ class TCPIPStack: public Resource
 		void appcall(void);
 
 		virtual Response::status_code process(Response* response, Message** return_message);
+	protected:
+		void printip(uip_ipaddr_t addr);
 
 };
 

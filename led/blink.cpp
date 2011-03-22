@@ -101,20 +101,17 @@ File<MESSAGE_SIZE>* Blinker::render( Request* request )
 Response::status_code Blinker::process( Request* request, Message** return_message )
 {
 	Response::status_code sc = Resource::process(request, return_message);
-	Debug::println(sc, DEC);
+
 	if(sc == NOT_IMPLEMENTED_501)
 	{
 		if(request->methodcmp("post", 4))
 		{
-			Debug::print("post rec ");
 			char buffer[8];
+			request->body_file->print();
 			uint8_t len = request->find_arg("i", buffer, 7);
-			Debug::print(len, DEC);
-			Debug::print(" ");
 			if(len)
 			{
 				buffer[len] = '\0';
-				Debug::println(atoi(buffer));
 				_interval = atoi(buffer);
 			}
 
