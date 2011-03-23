@@ -110,6 +110,7 @@ Message::PARSER_RESULT Request::parse_header(const char* line, MESSAGE_SIZE size
 			{
 				method = header;
 				method_length = index - header;
+				*index = '\0';
 				break;
 			}
 			else if (index > (header + header_length))
@@ -159,7 +160,7 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 
 	do
 	{
-		read = body_file->read(&buffer, 1, true);
+		read = body_file->read(&buffer, 1);
 
 		switch(state)
 		{

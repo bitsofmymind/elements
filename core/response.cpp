@@ -132,7 +132,7 @@ MESSAGE_SIZE Response::get_header_length(void)
 
 	if(content_type)
 	{
-		length += sizeof(CONTENT_TYPE) - 1 + 2 /*For ": "*/ + strlen(content_type) + 2/*For \r\n*/;
+		length += 12 /*strlen(CONTENT_TYPE)*/ + 2 /*For ": "*/ + strlen(content_type) + 2/*For \r\n*/;
 	}
 
 	return length;
@@ -156,7 +156,7 @@ void Response::serialize( char* buffer)
 	if(content_type)
 	{
 		strcpy(buffer, CONTENT_TYPE);
-		buffer += sizeof(CONTENT_TYPE) - 1; //Moves the pointer after "Content-Type"
+		buffer += 12; //strlen(CONTENT_TYPE); //Moves the pointer after "Content-Type"
 		*buffer++ = ':';
 		*buffer++ = ' ';
 		strcpy(buffer, content_type);

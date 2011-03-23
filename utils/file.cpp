@@ -19,7 +19,7 @@ void File::print(void)
 {
 	size_t prev_cursor = cursor;
 	char c;
-	while(read(&c, 1, false))
+	while(read(&c, 1))
 	{
 		DEBUG_PRINT_BYTE(c);
 	}
@@ -31,7 +31,7 @@ void File::print(void)
 size_t File::extract(char* buffer)
 {
 	cursor = 0;
-	return read(buffer, size, false);
+	return read(buffer, size);
 }
 
 ConstFile::ConstFile(const char* data):
@@ -49,7 +49,7 @@ ConstFile::ConstFile(const char* data, size_t length):
 }
 
 
-size_t ConstFile::read(char* buffer, size_t length, bool async)
+size_t ConstFile::read(char* buffer, size_t length)
 {
 	size_t i = 0;
 	for(; i < length && File::cursor < File::size; File::cursor++, i++)
@@ -58,7 +58,7 @@ size_t ConstFile::read(char* buffer, size_t length, bool async)
 	}
 	return i;
 }
- size_t ConstFile::write(const char* buffer, size_t length, bool async) { return 0; }
+ size_t ConstFile::write(const char* buffer, size_t length) { return 0; }
  int8_t ConstFile::open(void){ return 0; }
  void ConstFile::close(void){}
 
@@ -85,7 +85,7 @@ MemFile::~MemFile(void)
 }
 
 
-size_t MemFile::read(char* buffer, size_t length, bool async)
+size_t MemFile::read(char* buffer, size_t length)
 {
 	size_t i = 0;
 	for(; i < length && File::cursor < File::size; File::cursor++, i++)
@@ -94,7 +94,7 @@ size_t MemFile::read(char* buffer, size_t length, bool async)
 	}
 	return i;
 }
- size_t MemFile::write(const char* buffer, size_t length, bool async)
+ size_t MemFile::write(const char* buffer, size_t length)
 {
 	size_t i = 0;
 	for(; i < length && File::cursor < File::size; File::cursor++, i++)

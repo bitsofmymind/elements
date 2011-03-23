@@ -84,7 +84,7 @@ MESSAGE_SIZE Message::get_header_length(void)
 		#else
 			sprintf(content_string, "%d", content_length);
 		#endif
-		size += sizeof(CONTENT_LENGTH) - 1 + 2/*For ": "*/+ strlen(content_string) + 2/*For \r\n*/;
+		size += 14 /*strlen(CONTENT_LENGTH)*/ + 2/*For ": "*/+ strlen(content_string) + 2/*For \r\n*/;
 
 	}
 	//Add fields here.
@@ -96,7 +96,7 @@ void Message::serialize( char* buffer )
 	if(content_length)
 	{
 		strcpy(buffer, CONTENT_LENGTH);
-		buffer += sizeof(CONTENT_LENGTH) - 1;
+		buffer += 14; //strlen(CONTENT_LENGTH);
 		*buffer++ = ':';
 		*buffer++ =' ';
 		#ifdef ITOA
@@ -258,9 +258,9 @@ Message::PARSER_RESULT Message::parse_header(const char* line, MESSAGE_SIZE size
 
 	/*The content length line gets special treatment, for the rest of the fields, we should proceed normally
 	 * and store them in a buffer.*/
-	if(!strcmp(CONTENT_LENGTH, line)) //Could use memcmp
+	if(!strncmp(CONTENT_LENGTH, line, 14)) //Could use memcmp
 	{
-		content_length = atoi(line + sizeof(CONTENT_LENGTH) + 2);
+		content_length = atoi(line + 14 +/*strlen(CONTENT_LENGTH)*/ + 2);
 	}
 
 	//Store fields in buffers

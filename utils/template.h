@@ -26,8 +26,8 @@ class Template: public File
 		~Template();
 
 	public:
-		virtual size_t read(char* buffer, size_t length, bool async);
-		virtual size_t write(const char* buffer, size_t length, bool async);
+		virtual size_t read(char* buffer, size_t length);
+		virtual size_t write(const char* buffer, size_t length);
 		virtual int8_t open(void);
 		virtual void close(void);
 

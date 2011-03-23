@@ -29,11 +29,11 @@ Template::~Template()
 	delete file;
 }
 
-size_t Template::read(char* buffer, size_t length, bool async)
+size_t Template::read(char* buffer, size_t length)
 {
 	if( state != ARG )
 	{
-		previous_read_length = file->read(buffer, length, true);
+		previous_read_length = file->read(buffer, length);
 		if(state == DONE)
 		{
 			return previous_read_length;
@@ -77,7 +77,7 @@ size_t Template::read(char* buffer, size_t length, bool async)
 				argindex++;
 				if(i < length)
 				{
-					previous_read_length = file->read(buffer + i, length - i, true);
+					previous_read_length = file->read(buffer + i, length - i);
 					i--;
 					if(argindex >= argend )
 					{
@@ -97,7 +97,7 @@ size_t Template::read(char* buffer, size_t length, bool async)
 	return i;
 }
 
-size_t Template::write(const char* buffer, size_t length, bool async)
+size_t Template::write(const char* buffer, size_t length)
 {
 
 }

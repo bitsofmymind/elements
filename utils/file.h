@@ -3,6 +3,7 @@
 #define FILE_H_
 
 #include <stdint.h>
+#include <pal/pal.h>
 #include "../elements.h"
 
 /*template<class T> class Device
@@ -30,9 +31,9 @@ class File
 		#ifdef DEBUG
 			void print();
 		#endif
-		virtual size_t read(char* buffer, size_t length, bool async) = 0;
+		virtual size_t read(char* buffer, size_t length) = 0;
 		size_t extract(char* buffer);
-		virtual size_t write(const char* buffer, size_t length, bool async) = 0;
+		virtual size_t write(const char* buffer, size_t length) = 0;
 		virtual int8_t open(void) = 0;
 		virtual void close(void) = 0;
 };
@@ -46,8 +47,8 @@ class ConstFile: public File
 		ConstFile(const char* data);
 		ConstFile(const char* data, size_t length);
 
-		virtual size_t read(char* buffer, size_t length, bool async);
-		virtual size_t write(const char* buffer, size_t length, bool async);
+		virtual size_t read(char* buffer, size_t length);
+		virtual size_t write(const char* buffer, size_t length);
 		virtual int8_t open(void);
 		virtual void close(void);
 };
@@ -63,8 +64,8 @@ class MemFile: public File
 
 		virtual ~MemFile();
 
-		virtual size_t read(char* buffer, size_t length, bool async);
-		virtual size_t write(const char* buffer, size_t length, bool async);
+		virtual size_t read(char* buffer, size_t length);
+		virtual size_t write(const char* buffer, size_t length);
 		virtual int8_t open(void);
 		virtual void close(void);
 };
