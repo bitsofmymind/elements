@@ -28,7 +28,7 @@ Resource::Resource(void):
 	//register_element();
 }
 
-#ifndef NO_RESOURCE_DESTRUCTION
+#if RESOURCE_DESTRUCTION
 	Resource::~Resource(void)
 	{
 		//unregister_element();

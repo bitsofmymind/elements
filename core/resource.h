@@ -32,7 +32,7 @@ class Resource
 
 	public:
 		Resource(void);
-		#ifndef NO_RESOURCE_DESTRUCTION
+		#if RESOURCE_DESTRUCTION
 			virtual ~Resource(void);
 		#endif
 
