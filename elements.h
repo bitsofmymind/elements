@@ -34,4 +34,12 @@ typedef uint64_t uptime_t;
 #define HTTP_HEAD 0
 #define HTTP_GET 1
 
+/*URL parsing controls*/
+#define URL_PROTOCOL 0
+#define URL_AUTHORITY 0
+#define URL_PORT 0
+//Resource parsing is essential
+#define URL_ARGUMENTS 0
+#define URL_FRAGMENT 0
+
 #endif /* ELEMENTS_H_ */

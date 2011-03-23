@@ -12,24 +12,36 @@
 #include <string.h>
 
 
-URL::URL( )
+URL::URL( ):
+	cursor(0)
 {
 	url_str = NULL;
 	url_length = 0;
-	port = NULL;
+#if URL_PROTOCOL
 	protocol = NULL;
-	fragment = NULL;
+#endif
+#if URL_AUTHORITY
 	authority = NULL;
+#endif
+#if URL_PORT
+	port = NULL;
+#endif
+#if URL_ARGUMENTS
 	arguments = NULL;
-	cursor = 0;
+#endif
+#if URL_FRAGMENT
+	fragment = NULL;
+#endif
+
 }
 URL::~URL()
 {
-	//delete args if necessary
+#if URL_ARGUMENTS
 	if(arguments)
 	{
 		delete arguments;
 	}
+#endif
 }
 
 URL::PARSING_RESULT URL::parse(char* str)
@@ -37,7 +49,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 	url_str = str;
 
 	char* start = str;
-
+#if URL_PROTOCOL
 	//PROTOCOL PART
 	while(true)
 	{
@@ -57,12 +69,12 @@ URL::PARSING_RESULT URL::parse(char* str)
 		}
 		str++;
 	}
-
+#endif
 
 	char next_part = *str;
-
+#if URL_AUTHORITY
 	//AUTHORITY PART
-	if( *str != '.' && *str != '/' && *str != '#' )
+	if( *str != '/' && *str != '?' && *str != '#' )
 	{
 		start = str;
 
@@ -74,9 +86,10 @@ URL::PARSING_RESULT URL::parse(char* str)
 		next_part = *str;
 		*str++ = '\0';
 	}
+#endif
 
+#if URL_PORT
 	//PORT PART
-
 	if(next_part == ':')
 	{
 		port = start = str;
@@ -84,6 +97,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 		next_part = *str;
 		*str++ = '\0';
 	}
+#endif
 
 	//RESOURCE PART
 	if( next_part != '?' && next_part != '#' && next_part != ' ' )
@@ -136,7 +150,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 	{
 		is_absolute_path = false;
 	}
-
+#if URL_ARGUMENT
 	//ARGUMENT PART
 	if( next_part == '?')
 	{
@@ -180,7 +194,9 @@ URL::PARSING_RESULT URL::parse(char* str)
 			str++;
 		}
 	}
+#endif
 
+#if URL_FRAGMENT
 	//FRAGMENT PART
 	if(next_part == '#')
 	{
@@ -188,7 +204,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 		while( *str++ != ' ' );
 		*(str - 1) = '\0';
 	}
-
+#endif
 	url_length = str - url_str - 1;
 
 	return VALID;
@@ -197,25 +213,29 @@ URL::PARSING_RESULT URL::parse(char* str)
 size_t URL::serialize(char* destination)
 {
 	char* start = destination;
-
+#if URL_PROTOCOL
 	if( protocol )
 	{
 		strcpy(destination, protocol);
 		destination += strlen(protocol);
 		*destination++ = ':'; *destination++ = '/'; *destination++ = '/';
 	}
+#endif
+#if URL_AUTHORITY
 	if( authority )
 	{
 		strcpy(destination, authority);
 		destination += strlen(authority);
 	}
-	if(port )
+#endif
+#if URL_PORT
+	if(port)
 	{
 		*destination++ = ':';
 		strcpy(destination, port);
 		destination += strlen(port);
 	}
-
+#endif
 	if(is_absolute_path){ *destination++ = '/'; }
 
 	for(uint8_t i = 0; i< resources.items; i++)
@@ -224,6 +244,7 @@ size_t URL::serialize(char* destination)
 		destination += strlen(destination);
 		*destination++ = '/';
 	}
+#if URL_ARGUMENTS
 	if (arguments )
 	{
 		key_value_pair<const char*>* kv;
@@ -243,14 +264,15 @@ size_t URL::serialize(char* destination)
 			destination--; //We do not need the last '&'
 		}
 	}
-
+#endif
+#if URL_FRAGMENT
 	if(fragment)
 	{
 		*destination++ = '#';
 		strcpy(destination, fragment);
 		destination += strlen(fragment);
 	}
-
+#endif
 	return destination - start;
 }
 
@@ -258,21 +280,26 @@ void URL::print(void)
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
 	 * this method should be optimized away by the compiler.*/
-
+#if URL_PROTOCOL
 	if(protocol)
 	{
 		DEBUG_PRINT(protocol);
 		DEBUG_PRINT_BYTE(':');
 	}
+#endif
+#if URL_AUTHORITY
 	if(authority)
 	{
 		DEBUG_PRINT(authority);
 	}
+#endif
+#if URL_PORT
 	if(port)
 	{
 		DEBUG_PRINT_BYTE(':');
 		DEBUG_PRINT(port);
 	}
+#endif
 	if(is_absolute_path)
 	{
 		DEBUG_PRINT_BYTE('/');
@@ -282,6 +309,7 @@ void URL::print(void)
 		DEBUG_PRINT(resources[i]);
 		DEBUG_PRINT_BYTE('/');
 	}
+#if URL_ARGUMENTS
 	if(arguments)
 	{
 		DEBUG_PRINT_BYTE('?');
@@ -296,27 +324,38 @@ void URL::print(void)
 			}
 		}
 	}
+#endif
+#if URL_FRAGMENT
 	if(fragment)
 	{
 		DEBUG_PRINT_BYTE('#');
 		DEBUG_PRINT(fragment);
 	}
-
+#endif
 }
 
 size_t URL::get_length(void)
 {
 	size_t length = 0;
-
+#if URL_PROTOCOL
 	if( protocol )
 	{
 		length += strlen(protocol);
 		length += 3; //For '://'
 	}
+#endif
+#if URL_AUTHORITY
 	if(authority)
 	{
 		length += strlen(authority);
 	}
+#endif
+#if URL_PORT
+	if(port)
+	{
+		length += strlen(port) + 1; //For ':'
+	}
+#endif
 	if(is_absolute_path)
 	{
 		length++;
@@ -326,6 +365,7 @@ size_t URL::get_length(void)
 		length++; //For the '/'
 		length += strlen(resources[i]);
 	}
+#if URL_ARGUMENTS
 	if(arguments)
 	{
 		key_value_pair<const char*>* kv;
@@ -342,13 +382,14 @@ size_t URL::get_length(void)
 			length += arguments->items - 1; //For the '='
 		}
 	}
-
+#endif
+#if URL_FRAGMENT
 	if(fragment)
 	{
 		length++; //For '#'
 		length += strlen(fragment);
 	}
-
+#endif
 	return length;
 }
 
