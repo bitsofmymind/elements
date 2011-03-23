@@ -67,7 +67,7 @@ class Message
 		TYPE object_type;
 
 		File* body_file;
-		MESSAGE_SIZE content_length;
+		size_t content_length;
 
 		char*  header;
 		size_t header_length;
@@ -84,14 +84,14 @@ class Message
 
 		virtual void print();
 
- 		virtual MESSAGE_SIZE get_header_length(void);
+ 		virtual size_t get_header_length(void);
 
 		virtual void serialize( char* buffer );
 
 		Message::PARSER_RESULT parse(const char* buffer);
-		Message::PARSER_RESULT parse(const char* buffer, MESSAGE_SIZE size);
-		virtual Message::PARSER_RESULT parse_header(const char* line, MESSAGE_SIZE size);
-		Message::PARSER_RESULT store_body(const char* buffer, MESSAGE_SIZE size);
+		Message::PARSER_RESULT parse(const char* buffer, size_t size);
+		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
+		Message::PARSER_RESULT store_body(const char* buffer, size_t size);
 
 
 	protected:

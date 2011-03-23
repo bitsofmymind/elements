@@ -404,7 +404,7 @@ Response* Resource::error(uint16_t error, Message* message)
 		switch(error)
 		{
 			case NOT_FOUND_404:
-				//response->body = string<MESSAGE_SIZE>::make("?");//"<html><body>Not found</body></html>");
+				//response->body_file = new ConstFile("<html><body>Not found</body></html>");
 				response->body_file = new ConstFile("?");
 				break;
 			default:

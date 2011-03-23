@@ -13,7 +13,6 @@
 
 #define DEBUG
 //#define VERBOSE 1
-#define MESSAGE_SIZE uint32_t
 //#define NO_RESOURCE_DESTRUCTION
 //#define NO_RESPONSE_DESERIALIZATION //#undefine if framework is to receive responses from another domain
 //#define NO_REQUEST_SERIALIZATION //#undefine if framework is to send request to another domain

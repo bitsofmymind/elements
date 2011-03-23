@@ -47,7 +47,7 @@ void Request::print(void)
 }
 
 
-MESSAGE_SIZE Request::get_header_length(void)
+size_t Request::get_header_length(void)
 {
 	return strlen(method)/*For 'HTTP/'*/ \
 		+ 1 /*For a space*/ \
@@ -82,7 +82,7 @@ MESSAGE_SIZE Request::get_header_length(void)
 	}
 #endif
 
-Message::PARSER_RESULT Request::parse_header(const char* line, MESSAGE_SIZE size)
+Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 {
 
 	if(line[size - 2] != '\r' && line[size - 1] != '\n')

@@ -71,7 +71,7 @@ Response::~Response()
 }
 
 #ifndef NO_RESPONSE_DESERIALIZATION
-	Message::PARSER_RESULT Response::parse_header(const char* line, MESSAGE_SIZE size)
+	Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 	{
 		if(line[size - 2] != '\r' && line[size - 1] != '\n')
 		{
@@ -119,9 +119,9 @@ Response::~Response()
 	}
 #endif
 
-MESSAGE_SIZE Response::get_header_length(void)
+size_t Response::get_header_length(void)
 {
-	MESSAGE_SIZE length = 5 /*For 'HTTP/'*/ \
+	size_t length = 5 /*For 'HTTP/'*/ \
 			+ 3 /*For the HTTP version*/ \
 			+ 1 /*For a space*/ \
 			+ 3 /*For the status code*/ \

@@ -61,19 +61,19 @@ Message::~Message()
 }
 
 
-MESSAGE_SIZE Message::get_header_length(void)
+size_t Message::get_header_length(void)
 {
-	MESSAGE_SIZE size = 2; //For \r\n at end of the headers
+	size_t size = 2; //For \r\n at end of the headers
 
 	if(content_length)
 	{
 		/*itoa(content_length) will not produce more chars than the type that can
 		contain it plus a null termination.*/
-		#if MESSAGE_SIZE == uint16_t
+		#if size_t == uint16_t
 			char content_string[5 + 1];
-		#elif MESSAGE_SIZE == uint32_t
+		#elif size_t == uint32_t
 			char content_string[10 + 1];
-		#elif MESSAGE_SIZE == uint64_t
+		#elif size_t == uint64_t
 			char content_string[20 + 1];
 		#else
 			#error "MESSAGE_SIZE is of unknown type"
@@ -117,10 +117,10 @@ void Message::serialize( char* buffer )
 	*buffer = '\n';
 }
 
-Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
+Message::PARSER_RESULT Message::parse(const char* data, size_t size)
 {
-	MESSAGE_SIZE line_end = 0;
-	MESSAGE_SIZE line_start = 0;
+	size_t line_end = 0;
+	size_t line_start = 0;
 
 	if(parsing_body)
 	{
@@ -239,16 +239,10 @@ Message::PARSER_RESULT Message::parse( const char* buffer )
 		line_size++;
 	}
 
-	/*if(content_length)
-	{
-		//body present
-		body_file = new ConstFile<MESSAGE_SIZE>(buffer);
-	}*/
-
 	return PARSING_COMPLETE;
 }
 
-Message::PARSER_RESULT Message::parse_header(const char* line, MESSAGE_SIZE size)
+Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 {
 	//Overrides of this method should have checked if the line was correcly formed
 	if(size == 2)
@@ -268,7 +262,7 @@ Message::PARSER_RESULT Message::parse_header(const char* line, MESSAGE_SIZE size
 	return PARSING_SUCESSFUL;
 }
 
-Message::PARSER_RESULT Message::store_body(const char* buffer, MESSAGE_SIZE size)
+Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
 {
 
 	if(!content_length)

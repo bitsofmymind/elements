@@ -55,8 +55,8 @@ class Request: public Message
 			virtual void serialize( char* buffer );
 		#endif
 
-		virtual MESSAGE_SIZE get_header_length(void);
-		virtual Message::PARSER_RESULT parse_header(const char* line, MESSAGE_SIZE size);
+		virtual size_t get_header_length(void);
+		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
 
 		#ifdef BODY_ARGS_PARSING
 			uint8_t find_arg(const char* key, char* value, uint8_t max_size);
