@@ -20,8 +20,8 @@ class PGMSpaceFile: public File
 
 		PGMSpaceFile(PGM_P text, uint16_t size);
 
-		virtual uint16_t read(char* buffer, uint16_t length, bool async);
-		virtual uint16_t write(const char* buffer, uint16_t length,  bool async);
+		virtual uint16_t read(char* buffer, uint16_t length);
+		virtual uint16_t write(const char* buffer, uint16_t length);
 		virtual int8_t open(void);
 		virtual void close(void);
 };

@@ -214,17 +214,17 @@ void TCPIPStack::appcall(void)
 
 	if(uip_acked())
 	{
-		MESSAGE_SIZE sent = 0;
+		size_t sent = 0;
 
 		if(s->header->cursor != s->header->size)
 		{
-			sent += s->header->read((char*)uip_appdata, uip_mss(), true);
+			sent += s->header->read((char*)uip_appdata, uip_mss());
 		}
 		if(s->body &&
 				s->header->cursor == s->header->size &&
 				sent < uip_mss())
 		{
-			sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent ,true);
+			sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent);
 		}
 		uip_send(uip_appdata, sent);
 		if(s->header->cursor == s->header->size
@@ -251,7 +251,7 @@ void TCPIPStack::appcall(void)
 			if(to_send[i]->original_request == s->request)
 			{
 				Response* response = to_send.remove(i);
-				MESSAGE_SIZE size = response->get_header_length();
+				size_t size = response->get_header_length();
 				char* buffer = (char*)ts_malloc(size);
 				if(!buffer)
 				{
@@ -270,13 +270,13 @@ void TCPIPStack::appcall(void)
 					s->body = response->body_file;
 					response->body_file = NULL;
 				}
-				MESSAGE_SIZE sent = 0;
-				sent += s->header->read((char*)uip_appdata, uip_mss(), true);
+				size_t sent = 0;
+				sent += s->header->read((char*)uip_appdata, uip_mss());
 				if(s->body &&
 						s->header->cursor == s->header->size &&
 						sent < uip_mss())
 				{
-					sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent, true);
+					sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent);
 				}
 				uip_send(uip_appdata, sent);
 				VERBOSE_PRINTLN_P("Sending reply packet");

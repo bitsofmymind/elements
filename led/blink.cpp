@@ -108,7 +108,6 @@ Response::status_code Blinker::process( Request* request, Message** return_messa
 		if(!strcmp(request->method, "post"))
 		{
 			char buffer[8];
-			request->body_file->print();
 			uint8_t len = request->find_arg("i", buffer, 7);
 			if(len)
 			{

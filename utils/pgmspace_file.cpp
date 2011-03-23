@@ -15,7 +15,7 @@ PGMSpaceFile::PGMSpaceFile(PGM_P text, uint16_t size):
 
 }
 
-uint16_t PGMSpaceFile::read(char* buffer, uint16_t length, bool async)
+uint16_t PGMSpaceFile::read(char* buffer, uint16_t length)
 {
 	uint16_t i = 0;
 	for(; i < length && cursor < size; cursor++, i++)
@@ -24,7 +24,7 @@ uint16_t PGMSpaceFile::read(char* buffer, uint16_t length, bool async)
 	}
 	return i;
 }
-uint16_t PGMSpaceFile::write(const char* buffer, uint16_t length,  bool async)
+uint16_t PGMSpaceFile::write(const char* buffer, uint16_t length)
 {
 	return 0;
 }
