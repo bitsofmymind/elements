@@ -13,7 +13,7 @@
 File::~File(void)
 {}
 
-#ifdef DEBUG
+#if VERBOSITY
 
 void File::print(void)
 {

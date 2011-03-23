@@ -34,7 +34,7 @@ extern void init(void);
 #define WEEKS(w) w*DAYS(7)
 #define NEVER MAX_UPTIME
 
-#ifdef TIME_KEEPING
+#if TIME_KEEPING
 	extern uint64_t get_time( void );
 	extern void set_time(uint64_t time);
 	inline void initialize_time( void );

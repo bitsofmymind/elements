@@ -59,7 +59,7 @@ size_t Request::get_header_length(void)
 		+ Message::get_header_length();
 
 }
-#ifndef NO_REQUEST_SERIALIZATION
+#if REQUEST_SERIALIZATION
 	void Request::serialize(char* buffer)
 	{
 
@@ -142,7 +142,7 @@ Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 	return Message::parse_header(line, size);
 }
 
-#ifdef BODY_ARGS_PARSING
+#if BODY_ARGS_PARSING
 uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 {
 

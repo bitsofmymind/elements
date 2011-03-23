@@ -13,7 +13,7 @@
 #include <pal/pal.h>
 #include <stdint.h>
 #include <string.h>
-#ifndef ITOA
+#if !ITOA
 #include <cstdio>
 #endif
 
@@ -70,7 +70,7 @@ Response::~Response()
 	}
 }
 
-#ifndef NO_RESPONSE_DESERIALIZATION
+#if RESPONSE_DESERIALIZATION
 	Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 	{
 		if(line[size - 2] != '\r' && line[size - 1] != '\n')
@@ -144,7 +144,7 @@ void Response::serialize( char* buffer)
 	*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
 	*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '0';
 	*buffer++ = ' ';
-#ifdef ITOA
+#if ITOA
 	itoa(response_code_int, buffer, 10);
 #else
 	sprintf(buffer, "%d", response_code_int);

@@ -15,7 +15,7 @@
 }*/
 
 
-#ifdef TIME_KEEPING
+#if TIME_KEEPING
 
 	uint64_t system_time = 0;
 

@@ -12,7 +12,7 @@
 #include "../utils/utils.h"
 #include <pal/pal.h>
 #include <string.h>
-#ifndef ITOA
+#if !ITOA
 #include <cstdio>
 #endif
 
@@ -79,7 +79,7 @@ size_t Message::get_header_length(void)
 			#error "MESSAGE_SIZE is of unknown type"
 		#endif
 
-		#ifdef ITOA
+		#if ITOA
 			itoa(content_length, content_string, 10);
 		#else
 			sprintf(content_string, "%d", content_length);
@@ -99,7 +99,7 @@ void Message::serialize( char* buffer )
 		buffer += 14; //strlen(CONTENT_LENGTH);
 		*buffer++ = ':';
 		*buffer++ =' ';
-		#ifdef ITOA
+		#if ITOA
 			itoa(content_length, buffer, 10);
 		#else
 			sprintf(buffer, "%d", content_length);

@@ -28,7 +28,7 @@ class File
 
 		virtual ~File();
 
-		#ifdef DEBUG
+		#if VERBOSITY
 			void print();
 		#endif
 		virtual size_t read(char* buffer, size_t length) = 0;

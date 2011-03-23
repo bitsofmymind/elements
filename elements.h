@@ -11,17 +11,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define DEBUG
-//#define VERBOSE 1
-//#define NO_RESOURCE_DESTRUCTION
-//#define NO_RESPONSE_DESERIALIZATION //#undefine if framework is to receive responses from another domain
-//#define NO_REQUEST_SERIALIZATION //#undefine if framework is to send request to another domain
-#define TIME_KEEPING
-#define BODY_ARGS_PARSING
+#define RESOURCE_DESTRUCTION 0
+#define RESPONSE_DESERIALIZATION 0//Set to 1 if framework is to receive responses from another domain
+#define REQUEST_SERIALIZATION 0//Set to 1 if framework is to send request to another domain
+#define TIME_KEEPING 1
+
+
 typedef uint64_t uptime_t;
 #define MAX_UPTIME 18446744073709551615ULL
 
 #define ATOMIC
+
+#define ITOA 0
+
+#define BODY_ARGS_PARSING 1
 
 /*Verbosity controls*/
 #define OUTPUT_ERRORS 1

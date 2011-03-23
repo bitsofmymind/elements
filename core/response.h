@@ -60,7 +60,7 @@ class Response: public Message
 
 
 		virtual size_t get_header_length(void);
-		#ifndef NO_RESPONSE_DESERIALIZATION
+		#if RESPONSE_DESERIALIZATION
 			virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
 		#endif
 		virtual void serialize(char* buffer);
