@@ -20,7 +20,7 @@ class Blinker: public Resource
 	public:
 		Blinker(uint32_t interval, uint8_t pin, volatile uint8_t* ddr, volatile uint8_t* port);
 		virtual void run(void);
-		virtual File<MESSAGE_SIZE>* render( Request* request );
+		virtual File* render( Request* request );
 		virtual Response::status_code process( Request* request, Message** return_message );
 
 };

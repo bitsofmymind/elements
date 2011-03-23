@@ -11,7 +11,7 @@
 #include <utils/file.h>
 #include <avr/pgmspace.h>
 
-class PGMSpaceFile: public File<uint16_t>
+class PGMSpaceFile: public File
 {
 	private:
 		PGM_P text;

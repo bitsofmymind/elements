@@ -10,8 +10,8 @@
 PGMSpaceFile::PGMSpaceFile(PGM_P text, uint16_t size):
 	text(text)
 {
-	File<uint16_t>::size = size;
-	File<uint16_t>::cursor = 0;
+	File::size = size;
+	File::cursor = 0;
 
 }
 

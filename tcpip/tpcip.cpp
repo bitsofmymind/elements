@@ -258,7 +258,7 @@ void TCPIPStack::appcall(void)
 					uip_abort();
 				}
 				response->serialize(buffer);
-				s->header = new MemFile<MESSAGE_SIZE>(buffer, size);
+				s->header = new MemFile(buffer, size);
 				if(!s->header)
 				{
 					ts_free(buffer);

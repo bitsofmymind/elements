@@ -11,6 +11,7 @@
 #include <utils/pgmspace_file.h>
 #include <stdlib.h>
 #include <utils/template.h>
+#include <string.h>
 
 Blinker::Blinker(uint32_t interval, uint8_t pin, volatile uint8_t* ddr, volatile uint8_t* port):
 	Resource(),
@@ -54,9 +55,9 @@ void Blinker::run(void)
 
 char content_P[] PROGMEM = CONTENT;
 
-File<MESSAGE_SIZE>* Blinker::render( Request* request )
+File* Blinker::render( Request* request )
 {
-	File<MESSAGE_SIZE>* file = new PGMSpaceFile(content_P, CONTENT_SIZE);
+	File* file = new PGMSpaceFile(content_P, CONTENT_SIZE);
 	if(!file)
 	{
 		return NULL;
@@ -87,7 +88,7 @@ File<MESSAGE_SIZE>* Blinker::render( Request* request )
 		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\"") + 1);
 	}
 
-	File<MESSAGE_SIZE>* temp =  new Template<MESSAGE_SIZE>(file, data, data_len, 3);
+	File* temp =  new Template(file, data, data_len, 3);
 	if(!temp)
 	{
 		delete file;
@@ -104,7 +105,7 @@ Response::status_code Blinker::process( Request* request, Message** return_messa
 
 	if(sc == NOT_IMPLEMENTED_501)
 	{
-		if(request->methodcmp("post", 4))
+		if(!strcmp(request->method, "post"))
 		{
 			char buffer[8];
 			request->body_file->print();
