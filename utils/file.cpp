@@ -6,17 +6,18 @@
  */
 
 #include "file.h"
-#include "../elements.h"
+#include <string.h>
+#include <pal/pal.h>
 
-template< class T >
-File<T>::~File(void)
+
+File::~File(void)
 {}
 
 #ifdef DEBUG
-template< class T >
-void File<T>::print(void)
+
+void File::print(void)
 {
-	T prev_cursor = cursor;
+	size_t prev_cursor = cursor;
 	char c;
 	while(read(&c, 1, false))
 	{
@@ -26,87 +27,82 @@ void File<T>::print(void)
 }
 #endif
 
-template< class T >
-T File<T>::extract(char* buffer)
+
+size_t File::extract(char* buffer)
 {
 	cursor = 0;
 	return read(buffer, size, false);
 }
 
-template< class T>
-ConstFile<T>::ConstFile(const char* data):
+ConstFile::ConstFile(const char* data):
 	data(data)
 {
-	File<T>::size = strlen(data);
-	File<T>::cursor = 0;
+	File::size = strlen(data);
+	File::cursor = 0;
 }
 
-template< class T>
-ConstFile<T>::ConstFile(const char* data, T length):
+ConstFile::ConstFile(const char* data, size_t length):
 	data(data)
 {
-	File<T>::size = length;
-	File<T>::cursor = 0;
+	File::size = length;
+	File::cursor = 0;
 }
 
-template< class T>
-T ConstFile<T>::read(char* buffer, T length, bool async)
+
+size_t ConstFile::read(char* buffer, size_t length, bool async)
 {
-	T i = 0;
-	for(; i < length && File<T>::cursor < File<T>::size; File<T>::cursor++, i++)
+	size_t i = 0;
+	for(; i < length && File::cursor < File::size; File::cursor++, i++)
 	{
-		buffer[i] = data[File<T>::cursor];
+		buffer[i] = data[File::cursor];
 	}
 	return i;
 }
-template< class T> T ConstFile<T>::write(const char* buffer, T length, bool async) { return 0; }
-template< class T> int8_t ConstFile<T>::open(void){ return 0; }
-template< class T> void ConstFile<T>::close(void){}
+ size_t ConstFile::write(const char* buffer, size_t length, bool async) { return 0; }
+ int8_t ConstFile::open(void){ return 0; }
+ void ConstFile::close(void){}
 
-template< class T>
-MemFile<T>::MemFile(char* data):
+
+MemFile::MemFile(char* data):
 	data(data)
 {
-	File<T>::size = strlen(data);
-	File<T>::cursor = 0;
+	File::size = strlen(data);
+	File::cursor = 0;
 }
 
-template< class T>
-MemFile<T>::MemFile(char* data, T length):
+
+MemFile::MemFile(char* data, size_t length):
 	data(data)
 {
-	File<T>::size = length;
-	File<T>::cursor = 0;
+	File::size = length;
+	File::cursor = 0;
 }
 
-template< class T>
-MemFile<T>::~MemFile(void)
+
+MemFile::~MemFile(void)
 {
 	ts_free(data);
 }
 
-template< class T>
-T MemFile<T>::read(char* buffer, T length, bool async)
-{
-	T i = 0;
-	for(; i < length && File<T>::cursor < File<T>::size; File<T>::cursor++, i++)
-	{
-		buffer[i] = data[File<T>::cursor];
-	}
-	return i;
-}
-template< class T> T MemFile<T>::write(const char* buffer, T length, bool async)
-{
-	T i = 0;
-	for(; i < length && File<T>::cursor < File<T>::size; File<T>::cursor++, i++)
-	{
-		data[File<T>::cursor] = buffer[i];
-	}
-	return i;
-}
-template< class T> int8_t MemFile<T>::open(void){ return 0; }
-template< class T> void MemFile<T>::close(void){}
 
-template class File<MESSAGE_SIZE>;
-template class ConstFile<MESSAGE_SIZE>;
-template class MemFile<MESSAGE_SIZE>;
+size_t MemFile::read(char* buffer, size_t length, bool async)
+{
+	size_t i = 0;
+	for(; i < length && File::cursor < File::size; File::cursor++, i++)
+	{
+		buffer[i] = data[File::cursor];
+	}
+	return i;
+}
+ size_t MemFile::write(const char* buffer, size_t length, bool async)
+{
+	size_t i = 0;
+	for(; i < length && File::cursor < File::size; File::cursor++, i++)
+	{
+		data[File::cursor] = buffer[i];
+	}
+	return i;
+}
+ int8_t MemFile::open(void){ return 0; }
+ void MemFile::close(void){}
+

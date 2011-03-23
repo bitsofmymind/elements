@@ -10,7 +10,6 @@
 
 #include "message.h"
 //#include <elements.h>
-#include "../utils/types.h"
 #include <stdint.h>
 
 class Request: public Message
@@ -18,29 +17,30 @@ class Request: public Message
 	public:
 
 		//Request header fields
-		//static const string< uint8_t > ACCEPT;
-		//static const string< uint8_t > ACCEPT_CHARSET;
-		//static const string< uint8_t > ACCEPT_ENCODING;
-		//static const string< uint8_t > ACCEPT_LANGUAGE;
-		//static const string< uint8_t > AUTHORIZATION;
-		//static const string< uint8_t > EXPECT;
-		//static const string< uint8_t > FROM;
-		//static const string< uint8_t > HOST;
-		//static const string< uint8_t > IF_MATCH;
-		//static const string< uint8_t > IF_MODIFIED_SINCE;
-		//static const string< uint8_t > IF_NONE_MATCH;
-		//static const string< uint8_t > IF_UNMODIFIED_SINCE;
-		//static const string< uint8_t > MAX_FORWARDS;
-		//static const string< uint8_t > PROXY_AUTHORIZATION;
-		//static const string< uint8_t > RANGE;
-		//static const string< uint8_t > REFERER;
-		//static const string< uint8_t > TE;
-		//static const string< uint8_t > USER_AGENT;
+		//static const char* ACCEPT;
+		//static const char* ACCEPT_CHARSET;
+		//static const char* ACCEPT_ENCODING;
+		//static const char* ACCEPT_LANGUAGE;
+		//static const char* AUTHORIZATION;
+		//static const char* EXPECT;
+		//static const char* FROM;
+		//static const char* HOST;
+		//static const char* IF_MATCH;
+		//static const char* IF_MODIFIED_SINCE;
+		//static const char* IF_NONE_MATCH;
+		//static const char* IF_UNMODIFIED_SINCE;
+		//static const char* MAX_FORWARDS;
+		//static const char* PROXY_AUTHORIZATION;
+		//static const char* RANGE;
+		//static const char* REFERER;
+		//static const char* TE;
+		//static const char* USER_AGENT;
 
 		static const Message::TYPE type = REQUEST;
 
 
-		Elements::string< uint8_t > method;
+		const char* method;
+		uint8_t method_length;
 
 
 		Request();
@@ -57,8 +57,6 @@ class Request: public Message
 
 		virtual MESSAGE_SIZE get_header_length(void);
 		virtual Message::PARSER_RESULT parse_header(const char* line, MESSAGE_SIZE size);
-
-		bool methodcmp(const char* m, uint8_t len);
 
 		#ifdef BODY_ARGS_PARSING
 			uint8_t find_arg(const char* key, char* value, uint8_t max_size);

@@ -10,11 +10,8 @@
 
 #include "message.h"
 #include "request.h"
-//#include "../elements.h"
 #include "../utils/utils.h"
-#include "../utils/types.h"
 
-using namespace Elements;
 
 class Response: public Message
 {
@@ -33,16 +30,16 @@ class Response: public Message
 		#define NOT_IMPLEMENTED_501 501
 
 		//Response header fields
-		//static const string< uint8_t > ACCEPT_RANGES;
-		//static const string< uint8_t > AGE;
-		//static const string< uint8_t > ALLOW;
-		//static const string< uint8_t > ETAG;
-		//static const string< uint8_t > LOCATION;
-		//static const string< uint8_t > PROXY_AUTHENTICATE;
-		//static const string< uint8_t > RETRY_AFTER;
-		//static const string< uint8_t > SERVER;
-		//static const string< uint8_t > VARY;
-		//static const string< uint8_t > WWW_AUTHENTICATE;
+		//static const char* ACCEPT_RANGES;
+		//static const char* AGE;
+		//static const char* ALLOW;
+		//static const char* ETAG;
+		//static const char* LOCATION;
+		//static const char* PROXY_AUTHENTICATE;
+		//static const char* RETRY_AFTER;
+		//static const char* SERVER;
+		//static const char* VARY;
+		//static const char* WWW_AUTHENTICATE;
 
 		static const Message::TYPE type = RESPONSE;
 
@@ -51,7 +48,7 @@ class Response: public Message
 
 
 		uint16_t response_code_int;
-		mime* content_type;
+		mime content_type;
 		Request* original_request;
 
 	public:

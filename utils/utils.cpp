@@ -8,12 +8,10 @@
 
 //#include "utils.h"
 #include "../elements.h"
-#include "types.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include "utils.h"
-
-using namespace Elements;
+#include <string.h>
 
 GenericList::GenericList( void )
 {

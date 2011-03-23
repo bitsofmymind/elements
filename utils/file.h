@@ -3,9 +3,7 @@
 #define FILE_H_
 
 #include <stdint.h>
-#include "types.h"
-
-using namespace Elements;
+#include "../elements.h"
 
 /*template<class T> class Device
 {
@@ -20,53 +18,53 @@ with the length property set to the amount of bytes
 		virtual T write(string<T>* buffer, bool async) = 0;*/
 //};*/
 
-template<class T> class File//: public Device<T>
+class File
 {
 
 	public:
-		T size;
-		T cursor;
+		size_t size;
+		size_t cursor;
 
 		virtual ~File();
 
 		#ifdef DEBUG
 			void print();
 		#endif
-		virtual T read(char* buffer, T length, bool async) = 0;
-		T extract(char* buffer);
-		virtual T write(const char* buffer, T length, bool async) = 0;
+		virtual size_t read(char* buffer, size_t length, bool async) = 0;
+		size_t extract(char* buffer);
+		virtual size_t write(const char* buffer, size_t length, bool async) = 0;
 		virtual int8_t open(void) = 0;
 		virtual void close(void) = 0;
 };
 
-template<class T> class ConstFile: public File<T>
+class ConstFile: public File
 {
 
 	protected:
 		const char* data;
 	public:
 		ConstFile(const char* data);
-		ConstFile(const char* data, T length);
+		ConstFile(const char* data, size_t length);
 
-		virtual T read(char* buffer, T length, bool async);
-		virtual T write(const char* buffer, T length, bool async);
+		virtual size_t read(char* buffer, size_t length, bool async);
+		virtual size_t write(const char* buffer, size_t length, bool async);
 		virtual int8_t open(void);
 		virtual void close(void);
 };
 
-template<class T> class MemFile: public File<T>
+class MemFile: public File
 {
 
 	protected:
 		char* data;
 	public:
 		MemFile(char* data);
-		MemFile(char* data, T length);
+		MemFile(char* data, size_t length);
 
 		virtual ~MemFile();
 
-		virtual T read(char* buffer, T length, bool async);
-		virtual T write(const char* buffer, T length, bool async);
+		virtual size_t read(char* buffer, size_t length, bool async);
+		virtual size_t write(const char* buffer, size_t length, bool async);
 		virtual int8_t open(void);
 		virtual void close(void);
 };

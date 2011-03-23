@@ -11,12 +11,9 @@
 #include "processing.h"
 //#include "../elements.h"
 #include "../utils/utils.h"
-#include "../utils/types.h"
 #include "resource.h"
 #include "../pal/pal.h"
 #include <stdint.h>
-
-using namespace Elements;
 
 Processing::Processing(Resource* bound):Resource(),
 		bound(bound),

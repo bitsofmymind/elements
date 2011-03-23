@@ -11,10 +11,8 @@
 #include <elements.h>
 #include "url.h"
 #include <utils/utils.h>
-#include <utils/types.h>
 #include <utils/file.h>
 
-using namespace Elements;
 
 #ifndef MESSAGE_SIZE
 	#define MESSAGE_SIZE uint32_t
@@ -34,44 +32,49 @@ class Message
 			OUT_OF_MEMORY };
 
 		//General header fields
-		//static const string< uint8_t > CACHE_CONTROL;
-		//static const string< uint8_t > CONNECTION;
-		//static const string< uint8_t > DATE;
-		//static const string< uint8_t > PRAGMA;
-		//static const string< uint8_t > TRAILER;
-		//static const string< uint8_t > TRANSFER_ENCODING;
-		//static const string< uint8_t > UPGRADE;
-		//static const string< uint8_t > VIA;
-		//static const string< uint8_t > WARNING;
+		//static const char * CACHE_CONTROL;
+		//static const char * CONNECTION;
+		//static const char * DATE;
+		//static const char * PRAGMA;
+		//static const char * TRAILER;
+		//static const char * TRANSFER_ENCODING;
+		//static const char * UPGRADE;
+		//static const char * VIA;
+		//static const char * WARNING;
 
 		//Entity header fields
-		//static const string< uint8_t > CONTENT_ENCODING;
-		//static const string< uint8_t > CONTENT_LANGUAGE;
-		static const string< uint8_t > CONTENT_LENGTH;
-		//static const string< uint8_t > CONTENT_LOCATION;
-		//static const string< uint8_t > CONTENT_MD5;
-		//static const string< uint8_t > CONTENT_RANGE;
-		static const Elements::string< uint8_t > CONTENT_TYPE;
-		//static const string< uint8_t > EXPIRES;
-		//static const string< uint8_t > LAST_MODIFIED;
+		//static const char * CONTENT_ENCODING;
+		//static const char * CONTENT_LANGUAGE;
+		static const char* CONTENT_LENGTH;
+		//static const char * CONTENT_LOCATION;
+		//static const char * CONTENT_MD5;
+		//static const char * CONTENT_RANGE;
+		static const char * CONTENT_TYPE;
+		//static const char * EXPIRES;
+		//static const char * LAST_MODIFIED;
 
-		typedef const string<uint8_t> mime;
+		typedef const char* mime;
 
 		static mime TEXT_HTML;
 		static mime MESSAGE_HTTP;
 
 		//Elements header fields
-		static const Elements::string< uint8_t > FROM_URL;
+		static const char* FROM_URL;
 
 		URL* to_url;
 		URL* from_url;
 
 		TYPE object_type;
 
-		File<MESSAGE_SIZE>* body_file;
+		File* body_file;
 		MESSAGE_SIZE content_length;
-		string<uint8_t> header;
-		string<MESSAGE_SIZE> current_line;
+
+		char*  header;
+		size_t header_length;
+
+		char* current_line;
+		size_t current_line_length;
+
 		bool parsing_body;
 
 	public:

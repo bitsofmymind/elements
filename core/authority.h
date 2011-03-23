@@ -15,7 +15,6 @@
 #include "resource.h"
 //#include "../elements.h"
 #include "../utils/utils.h"
-#include "../utils/types.h"
 
 #define MAX_NUMBER_OF_CHILD_AUTHORITIES 10
 

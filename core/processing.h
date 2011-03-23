@@ -15,7 +15,6 @@
 #include "resource.h"
 //#include "../elements.h"
 #include "../utils/utils.h"
-#include "../utils/types.h"
 
 class Processing: public Resource
 {

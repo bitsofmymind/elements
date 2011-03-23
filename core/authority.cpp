@@ -12,15 +12,12 @@
 #include "authority.h"
 //#include "../elements.h"
 #include "../utils/utils.h"
-#include "../utils/types.h"
 #include "resource.h"
 #include "../pal/pal.h"
 #include <stdint.h>
 
 #define OUT_QUEUE_LENGTH 10
 #define IN_QUEUE_LENGTH 10
-
-using namespace Elements;
 
 Authority::Authority(void):Resource()
 {

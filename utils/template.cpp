@@ -6,9 +6,9 @@
  */
 
 #include "template.h"
+#include <pal/pal.h>
 
-template< class T>
-Template<T>::Template(File<T>* file, char* args, MESSAGE_SIZE arglen, uint8_t argc):
+Template::Template(File* file, char* args, size_t arglen, uint8_t argc):
 		args(args),
 		argend(args + arglen),
 		file(file),
@@ -17,19 +17,19 @@ Template<T>::Template(File<T>* file, char* args, MESSAGE_SIZE arglen, uint8_t ar
 		previous_args_length(0),
 		previous_read_length(0)
 {
-	File<T>::cursor = 0;
-	File<T>::size = file->size + arglen - 2 * argc; /*argc is substracted two times to remove the ~
+	File::cursor = 0;
+	File::size = file->size + arglen - 2 * argc; /*argc is substracted two times to remove the ~
 	and the null characters that separates the arguments.*/
 }
 
-template< class T>
-Template<T>::~Template()
+
+Template::~Template()
 {
 	ts_free(args);
 	delete file;
 }
-template< class T>
-T Template<T>::read(char* buffer, T length, bool async)
+
+size_t Template::read(char* buffer, size_t length, bool async)
 {
 	if( state != ARG )
 	{
@@ -40,7 +40,7 @@ T Template<T>::read(char* buffer, T length, bool async)
 		}
 	}
 
-	T i;
+	size_t i;
 
 	for(i = 0; i < length && previous_read_length != 0; i++)
 	{
@@ -59,7 +59,7 @@ T Template<T>::read(char* buffer, T length, bool async)
 			else if(buffer[i] == '~')
 			{
 				state = ARG;
-				file->cursor = File<T>::cursor + i + 1 - previous_args_length;
+				file->cursor = File::cursor + i + 1 - previous_args_length;
 				//previous_arg_length = 0;
 				i--;
 				continue;
@@ -93,23 +93,22 @@ T Template<T>::read(char* buffer, T length, bool async)
 			previous_args_length++;
 		}
 	}
-	File<T>::cursor += i;
+	File::cursor += i;
 	return i;
 }
-template< class T>
-T Template<T>::write(const char* buffer, T length, bool async)
+
+size_t Template::write(const char* buffer, size_t length, bool async)
 {
 
 }
-template< class T>
-int8_t Template<T>::open(void)
+
+int8_t Template::open(void)
 {
 	return 0;
 }
-template< class T>
-void Template<T>::close(void)
+
+void Template::close(void)
 {
 
 }
 
-template class Template<MESSAGE_SIZE>;

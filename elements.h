@@ -27,7 +27,7 @@ typedef uint64_t uptime_t;
 /*Verbosity controls*/
 #define OUTPUT_ERRORS 1
 #define OUTPUT_WARNINGS 1
-#define VERBOSITY 0
+#define VERBOSITY 1
 
 /*Default methods controls*/
 #define HTTP_TRACE 0

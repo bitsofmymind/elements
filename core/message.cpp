@@ -10,13 +10,11 @@
 #include "message.h"
 #include "../elements.h"
 #include "../utils/utils.h"
-#include "../utils/types.h"
 #include <pal/pal.h>
+#include <string.h>
 #ifndef ITOA
 #include <cstdio>
 #endif
-
-using namespace Elements;
 
 
 void Message::print()
@@ -37,9 +35,10 @@ Message::Message():
 		parsing_body(false)
 {
 	body_file = NULL;
-	header.length = 0;
-	header.text = NULL;
-	current_line.length = 0;
+	header_length = 0;
+	header = NULL;
+	current_line_length = 0;
+	current_line = NULL;
 }
 Message::~Message()
 {
@@ -47,17 +46,17 @@ Message::~Message()
 	{
 		ts_free(fields.remove(fields[0]->key));
 	}*/
-	if(header.length)
+	if(header)
 	{
-		ts_free(header.text);
+		ts_free(header);
 	}
 	if(body_file)
 	{
 		delete body_file;
 	}
-	if(current_line.length)
+	if(current_line_length)
 	{
-		ts_free(current_line.text);
+		ts_free(current_line);
 	}
 }
 
@@ -85,7 +84,7 @@ MESSAGE_SIZE Message::get_header_length(void)
 		#else
 			sprintf(content_string, "%d", content_length);
 		#endif
-		size += CONTENT_LENGTH.length + 2/*For ": "*/+ strlen(content_string) + 2/*For \r\n*/;
+		size += sizeof(CONTENT_LENGTH) - 1 + 2/*For ": "*/+ strlen(content_string) + 2/*For \r\n*/;
 
 	}
 	//Add fields here.
@@ -96,8 +95,8 @@ void Message::serialize( char* buffer )
 {
 	if(content_length)
 	{
-		CONTENT_LENGTH.copy(buffer);
-		buffer += CONTENT_LENGTH.length; //Moves the pointer after "Content-Length"
+		strcpy(buffer, CONTENT_LENGTH);
+		buffer += sizeof(CONTENT_LENGTH) - 1;
 		*buffer++ = ':';
 		*buffer++ =' ';
 		#ifdef ITOA
@@ -136,21 +135,21 @@ Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 		if(data[line_end] == '\n')
 		{
 			PARSER_RESULT res;
-			if(current_line.length)
+			if(current_line_length)
 			{
 				//Part of a line was previously saved
-				char* line = (char*)ts_malloc(line_end + 1 + current_line.length);
+				char* line = (char*)ts_malloc(line_end + 1 + current_line_length);
 				//Stack allocation coud be used here.
 				if(!line)
 				{
 					return OUT_OF_MEMORY;
 				}
-				memcpy(line, current_line.text, current_line.length);
-				memcpy(line + current_line.length, data, line_end + 1);
-				ts_free(current_line.text);
-				res = parse_header(line, current_line.length + line_end + 1 );
+				memcpy(line, current_line, current_line_length);
+				memcpy(line + current_line_length, data, line_end + 1);
+				ts_free(current_line);
+				res = parse_header(line, current_line_length + line_end + 1 );
 				ts_free(line);
-				current_line.length = 0;
+				current_line_length = 0;
 			}
 			else
 			{
@@ -181,28 +180,28 @@ Message::PARSER_RESULT Message::parse(const char* data, MESSAGE_SIZE size)
 			{
 				/*The current line ends in the next buffer, we need to save the current line for the next call
 				 * to this method.*/
-				if(current_line.length) //The end of the line was not located within this buffer
+				if(current_line_length) //The end of the line was not located within this buffer
 				{
-					char* line = (char*)ts_malloc(line_end + current_line.length);
+					char* line = (char*)ts_malloc(line_end + current_line_length);
 					if(!line)
 					{
 						return OUT_OF_MEMORY;
 					}
-					memcpy( line, current_line.text, current_line.length);
-					memcpy( line + current_line.length, data, size);
-					ts_free(current_line.text);
-					current_line.text = line;
-					current_line.length += size;
+					memcpy( line, current_line, current_line_length);
+					memcpy( line + current_line_length, data, size);
+					ts_free(current_line);
+					current_line = line;
+					current_line_length += size;
 				}
 				else
 				{
-					current_line.length = line_end - line_start;
-					current_line.text = (char*)ts_malloc(current_line.length);
-					if(!current_line.text)
+					current_line_length = line_end - line_start;
+					current_line = (char*)ts_malloc(current_line_length);
+					if(!current_line)
 					{
 						return OUT_OF_MEMORY;
 					}
-					memcpy(current_line.text, data + line_start, current_line.length);
+					memcpy(current_line, data + line_start, current_line_length);
 				}
 			}
 			return PARSING_SUCESSFUL;
@@ -259,9 +258,9 @@ Message::PARSER_RESULT Message::parse_header(const char* line, MESSAGE_SIZE size
 
 	/*The content length line gets special treatment, for the rest of the fields, we should proceed normally
 	 * and store them in a buffer.*/
-	if(!strncmp(CONTENT_LENGTH.text, line, CONTENT_LENGTH.length)) //Could use memcmp
+	if(!strcmp(CONTENT_LENGTH, line)) //Could use memcmp
 	{
-		content_length = atoi(line + CONTENT_LENGTH.length + 2);
+		content_length = atoi(line + sizeof(CONTENT_LENGTH) + 2);
 	}
 
 	//Store fields in buffers
@@ -276,30 +275,30 @@ Message::PARSER_RESULT Message::store_body(const char* buffer, MESSAGE_SIZE size
 	{
 		return PARSING_COMPLETE;
 	}
-	if(!current_line.length)
+	if(!current_line_length)
 	{
-		current_line.text = (char*)ts_malloc(content_length);
-		if(!current_line.text)
+		current_line = (char*)ts_malloc(content_length);
+		if(!current_line)
 		{
 			return OUT_OF_MEMORY;
 		}
 	}
 
-	if(size > content_length - current_line.length)
+	if(size > content_length - current_line_length)
 	{
-		size = content_length - current_line.length;
+		size = content_length - current_line_length;
 	}
 
-	memcpy(current_line.text + current_line.length, buffer, size);
-	current_line.length += size;
+	memcpy(current_line + current_line_length, buffer, size);
+	current_line_length += size;
 
-	if(current_line.length >= content_length)
+	if(current_line_length >= content_length)
 	{
-		body_file = new MemFile<MESSAGE_SIZE>(current_line.text, current_line.length);
-		current_line.length = 0;
+		body_file = new MemFile(current_line, current_line_length);
+		current_line_length = 0;
 		if(!body_file)
 		{
-			ts_free(current_line.text);
+			ts_free(current_line);
 			return OUT_OF_MEMORY;
 		}
 
@@ -310,26 +309,26 @@ Message::PARSER_RESULT Message::store_body(const char* buffer, MESSAGE_SIZE size
 }
 
 
-//const string< uint8_t > Message::CACHE_CONTROL = {"cache-control", 1};
-//const string< uint8_t > Message::CONNECTION = {"connection", 2 };
-//const string< uint8_t > Message::DATE = {"date", 3 };
-//const string< uint8_t > Message::PRAGMA = {"pragma", 4 };
-//const string< uint8_t > Message::TRAILER = {"trailer", 5 };
-//const string< uint8_t > Message::TRANSFER_ENCODING = {"transfer-encoding", 6 };
-//const string< uint8_t > Message::UPGRADE = {"upgrade", 7 };
-//const string< uint8_t > Message::VIA = {"via", 8 };
-//const string< uint8_t > Message::WARNING = {"warning", 9 };
+//const char* Message::CACHE_CONTROL = {"cache-control", 1};
+//const char* Message::CONNECTION = {"connection", 2 };
+//const char* Message::DATE = {"date", 3 };
+//const char* Message::PRAGMA = {"pragma", 4 };
+//const char* Message::TRAILER = {"trailer", 5 };
+//const char* Message::TRANSFER_ENCODING = {"transfer-encoding", 6 };
+//const char* Message::UPGRADE = {"upgrade", 7 };
+//const char* Message::VIA = {"via", 8 };
+//const char* Message::WARNING = {"warning", 9 };
 
-//const string< uint8_t > Message::CONTENT_ENCODING = {"content-encoding", 10 };
-//const string< uint8_t > Message::CONTENT_LANGUAGE = {"content-language", 11 };
-const string< uint8_t > Message::CONTENT_LENGTH = MAKE_STRING("Content-Length");
-//const string< uint8_t > Message::CONTENT_LOCATION = {"content-location", 13 };
-//const string< uint8_t > Message::CONTENT_MD5 = {"content-md5", 14 };
-//const string< uint8_t > Message::CONTENT_RANGE = {"content-range", 15 };
-const string< uint8_t > Message::CONTENT_TYPE = MAKE_STRING("Content-Type");
-//const string< uint8_t > Message::EXPIRES = {"expires", 17 };
-//const string< uint8_t > Message::LAST_MODIFIED = {"last-modified", 18 };
-//const string< uint8_t > Message::FROM_URL = {"from-url", 48 };
+//const char* Message::CONTENT_ENCODING = {"content-encoding", 10 };
+//const char* Message::CONTENT_LANGUAGE = {"content-language", 11 };
+const char *Message::CONTENT_LENGTH = "Content-Length";
+//const char* Message::CONTENT_LOCATION = {"content-location", 13 };
+//const char* Message::CONTENT_MD5 = {"content-md5", 14 };
+//const char* Message::CONTENT_RANGE = {"content-range", 15 };
+const char *Message::CONTENT_TYPE = "Content-Type";
+//const char* Message::EXPIRES = {"expires", 17 };
+//const char* Message::LAST_MODIFIED = {"last-modified", 18 };
+//const char* Message::FROM_URL = {"from-url", 48 };
 
-Message::mime Message::TEXT_HTML = MAKE_STRING("text/html");
-Message::mime Message::MESSAGE_HTTP = MAKE_STRING("message/http");
+Message::mime Message::TEXT_HTML = "text/html";
+Message::mime Message::MESSAGE_HTTP = "message/http";

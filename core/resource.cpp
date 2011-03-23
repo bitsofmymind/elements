@@ -12,14 +12,11 @@
 #include "../elements.h"
 #include "url.h"
 #include "../utils/utils.h"
-#include "../utils/types.h"
 #include "../pal/pal.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
-using namespace Elements;
-
-string<uint8_t> parent_resource = MAKE_STRING("..");
 
 Resource::Resource(void):
   children_sleep_clock(MAX_UPTIME),
@@ -128,16 +125,17 @@ uint8_t Resource::send(Message* message)
 {
     if(parent)
     {
-        const char* name = parent->get_name(this);
-        char* new_name = (char*)ts_malloc(strlen(name));
+        /*PROBLEM: In a case where a child's name string was allocated on the heap and it is removed
+         * while a message is in flight, that name, since it was not copied, could be modified
+         * and become something different.*/
 
-        strcpy(new_name, name);
+    	const char* name = parent->get_name(this);
 
         if(!message->to_url->is_absolute_path)
         {
-            message->to_url->resources.insert((const char *)new_name,0);
+            message->to_url->resources.insert(name,0);
         }
-        message->from_url->resources.insert((const char *)new_name,0);
+        message->from_url->resources.insert(name,0);
         return parent->send(message);
     }
     return 1;
@@ -212,19 +210,19 @@ Response::status_code Resource::process( Request* request, Message** return_mess
 	{
 		print_transaction(request);
 #if HTTP_GET
-		if(request->methodcmp("get", 3))
+		if(!strcmp("get", request->method))
 		{
 			 *return_message = http_get( request );
 		}
 #endif
 #if HTTP_HEAD
-		else if(request->methodcmp("head", 4))
+		else if(!strcmp("head" request->method))
 		{
 			*return_message = http_head( request );
 		}
 #endif
 #if HTTP_TRACE
-		else if(request->methodcmp("trace", 5))
+		else if(!strcmp("trace" request->method))
 		{
 			*return_message = http_trace( request );
 		}
@@ -249,7 +247,7 @@ Response* Resource::http_get(Request* request)
 		return NULL;
 	}
 	response->body_file = render( request );
-	response->content_type = &Message::TEXT_HTML;
+	response->content_type = Message::TEXT_HTML;
 	if(response->body_file)
 	{
 		response->content_length = response->body_file->size;
@@ -349,9 +347,9 @@ void Resource::schedule(uptime_t time)
 	schedule(&own_sleep_clock, time);
 }
 
-File<MESSAGE_SIZE>* Resource::render( Request* request )
+File* Resource::render( Request* request )
 {
-	return new ConstFile<MESSAGE_SIZE>("o");//<html><body>There are currently no representation associated with this resource.</body></html>");
+	return new ConstFile("o");//<html><body>There are currently no representation associated with this resource.</body></html>");
 }
 
 Resource* Resource::get_next_child_to_visit(void)
@@ -407,7 +405,7 @@ Response* Resource::error(uint16_t error, Message* message)
 		{
 			case NOT_FOUND_404:
 				//response->body = string<MESSAGE_SIZE>::make("?");//"<html><body>Not found</body></html>");
-				response->body_file = new ConstFile<MESSAGE_SIZE>("?");
+				response->body_file = new ConstFile("?");
 				break;
 			default:
 				break;

@@ -6,185 +6,141 @@
  */
 
 #include <stdlib.h>
-#include "../utils/types.h"
 #include <pal/pal.h>
 #include "url.h"
 #include <stdint.h>
+#include <string.h>
 
-using namespace Elements;
 
 URL::URL( )
 {
-	this->url.text = NULL;
-	this->url.length = 0;
-	port.text = NULL;
-	port.length = 0;
-	protocol.text = NULL;
-	protocol.length = 0;
-	fragment.text = NULL;
-	fragment.length = 0;
-	valid = false;
-	authorities = NULL;
-	arguments = 0;
+	url_str = NULL;
+	url_length = 0;
+	port = NULL;
+	protocol = NULL;
+	fragment = NULL;
+	authority = NULL;
+	arguments = NULL;
 	cursor = 0;
 }
 URL::~URL()
 {
-	if(authorities)
-	{
-		while(authorities->items)
-		{
-			ts_free(authorities->remove(0));
-		}
-		delete authorities;
-	}
 	//delete args if necessary
+	if(arguments)
+	{
+		delete arguments;
+	}
 }
 
-void URL::parse(char* str)
+URL::PARSING_RESULT URL::parse(char* str)
 {
-	url.text = str;
+	url_str = str;
 
-	uint8_t index = 0;
-	string<uint8_t>* temp;
+	char* start = str;
 
 	//PROTOCOL PART
 	while(true)
 	{
-		if( url.text[index] == ':' )
+		if( *str == ':' && *(str + 1) == '/' )
 		{
-			protocol.length = index;
-			protocol.text = url.text;
-			index += 3; //jumps the '//'
+			/*We check for ':' and '/' so as not to confuse the protocol with the port*/
+			*str = '\0';
+			protocol = start;
+			str += 3; //jumps the '//'
 			break;
 		}
-		else if( url.text[index] == '.' || url.text[index] == '/' || url.text[index] == '#')
+		else if( *str == '.' || *str == '/' || *str == '#' || *str == ' ')
 		{
-
-			protocol.text = NULL;
-			protocol.length = 0;
-			index = 0; //The url did not contain the protocol part.
+			//The url did not contain the protocol part.
+			str = start;
 			break;
 		}
-		index++;
+		str++;
 	}
 
+
+	char next_part = *str;
 
 	//AUTHORITY PART
-	if( url.text[index] != '.' && url.text[index] != '/' && url.text[index] != '#' )
+	if( *str != '.' && *str != '/' && *str != '#' )
 	{
-		//authorities = new List< string<uint8_t> >();
-		uint8_t start = index;
-		authorities = new List< string<uint8_t> >();
+		start = str;
 
-		while(true)
+		do
 		{
-			if(url.text[index] == '.')
-			{
-				temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
-				temp->text = url.text + start;
-				temp->length = index - start;
-				authorities->append( temp );
-				start = index + 1;
-			}
-			else if( url.text[index] == '/' || url.text[index] == ':' || url.text[index] == '#' || url.text[index] == '?' )
-			{
-				temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
-				temp->text = url.text + start;
-				temp->length = index - start;
-				authorities->append( temp );
-				break;
-			}
-			index++;
-		}
-		is_absolute_url = true;
+			str++;
+		} while(*str != '/' || *str != ':' || *str != '#' || *str != '?' || *str != ' ');
+		authority = start;
+		next_part = *str;
+		*str++ = '\0';
 	}
-	else
-	{
-		is_absolute_url = false;
-	}
-
 
 	//PORT PART
 
-	if(url.text[index] == ':')
+	if(next_part == ':')
 	{
-		index++; // jumps the ':'
-		uint8_t start = index;
-		port.text = url.text + index;
-		while(true)
-		{
-			if(url.text[index] < '0' || url.text[index] > '9') { break; }
-			index++;
-		}
-		port.length = index - start;
+		port = start = str;
+		while(*str != '/' || *str != ':' || *str != '#' || *str != '?' || *str != ' ');
+		next_part = *str;
+		*str++ = '\0';
 	}
-	else
-	{
-		port.text = NULL;
-		port.length = 0;
-	}
-
-	char end_of_resources_char = '\0';
 
 	//RESOURCE PART
-	if( url.text[index] != '?' || url.text[index] != '#' || url.text[index] != ' ' )
+	if( next_part != '?' && next_part != '#' && next_part != ' ' )
 	{
-		if( url.text[index] == '/' )
+		if( next_part == '/' )
 		{
 			is_absolute_path = true;
-			index++;
+			str++;
 		}
 		else
 		{
 			is_absolute_path = false;
 		}
 
-		uint8_t start = index;
+		start = str;
 
 		while( true )
 		{
-			if( url.text[index] == '/' )
+			if( *str == '/' )
 			{
-				url.text[index] = '\0';
-				resources.append( url.text + start );
-				start = index + 1;
+				*str = '\0';
+				resources.append( start );
+				start = ++str;
+				continue;
 			}
-			else if( url.text[index] == '?' || url.text[index] == '#' || url.text[index] == ' ' )
+			else if( *str == '?' || *str == '#' || *str == ' ' )
 			{
-				end_of_resources_char = url.text[index];
-				if( url.text[index-1] == '/' )
+				next_part = *str;
+				if( *(str - 1) == '/' )
 				{
 					if( resources.items == 0 ){ break; }
 
-					url.text[index-1] = '\0';
-					resources.append(url.text + index);
+					*(str - 1) = '\0';
+					resources.append(str - 1);
 				}
 				else
 				{
 					/*There is necessarily a resource present because it was verified
 					at the beginning of this part.*/
-					url.text[index] = '\0';
-					resources.append( url.text + start );
+					*str++ = '\0';
+					resources.append( start );
 				}
 				break;
 			}
-			index++;
+			str++;
 		}
 
 	}
 	else
 	{
-		is_absolute_path = true;
+		is_absolute_path = false;
 	}
 
-
-
 	//ARGUMENT PART
-	if( end_of_resources_char == '?')
+	if( next_part == '?')
 	{
-		index++; //jumps the '?'
-		uint8_t start = index;
+		start = str;
 		bool is_key = true;
 		const char* key;
 		arguments = new Dictionary< const char >();
@@ -192,120 +148,75 @@ void URL::parse(char* str)
 		{
 			if( is_key )
 			{
-				if( url.text[index] == '=' )
+				if( *str == '=' )
 				{
-					url.text[index] = '\0';
+					*str = '\0';
 					is_key = false;
-					key = url.text + start;
-					start = index + 1;
+					key = start;
+					start = ++str;
+					continue;
 				}
 			}
 			else
 			{
-				if( url.text[index] == '&' )
+				if( *str == '&' )
 				{
-					url.text[index] = '\0';
+					*str = '\0';
 					is_key = true;
-					temp = (string<uint8_t>*)ts_malloc(sizeof(string<uint8_t>));
-					arguments->add( key, url.text+start );
-					start = index + 1;
+					arguments->add( key, start );
+					start = ++str;
+					continue;
 				}
-				else if( url.text[index] == '#' || url.text[index] == ' ' )
+				else if( *str == '#' || *str == ' ' )
 				{
 
-					end_of_resources_char = url.text[index];
-					url.text[index] = '\0';
-					arguments->add( key, url.text + start );
+					arguments->add( key, start );
+					next_part = *str;
+					*str++ = '\0';
 					break;
 				}
 
 			}
-			index++;
+			str++;
 		}
 	}
 
 	//FRAGMENT PART
-	if(end_of_resources_char == '#')
+	if(next_part == '#')
 	{
-		fragment.text = url.text + index + 1;
-		uint8_t start = index + 1;
-		while( url.text[index] != ' ' ){ index++; }
-		fragment.length = index - start;
+		fragment = str;
+		while( *str++ != ' ' );
+		*(str - 1) = '\0';
 	}
 
-	url.length = index;
-	valid = true;
+	url_length = str - url_str - 1;
+
+	return VALID;
 }
 
-int8_t URL::serialize(char* destination)
+size_t URL::serialize(char* destination)
 {
-	int8_t code = serialize_authority(destination);
-	if( code > 0) { return code; }
-	return serialize_resource(destination);
-}
+	char* start = destination;
 
-void URL::print(void)
-{
-	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
-	 * this method should be optimizes away by the compiler.*/
-
-	if(protocol.length)
+	if( protocol )
 	{
-		DEBUG_NPRINT(protocol.text, protocol.length);
-		DEBUG_PRINT_BYTE(':');
-	}
-	if(authorities)
-	{
-		for(uint8_t i = 0; i < authorities->items; i++)
-		{
-			DEBUG_NPRINT((*authorities)[i]->text, (*authorities)[i]->length);
-			DEBUG_PRINT_BYTE('.');
-		}
-	}
-	if(port.length)
-	{
-		DEBUG_PRINT_BYTE(':');
-		DEBUG_NPRINT(port.text, port.length);
-	}
-	if(is_absolute_path)
-	{
-
-	}
-	for(uint8_t i = 0; i < resources.items; i++)
-	{
-		DEBUG_PRINT(resources[i]);
-		DEBUG_PRINT_BYTE('/');
-	}
-
-	//TODO: print the rest of the url
-
-}
-
-int8_t URL::serialize_authority( char* destination )
-{
-	if( protocol.length )
-	{
-		destination += protocol.copy(destination);
+		strcpy(destination, protocol);
+		destination += strlen(protocol);
 		*destination++ = ':'; *destination++ = '/'; *destination++ = '/';
 	}
-	if( authorities )
+	if( authority )
 	{
-		for( uint8_t i = 0; i < authorities->items ; i++ )
-		{
-			destination += (*authorities)[i]->copy(destination);
-		}
+		strcpy(destination, authority);
+		destination += strlen(authority);
 	}
-	if(port.length )
+	if(port )
 	{
 		*destination++ = ':';
-		destination += port.copy(destination);
+		strcpy(destination, port);
+		destination += strlen(port);
 	}
 
-	return 0;
-}
-int8_t URL::serialize_resource( char* destination )
-{
-	if(is_absolute_path){*destination++ = '/';}
+	if(is_absolute_path){ *destination++ = '/'; }
 
 	for(uint8_t i = 0; i< resources.items; i++)
 	{
@@ -332,32 +243,79 @@ int8_t URL::serialize_resource( char* destination )
 			destination--; //We do not need the last '&'
 		}
 	}
-	if(fragment.length)
+
+	if(fragment)
 	{
 		*destination++ = '#';
-		destination += fragment.copy(destination);
+		strcpy(destination, fragment);
+		destination += strlen(fragment);
 	}
-	return 0;
+
+	return destination - start;
 }
 
-uint8_t URL::get_length(void)
+void URL::print(void)
 {
-	uint8_t length = protocol.length;
+	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
+	 * this method should be optimized away by the compiler.*/
 
-	if( protocol.length )
+	if(protocol)
 	{
+		DEBUG_PRINT(protocol);
+		DEBUG_PRINT_BYTE(':');
+	}
+	if(authority)
+	{
+		DEBUG_PRINT(authority);
+	}
+	if(port)
+	{
+		DEBUG_PRINT_BYTE(':');
+		DEBUG_PRINT(port);
+	}
+	if(is_absolute_path)
+	{
+		DEBUG_PRINT_BYTE('/');
+	}
+	for(uint8_t i = 0; i < resources.items; i++)
+	{
+		DEBUG_PRINT(resources[i]);
+		DEBUG_PRINT_BYTE('/');
+	}
+	if(arguments)
+	{
+		DEBUG_PRINT_BYTE('?');
+		for(uint8_t i = 0; i < arguments->items; i++)
+		{
+			DEBUG_PRINT((*arguments)[i]->key)
+			DEBUG_PRINT_BYTE('=');
+			DEBUG_PRINT((*arguments)[i]->value)
+			if(i != arguments->items - 1)
+			{
+				DEBUG_PRINT_BYTE('&');
+			}
+		}
+	}
+	if(fragment)
+	{
+		DEBUG_PRINT_BYTE('#');
+		DEBUG_PRINT(fragment);
+	}
+
+}
+
+size_t URL::get_length(void)
+{
+	size_t length = 0;
+
+	if( protocol )
+	{
+		length += strlen(protocol);
 		length += 3; //For '://'
 	}
-	if(authorities)
+	if(authority)
 	{
-		for(uint8_t i = 0; i < authorities->items; i++)
-		{
-			length += (*authorities)[i]->length;
-		}
-		if(authorities->items > 0)
-		{
-			length += authorities->items - 1; //For the '.'
-		}
+		length += strlen(authority);
 	}
 	if(is_absolute_path)
 	{
@@ -385,10 +343,10 @@ uint8_t URL::get_length(void)
 		}
 	}
 
-	if(fragment.length)
+	if(fragment)
 	{
 		length++; //For '#'
-		length += fragment.length;
+		length += strlen(fragment);
 	}
 
 	return length;

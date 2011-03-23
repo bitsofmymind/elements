@@ -14,7 +14,6 @@
 //#include "representation.h"
 #include "../elements.h"
 #include "../utils/utils.h"
-#include "../utils/types.h"
 #include <stdint.h>
 
 class Resource
@@ -67,7 +66,7 @@ class Resource
 		void schedule(volatile uptime_t* timer, uptime_t time );
         void schedule(uptime_t time);
 
-		virtual File<MESSAGE_SIZE>* render( Request* request );
+		virtual File* render( Request* request );
 
 		Resource* get_next_child_to_visit();
 

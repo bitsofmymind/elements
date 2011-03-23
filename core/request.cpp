@@ -9,13 +9,11 @@
 #include "message.h"
 #include "request.h"
 //#include "../elements.h"
-#include "../utils/types.h"
 #include "url.h"
 #include <stdint.h>
 #include <pal/pal.h>
 #include <ctype.h>
-
-using namespace Elements;
+#include <string.h>
 
 Request::Request():
 		Message()
@@ -24,8 +22,8 @@ Request::Request():
 	from_url = new URL();
 	object_type = REQUEST;
 
-	method.text = NULL;
-	method.length = 0;
+	method = NULL;
+	method_length = 0;
 
 }
 
@@ -41,9 +39,9 @@ void Request::print(void)
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
 	 * this method should be optimizes away by the compiler.*/
 	DEBUG_PRINT(" % Request: ");
-	DEBUG_NPRINT(method.text, method.length);
+	DEBUG_PRINT(method);
 	DEBUG_PRINT_BYTE(' ');
-	DEBUG_NPRINT(to_url->url.text, to_url->url.length);
+	to_url->print();
 	DEBUG_PRINTLN(" HTTP/1.0");
 	Message::print();
 }
@@ -51,7 +49,7 @@ void Request::print(void)
 
 MESSAGE_SIZE Request::get_header_length(void)
 {
-	return method.length /*For 'HTTP/'*/ \
+	return strlen(method)/*For 'HTTP/'*/ \
 		+ 1 /*For a space*/ \
 		+ to_url->get_length() \
 		+ 1 /*For a space*/ \
@@ -65,7 +63,8 @@ MESSAGE_SIZE Request::get_header_length(void)
 	void Request::serialize(char* buffer)
 	{
 
-		buffer += method.copy(buffer);
+		strcpy(buffer, method);
+		buffer += strlen(method);
 		*buffer++ = ' ';
 
 		buffer += to_url->serialize(buffer);
@@ -91,29 +90,29 @@ Message::PARSER_RESULT Request::parse_header(const char* line, MESSAGE_SIZE size
 		return LINE_INCOMPLETE;
 	}
 
-	if(!header.text)
+	if(!header)
 	{
-		header.text = (char*)ts_malloc(size - 2); /*We substract two because the
+		header = (char*)ts_malloc(size - 2); /*We substract two because the
 		\r\n is implicit*/
-		if(!header.text)
+		if(!header)
 		{
 			return Message::OUT_OF_MEMORY;
 		}
-		header.length = size - 2;
-		memcpy(header.text, line , size - 2);
+		header_length = size - 2;
+		memcpy(header, line , size - 2);
 
-		char* index = header.text;
+		char* index = header;
 
 
 		while(true)
 		{
 			if( *index == ' ' )
 			{
-				method.text = header.text;
-				method.length = index - header.text;
+				method = header;
+				method_length = index - header;
 				break;
 			}
-			else if (index > (header.text + header.length))
+			else if (index > (header + header_length))
 			{
 				return HEADER_MALFORMED;
 			}
@@ -140,11 +139,6 @@ Message::PARSER_RESULT Request::parse_header(const char* line, MESSAGE_SIZE size
 	//Here we would parse for headers we want to keep
 
 	return Message::parse_header(line, size);
-}
-
-bool Request::methodcmp(const char * m, uint8_t len)
-{
-	return method.length == len && !memcmp(m, method.text, 3);
 }
 
 #ifdef BODY_ARGS_PARSING

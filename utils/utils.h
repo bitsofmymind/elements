@@ -10,12 +10,9 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include "types.h"
 #include <stdint.h>
 
 #define CAPACITY 5
-
-using namespace Elements;
 
 class GenericList
 {

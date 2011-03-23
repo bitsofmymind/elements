@@ -12,12 +12,10 @@
 //#include "../elements.h"
 #include <pal/pal.h>
 #include <stdint.h>
+#include <string.h>
 #ifndef ITOA
 #include <cstdio>
 #endif
-
-using namespace Elements;
-
 
 void Response::print(void)
 {
@@ -31,7 +29,7 @@ void Response::print(void)
 	if(content_type)
 	{
 		DEBUG_PRINT("Content-Type: ");
-		DEBUG_NPRINTLN(content_type->text, content_type->length);
+		DEBUG_PRINTLN(content_type);
 	}
 	Message::print();
 }
@@ -80,20 +78,20 @@ Response::~Response()
 			return LINE_INCOMPLETE;
 		}
 
-		if(!header.text)
+		if(!header)
 		{
-			header.text = (char*)ts_malloc(size - 2); /*We substract two because the
+			header = (char*)ts_malloc(size - 2); /*We substract two because the
 			\r\n is implicit*/
-			if(!header.text)
+			if(!header)
 			{
 				return Message::OUT_OF_MEMORY;
 			}
-			header.length = size - 2;
-			memcpy(header.text, line , size - 2);
+			header_length = size - 2;
+			memcpy(header, line , size - 2);
 
 			/*We do not really care about the HTTP version here, in fact, we could avoir saving it entirely*/
 
-			char* index = header.text;
+			char* index = header;
 
 			while(true)
 			{
@@ -102,7 +100,7 @@ Response::~Response()
 					response_code_int = atoi(++index);
 					break;
 				}
-				else if (index > (header.text + header.length))
+				else if (index > (header + header_length))
 				{
 					return HEADER_MALFORMED;
 				}
@@ -134,7 +132,7 @@ MESSAGE_SIZE Response::get_header_length(void)
 
 	if(content_type)
 	{
-		length += CONTENT_TYPE.length + 2 /*For ": "*/ + content_type->length + 2/*For \r\n*/;
+		length += sizeof(CONTENT_TYPE) - 1 + 2 /*For ": "*/ + strlen(content_type) + 2/*For \r\n*/;
 	}
 
 	return length;
@@ -157,12 +155,12 @@ void Response::serialize( char* buffer)
 
 	if(content_type)
 	{
-		CONTENT_TYPE.copy(buffer);
-		buffer += CONTENT_TYPE.length; //Moves the pointer after "Content-Type"
+		strcpy(buffer, CONTENT_TYPE);
+		buffer += sizeof(CONTENT_TYPE) - 1; //Moves the pointer after "Content-Type"
 		*buffer++ = ':';
 		*buffer++ = ' ';
-		content_type->copy(buffer);
-		buffer += content_type->length; //Moves the pointer after the content type
+		strcpy(buffer, content_type);
+		buffer += strlen(content_type); //Moves the pointer after the content type
 		*buffer++ = '\r';
 		*buffer++ = '\n';
 	}
