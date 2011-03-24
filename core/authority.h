@@ -21,14 +21,14 @@
 class Authority: public Resource
 {
 
-	public:
+	private:
 		Queue<Message*> message_queue;
 
 	public:
 		Authority(void);
-		#if RESOURCE_DESTRUCTION
-			virtual ~Authority(void);
-		#endif
+#if RESOURCE_DESTRUCTION
+		virtual ~Authority(void);
+#endif
 
 	protected:
 		virtual void visit(void);

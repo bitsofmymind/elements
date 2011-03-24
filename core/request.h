@@ -14,6 +14,8 @@
 
 class Request: public Message
 {
+	protected:
+		static const Message::TYPE type = REQUEST;
 	public:
 
 		//Request header fields
@@ -36,31 +38,24 @@ class Request: public Message
 		//static const char* TE;
 		//static const char* USER_AGENT;
 
-		static const Message::TYPE type = REQUEST;
-
-
 		const char* method;
 		uint8_t method_length;
 
-
+	public:
 		Request();
 		~Request();
 
-
 		virtual void print();
-
-
-
-		#if REQUEST_SERIALIZATION
-			virtual void serialize( char* buffer );
-		#endif
-
+#if REQUEST_SERIALIZATION
+		virtual void serialize( char* buffer );
+#endif
 		virtual size_t get_header_length(void);
-		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
-
-		#if BODY_ARGS_PARSING
+#if BODY_ARGS_PARSING
 			uint8_t find_arg(const char* key, char* value, uint8_t max_size);
-		#endif
+#endif
+
+	protected:
+		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
 };
 
 #endif /* REQUEST_H_ */

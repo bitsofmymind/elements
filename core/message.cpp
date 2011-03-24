@@ -321,8 +321,5 @@ const char *Message::CONTENT_LENGTH = "Content-Length";
 //const char* Message::CONTENT_RANGE = {"content-range", 15 };
 const char *Message::CONTENT_TYPE = "Content-Type";
 //const char* Message::EXPIRES = {"expires", 17 };
-//const char* Message::LAST_MODIFIED = {"last-modified", 18 };
+//const char* Message::LAST_MODIFIED = "Last-Modified";
 //const char* Message::FROM_URL = {"from-url", 48 };
-
-Message::mime Message::TEXT_HTML = "text/html";
-Message::mime Message::MESSAGE_HTTP = "message/http";

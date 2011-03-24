@@ -41,30 +41,25 @@ class Response: public Message
 		//static const char* VARY;
 		//static const char* WWW_AUTHENTICATE;
 
-		static const Message::TYPE type = RESPONSE;
-
-	public:
-
-
-
 		uint16_t response_code_int;
 		mime content_type;
 		Request* original_request;
+
+	private:
+		static const Message::TYPE type = RESPONSE;
 
 	public:
 		Response( const uint16_t response_code,	Request* request );
 		~Response();
 
-
 		virtual void print();
-
-
-		virtual size_t get_header_length(void);
-		#if RESPONSE_DESERIALIZATION
-			virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
-		#endif
 		virtual void serialize(char* buffer);
+		virtual size_t get_header_length(void);
 
+	protected:
+#if RESPONSE_DESERIALIZATION
+		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
+#endif
 };
 
 //STATUS CODE DEFINITIONS

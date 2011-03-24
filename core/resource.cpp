@@ -249,7 +249,7 @@ Response* Resource::http_get(Request* request)
 		return NULL;
 	}
 	response->body_file = render( request );
-	response->content_type = Message::TEXT_HTML;
+	response->content_type = "text/html";
 	if(response->body_file)
 	{
 		response->content_length = response->body_file->size;
@@ -281,7 +281,7 @@ Response* Resource::http_trace( Request* request )
 	Response* response = new Response(OK_200, request );
 	//request->Message::serialize();
 	//response->body = request->message;
-	response->content_type = &Message::MESSAGE_HTTP;
+	response->content_type = "message/http";
 	return response;
 }
 #endif

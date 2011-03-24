@@ -13,22 +13,19 @@
 #include "response.h"
 #include "request.h"
 #include "resource.h"
-//#include "../elements.h"
 #include "../utils/utils.h"
 
 class Processing: public Resource
 {
-	Resource* bound;
-	Resource* current;
+	private:
+		Resource* bound;
+		Resource* current;
 
 	public:
 		Processing(Resource* bound);
 
 		virtual void start(void);
 		void step(void);
-
-	protected:
-
 
 };
 

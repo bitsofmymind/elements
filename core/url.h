@@ -52,11 +52,7 @@ class URL
 		URL::PARSING_RESULT parse(char* str);
 		size_t serialize( char* destination );
 		size_t get_length(void);
-
 		void print(void);
-
-
-
 };
 
 

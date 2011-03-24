@@ -55,9 +55,6 @@ class Message
 
 		typedef const char* mime;
 
-		static mime TEXT_HTML;
-		static mime MESSAGE_HTTP;
-
 		//Elements header fields
 		static const char* FROM_URL;
 
@@ -81,20 +78,15 @@ class Message
 		Message();
 		virtual ~Message();
 
-
 		virtual void print();
-
  		virtual size_t get_header_length(void);
-
 		virtual void serialize( char* buffer );
-
 		Message::PARSER_RESULT parse(const char* buffer);
 		Message::PARSER_RESULT parse(const char* buffer, size_t size);
-		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
-		Message::PARSER_RESULT store_body(const char* buffer, size_t size);
-
 
 	protected:
+		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
+		Message::PARSER_RESULT store_body(const char* buffer, size_t size);
 
 };
 
