@@ -61,60 +61,56 @@ Message::~Message()
 }
 
 
-size_t Message::get_header_length(void)
+size_t Message::serialize( char* buffer, bool write )
 {
-	size_t size = 2; //For \r\n at end of the headers
+	char* start = buffer;
 
 	if(content_length)
 	{
-		/*itoa(content_length) will not produce more chars than the type that can
-		contain it plus a null termination.*/
-		#if size_t == uint16_t
-			char content_string[5 + 1];
-		#elif size_t == uint32_t
-			char content_string[10 + 1];
-		#elif size_t == uint64_t
-			char content_string[20 + 1];
-		#else
-			#error "MESSAGE_SIZE is of unknown type"
-		#endif
-
-		#if ITOA
-			itoa(content_length, content_string, 10);
-		#else
-			sprintf(content_string, "%d", content_length);
-		#endif
-		size += 14 /*strlen(CONTENT_LENGTH)*/ + 2/*For ": "*/+ strlen(content_string) + 2/*For \r\n*/;
-
-	}
-	//Add fields here.
-	return size;
-}
-
-void Message::serialize( char* buffer )
-{
-	if(content_length)
-	{
-		strcpy(buffer, CONTENT_LENGTH);
+		if( write ){ strcpy( buffer, CONTENT_LENGTH ); }
 		buffer += 14; //strlen(CONTENT_LENGTH);
-		*buffer++ = ':';
-		*buffer++ =' ';
-		#if ITOA
-			itoa(content_length, buffer, 10);
-		#else
-			sprintf(buffer, "%d", content_length);
-		#endif
-		buffer += strlen(buffer); /*Moves the pointer after the length. The terminating
-		character gets discarded because strlen() does not count it.*/
+		if( write )
+		{
+			*buffer = ':';
+			*(buffer + 1) = ' ';
+		}
+		buffer += 2;
 
-		*buffer++ = '\r';
-		*buffer++ = '\n';
+		if( write )
+		{
+#if ITOA
+			itoa(content_length, buffer, 10);
+#else
+			sprintf(buffer, "%d", content_length);
+#endif
+		}
+
+		size_t cl = content_length;
+		while( cl > 10 )
+		{
+			buffer++;
+			cl /= 10;
+		}
+
+		if( write )
+		{
+			*buffer = '\r';
+			*(buffer + 1) = '\n';
+		}
+		buffer += 2;
+
 	}
 
 	//Serialize other fields here
 
-	*buffer++ = '\r';
-	*buffer = '\n';
+	if( write )
+	{
+		*buffer = '\r';
+		*(buffer + 1) = '\n';
+	}
+	buffer++;
+
+	return buffer - start;
 }
 
 Message::PARSER_RESULT Message::parse(const char* data, size_t size)

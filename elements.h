@@ -11,10 +11,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define RESOURCE_DESTRUCTION 0
+#define RESOURCE_DESTRUCTION 1
 #define RESPONSE_DESERIALIZATION 0//Set to 1 if framework is to receive responses from another domain
 #define REQUEST_SERIALIZATION 0//Set to 1 if framework is to send request to another domain
 #define TIME_KEEPING 1
+#define URL_SERIALIZATION 1
 
 
 typedef uint64_t uptime_t;

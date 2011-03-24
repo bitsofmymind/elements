@@ -79,8 +79,7 @@ class Message
 		virtual ~Message();
 
 		virtual void print();
- 		virtual size_t get_header_length(void);
-		virtual void serialize( char* buffer );
+		virtual size_t serialize( char* buffer, bool write);
 		Message::PARSER_RESULT parse(const char* buffer);
 		Message::PARSER_RESULT parse(const char* buffer, size_t size);
 

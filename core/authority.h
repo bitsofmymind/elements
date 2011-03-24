@@ -29,14 +29,12 @@ class Authority: public Resource
 #if RESOURCE_DESTRUCTION
 		virtual ~Authority(void);
 #endif
+        virtual uint8_t send(Message* message);
 
 	protected:
 		virtual void visit(void);
 		virtual Message* dispatch(Message* message);
-        virtual uint8_t send(Message* message);
-
         virtual uptime_t get_sleep_clock( void );
-
 		void process_queue(void);
 };
 

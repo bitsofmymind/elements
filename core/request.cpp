@@ -47,39 +47,37 @@ void Request::print(void)
 }
 
 
-size_t Request::get_header_length(void)
-{
-	return strlen(method)/*For 'HTTP/'*/ \
-		+ 1 /*For a space*/ \
-		+ to_url->get_length() \
-		+ 1 /*For a space*/ \
-		+ 5 /*For 'HTTP/'*/
-		+ 3 /*for the HTTP version*/ \
-		+ 2 /*For CLRF between header and fields*/ \
-		+ Message::get_header_length();
-
-}
 #if REQUEST_SERIALIZATION
-	void Request::serialize(char* buffer)
+void Request::serialize(char* buffer, bool write)
+{
+	char* start = buffer;
+	write ? strcpy(buffer, method):;
+	buffer += strlen(method);
+
+	write ? *buffer = ' ':;
+	buffer++;
+
+	buffer += to_url->serialize(buffer, write);
+
+	if(write)
 	{
-
-		strcpy(buffer, method);
-		buffer += strlen(method);
 		*buffer++ = ' ';
-
-		buffer += to_url->serialize(buffer);
-		*buffer++ = ' ';
-
 		*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
 		*buffer++ = '1';
 		*buffer++ = '.';
 		*buffer++ = '0';
-
 		*buffer++ = '\r';
 		*buffer++ = '\n';
-
-		Message::serialize(buffer);
 	}
+	else
+	{
+		buffer += 12;
+	}
+
+	buffer += Message::serialize(buffer);
+
+	return buffer - start;
+}
 #endif
 
 Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)

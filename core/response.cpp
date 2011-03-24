@@ -119,53 +119,56 @@ Response::~Response()
 	}
 #endif
 
-size_t Response::get_header_length(void)
-{
-	size_t length = 5 /*For 'HTTP/'*/ \
-			+ 3 /*For the HTTP version*/ \
-			+ 1 /*For a space*/ \
-			+ 3 /*For the status code*/ \
-			+ 2 /*For CLRF between header and fields*/ \
-			+ Message::get_header_length();
-
-	//Reason phrase gets skipped
-
-	if(content_type)
-	{
-		length += 12 /*strlen(CONTENT_TYPE)*/ + 2 /*For ": "*/ + strlen(content_type) + 2/*For \r\n*/;
-	}
-
-	return length;
-}
-
-void Response::serialize( char* buffer)
+size_t Response::serialize( char* buffer, bool write)
 {
 
-	*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
-	*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '0';
-	*buffer++ = ' ';
-#if ITOA
-	itoa(response_code_int, buffer, 10);
-#else
-	sprintf(buffer, "%d", response_code_int);
-#endif
-	buffer += 3; //Moved the pointer after the response code
-	*buffer++ = '\r';
-	*buffer++ = '\n';
+	char* start = buffer;
 
-	if(content_type)
+	if( write )
 	{
-		strcpy(buffer, CONTENT_TYPE);
-		buffer += 12; //strlen(CONTENT_TYPE); //Moves the pointer after "Content-Type"
-		*buffer++ = ':';
+		*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
+		*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '0';
 		*buffer++ = ' ';
-		strcpy(buffer, content_type);
+#if ITOA
+		itoa(response_code_int, buffer, 10);
+#else
+		sprintf(buffer, "%d", response_code_int);
+#endif
+	}
+	else { buffer += 9; }
+
+	buffer += 3; //Moved the pointer after the response code
+
+	if( write )
+	{
+		*buffer = '\r';
+		*( buffer + 1 ) = '\n';
+	}
+	buffer += 2;
+
+	if(content_type)
+	{
+		if( write ) { strcpy(buffer, CONTENT_TYPE); }
+		buffer += 12; //strlen(CONTENT_TYPE); //Moves the pointer after "Content-Type"
+		if( write )
+		{
+			*buffer = ':';
+			*( buffer + 1 ) = ' ';
+		}
+		buffer += 2;
+		if( write ) {	strcpy(buffer, content_type); }
 		buffer += strlen(content_type); //Moves the pointer after the content type
-		*buffer++ = '\r';
-		*buffer++ = '\n';
+		if( write )
+		{
+			*buffer = '\r';
+			*( buffer + 1 ) = '\n';
+		}
+		buffer += 2;
 	}
 
-	Message::serialize(buffer);
+	buffer += Message::serialize(buffer, write);
+
+	return buffer - start;
 }
 
 //STATUS CODE DEFINITIONS

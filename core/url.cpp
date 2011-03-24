@@ -209,72 +209,87 @@ URL::PARSING_RESULT URL::parse(char* str)
 
 	return VALID;
 }
-
-size_t URL::serialize(char* destination)
+#if URL_SERIALIZATION
+size_t URL::serialize(char* buffer, bool write)
 {
-	char* start = destination;
+	char* start = buffer;
 #if URL_PROTOCOL
 	if( protocol )
 	{
-		strcpy(destination, protocol);
-		destination += strlen(protocol);
-		*destination++ = ':'; *destination++ = '/'; *destination++ = '/';
+		if(write) { strcpy(buffer, protocol); }
+		buffer += strlen(protocol);
+		if(write)
+		{
+			*buffer = ':'; *( buffer + 1 ) = '/'; *(buffer + 2) = '/';
+		}
+		buffer += 3;
 	}
 #endif
 #if URL_AUTHORITY
 	if( authority )
 	{
-		strcpy(destination, authority);
-		destination += strlen(authority);
+		if( write ){ strcpy(buffer, authority); }
+		buffer += strlen(authority);
 	}
 #endif
 #if URL_PORT
 	if(port)
 	{
-		*destination++ = ':';
-		strcpy(destination, port);
-		destination += strlen(port);
+		if( write ){ *buffer = ':' };
+		buffer++;
+		if( write ){ strcpy(buffer, port); }
+		buffer += strlen(port);
 	}
 #endif
-	if(is_absolute_path){ *destination++ = '/'; }
+	if(is_absolute_path)
+	{
+		if(write){ *buffer = '/'; }
+		buffer++;
+	}
 
 	for(uint8_t i = 0; i< resources.items; i++)
 	{
-		strcpy(destination, resources[i]);
-		destination += strlen(destination);
-		*destination++ = '/';
+		if( write ){ strcpy(buffer, resources[i]); }
+		buffer += strlen(buffer);
+		if( write ){ *buffer = '/'; }
+		buffer++;
 	}
 #if URL_ARGUMENTS
 	if (arguments )
 	{
 		key_value_pair<const char*>* kv;
-		*destination++ = '?';
+		if( write ){ *buffer = '?'; }
+		buffer++;
 		for(uint8_t i = 0; i< arguments->items; i++)
 		{
 			kv = (*arguments)[i];
-			strcpy(destination, kv->key);
-			destination += strlen(destination);
-			*destination++ = '=';
-			strcpy(destination, kv->value);
-			destination += strlen(destination);
-			*destination++ = '&';
+			if( write ){ strcpy(buffer, kv->key); }
+			buffer += strlen(buffer);
+			if( write ) {*buffer = '='; }
+			buffer += 1;
+			if( write ){ strcpy(buffer, kv->value); }
+			buffer += strlen(buffer);
+			if( write ){ *buffer = '&'; }
+			buffer += 1;
 		}
 		if(arguments->items)
 		{
-			destination--; //We do not need the last '&'
+			buffer--; //We do not need the last '&'
 		}
 	}
 #endif
 #if URL_FRAGMENT
 	if(fragment)
 	{
-		*destination++ = '#';
-		strcpy(destination, fragment);
-		destination += strlen(fragment);
+		if( write ){ *buffer = '#'; }
+		buffer++;
+		if( write ){ strcpy(buffer, fragment); }
+		buffer += strlen(fragment);
 	}
 #endif
-	return destination - start;
+	return buffer - start;
 }
+#endif
 
 void URL::print(void)
 {
@@ -333,63 +348,3 @@ void URL::print(void)
 	}
 #endif
 }
-
-size_t URL::get_length(void)
-{
-	size_t length = 0;
-#if URL_PROTOCOL
-	if( protocol )
-	{
-		length += strlen(protocol);
-		length += 3; //For '://'
-	}
-#endif
-#if URL_AUTHORITY
-	if(authority)
-	{
-		length += strlen(authority);
-	}
-#endif
-#if URL_PORT
-	if(port)
-	{
-		length += strlen(port) + 1; //For ':'
-	}
-#endif
-	if(is_absolute_path)
-	{
-		length++;
-	}
-	for(uint8_t i = 0; i<resources.items; i++ )
-	{
-		length++; //For the '/'
-		length += strlen(resources[i]);
-	}
-#if URL_ARGUMENTS
-	if(arguments)
-	{
-		key_value_pair<const char*>* kv;
-		length++; //For the '?'
-		for(uint8_t i = 0; i< arguments->items; i++)
-		{
-			kv = (*arguments)[i];
-			length += strlen(kv->key);
-			length += strlen(kv->value);
-		}
-		if( arguments->items)
-		{
-			length += arguments->items - 1; //For the '&'
-			length += arguments->items - 1; //For the '='
-		}
-	}
-#endif
-#if URL_FRAGMENT
-	if(fragment)
-	{
-		length++; //For '#'
-		length += strlen(fragment);
-	}
-#endif
-	return length;
-}
-

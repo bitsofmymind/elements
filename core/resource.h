@@ -11,7 +11,6 @@
 #include "message.h"
 #include "response.h"
 #include "request.h"
-//#include "representation.h"
 #include "../elements.h"
 #include "../utils/utils.h"
 #include <stdint.h>
@@ -37,12 +36,12 @@ class Resource
 		int8_t add_child(const char* name, Resource* child);
 		Resource* remove_child(const char* name);
 		uint8_t get_number_of_children(void);
+		virtual uint8_t send(Message* message);
 
 	protected:
 		virtual void visit(void);
 		virtual Message* dispatch(Message* message);
 		virtual void run( void );
-        virtual uint8_t send(Message* message);
 		virtual uptime_t get_sleep_clock( void );
         const char* get_name(Resource* resource);
         virtual Response::status_code process( Request* request, Message** return_message );

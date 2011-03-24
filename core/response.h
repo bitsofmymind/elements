@@ -72,35 +72,34 @@ class Response: public Message
 		#define HTTP_VERSION_NOT_SUPPORTED_503 503
 
 		//Response header fields
-		//static const char* ACCEPT_RANGES_
-		//static const char* AGE_
-		//static const char* ALLOW_
-		//static const char* ETAG_
-		//static const char* LOCATION_
-		//static const char* PROXY_AUTHENTICATE_
-		//static const char* RETRY_AFTER_
-		//static const char* SERVER_
-		//static const char* VARY_
-		//static const char* WWW_AUTHENTICATE_
+		//static const char* ACCEPT_RANGES;
+		//static const char* AGE;
+		//static const char* ALLOW;
+		//static const char* ETAG;
+		//static const char* LOCATION;
+		//static const char* PROXY_AUTHENTICATE;
+		//static const char* RETRY_AFTER;
+		//static const char* SERVER;
+		//static const char* VARY;
+		//static const char* WWW_AUTHENTICATE;
 
-		uint16_t response_code_int_
-		mime content_type_
-		Request* original_request_
+		uint16_t response_code_int;
+		mime content_type;
+		Request* original_request;
 
 	private:
-		static const Message::TYPE type = RESPONSE_
+		static const Message::TYPE type = RESPONSE;
 
 	public:
-		Response( const uint16_t response_code,	Request* request )_
-		~Response()_
+		Response( const uint16_t response_code,	Request* request );
+		~Response();
 
-		virtual void print()_
-		virtual void serialize(char* buffer)_
-		virtual size_t get_header_length(void)_
+		virtual void print();
+		virtual size_t serialize(char* buffer, bool write);
 
 	protected:
 #if RESPONSE_DESERIALIZATION
-		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size)_
+		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
 #endif
-}_
+};
 #endif /* RESPONSE_H_ */

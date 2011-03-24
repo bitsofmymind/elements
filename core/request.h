@@ -47,9 +47,8 @@ class Request: public Message
 
 		virtual void print();
 #if REQUEST_SERIALIZATION
-		virtual void serialize( char* buffer );
+		virtual size_t serialize( char* buffer, bool write );
 #endif
-		virtual size_t get_header_length(void);
 #if BODY_ARGS_PARSING
 			uint8_t find_arg(const char* key, char* value, uint8_t max_size);
 #endif

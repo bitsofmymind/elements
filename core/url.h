@@ -50,8 +50,9 @@ class URL
 		~URL();
 
 		URL::PARSING_RESULT parse(char* str);
-		size_t serialize( char* destination );
-		size_t get_length(void);
+#if URL_SERIALIZATION
+		size_t serialize( char* buffer , bool write);
+#endif
 		void print(void);
 };
 
