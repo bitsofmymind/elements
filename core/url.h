@@ -35,9 +35,9 @@ class URL
 #if URL_PORT
 		const char* port;
 #endif
-		List< const char > resources;
+		List< const char* > resources;
 #if URL_ARGUMENTS
-		Dictionary< const char >* arguments;
+		Dictionary< const char* >* arguments;
 #endif
 #if URL_FRAGMENT
 		const char* fragment;

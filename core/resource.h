@@ -20,7 +20,7 @@ class Resource
 {
 
     public:
-		Dictionary< Resource >* children;
+		Dictionary< Resource* >* children;
 		volatile uptime_t own_sleep_clock;
 		Resource* parent;
 

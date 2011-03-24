@@ -155,7 +155,7 @@ int8_t Resource::add_child(const char* name, Resource* child )
 {
 	if( children == NULL )
 	{
-		children = new Dictionary<Resource>();
+		children = new Dictionary<Resource*>();
 		if(!children)
 		{
 			return -2;
@@ -208,7 +208,9 @@ Response::status_code Resource::process( Request* request, Message** return_mess
 
 	if(request->to_url->cursor >=  request->to_url->resources.items)
 	{
+#if VERBOSITY
 		print_transaction(request);
+#endif
 #if HTTP_GET
 		if(!strcmp("get", request->method))
 		{
@@ -288,7 +290,9 @@ Response::status_code Resource::process(Response* response, Message** return_mes
 {
 	if(response->to_url->cursor >=  response->to_url->resources.items)
 	{
+#if VERBOSITY
 		print_transaction(response);
+#endif
 		delete response;
 		return OK_200;
 	}

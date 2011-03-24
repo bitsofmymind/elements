@@ -157,7 +157,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 		start = str;
 		bool is_key = true;
 		const char* key;
-		arguments = new Dictionary< const char >();
+		arguments = new Dictionary< const char* >();
 		for(;;)
 		{
 			if( is_key )

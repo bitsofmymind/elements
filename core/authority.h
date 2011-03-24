@@ -22,11 +22,11 @@ class Authority: public Resource
 {
 
 	public:
-		Queue<Message>* message_queue;
+		Queue<Message*> message_queue;
 
 	public:
 		Authority(void);
-		#ifndef NO_RESOURCE_DESTRUCTION
+		#if RESOURCE_DESTRUCTION
 			virtual ~Authority(void);
 		#endif
 

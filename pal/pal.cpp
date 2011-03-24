@@ -73,9 +73,12 @@ void* ts_malloc(size_t size)
 
 void ts_free(void* block)
 {
-	ATOMIC
+	if(block != NULL)
 	{
-		free(block);
+		ATOMIC
+		{
+			free(block);
+		}
 	}
 }
 

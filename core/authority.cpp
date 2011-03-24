@@ -21,19 +21,11 @@
 
 Authority::Authority(void):Resource()
 {
-	message_queue = new Queue<Message>();
 }
 
-#ifndef NO_RESOURCE_DESTRUCTION
+#if RESOURCE_DESTRUCTION
 	Authority::~Authority(void)
-	{
-		/*for( uint8_t i = 0; i < message_queue->items ; i++ )
-		{
-			delete message_queue[i];
-		}*/
-		delete message_queue;
-
-	}
+	{}
 #endif
 
 void Authority::visit(void)
@@ -44,7 +36,7 @@ void Authority::visit(void)
 
 Message* Authority::dispatch(Message* message)
 {
-	message_queue->queue(message);
+	message_queue.queue(message);
 	schedule(NULL, 0);
 	return NULL;
 }
@@ -54,22 +46,22 @@ constitutes the entry point of a thread.*/
 void Authority::process_queue(void)
 {
 	Message* message; //Danger here, if the queue becomes full, it will no longer run
-	while(message_queue->items && message_queue->items < CAPACITY)
+	while(message_queue.items && message_queue.items < CAPACITY)
 	{
-		message = message_queue->dequeue();
-                if(message->to_url->cursor > 0 || !message->to_url->is_absolute_path)
-                {
-                    message = Resource::dispatch(message);
-                    if(message){ message_queue->queue( message ); }
-                }
-                else
-                {
-                    if(Resource::send(message))
-                    {
-                        message = Resource::dispatch(message);
-                        if(message){ message_queue->queue( message ); }
-                    }
-                }
+		message = message_queue.dequeue();
+		if(message->to_url->cursor > 0 || !message->to_url->is_absolute_path)
+		{
+			message = Resource::dispatch(message);
+			if(message){ message_queue.queue( message ); }
+		}
+		else
+		{
+			if(Resource::send(message))
+			{
+				message = Resource::dispatch(message);
+				if(message){ message_queue.queue( message ); }
+			}
+		}
 		/*CONCURENCY PROBLEM: there will most likely be a significant delay between the time that its dertemined there is
 		enough space on the messages_out queue and the actual queuing of the message. For exampe, collect() might be called in between
 		and load the queue with messages, in which case there might no longer be enough space for the message returned by dispatch(). Also,
@@ -82,7 +74,7 @@ void Authority::process_queue(void)
 
 uint8_t Authority::send(Message* message)
 {
-    uint8_t result = message_queue->queue(message);
+    uint8_t result = message_queue.queue(message);
     if(!result)
     {
         schedule(NULL, 0);
@@ -92,7 +84,7 @@ uint8_t Authority::send(Message* message)
 
 uptime_t Authority::get_sleep_clock(void)
 {
-    if(message_queue->items)
+    if(message_queue.items)
     {
         return 0;
     }
