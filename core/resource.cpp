@@ -410,6 +410,7 @@ Response* Resource::error(uint16_t error, Message* message)
 			case NOT_FOUND_404:
 				//response->body_file = new ConstFile("<html><body>Not found</body></html>");
 				response->body_file = new ConstFile("?");
+				response->content_length = response->body_file->size;
 				break;
 			default:
 				break;

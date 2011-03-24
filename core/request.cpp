@@ -46,15 +46,15 @@ void Request::print(void)
 	Message::print();
 }
 
-
 #if REQUEST_SERIALIZATION
-void Request::serialize(char* buffer, bool write)
+size_t Request::serialize(char* buffer, bool write)
 {
 	char* start = buffer;
-	write ? strcpy(buffer, method):;
+
+	if( write ){ strcpy(buffer, method); }
 	buffer += strlen(method);
 
-	write ? *buffer = ' ':;
+	if( write ){ *buffer = ' '; }
 	buffer++;
 
 	buffer += to_url->serialize(buffer, write);
@@ -71,10 +71,10 @@ void Request::serialize(char* buffer, bool write)
 	}
 	else
 	{
-		buffer += 12;
+		buffer += 11;
 	}
 
-	buffer += Message::serialize(buffer);
+	buffer += Message::serialize(buffer, write);
 
 	return buffer - start;
 }

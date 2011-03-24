@@ -250,7 +250,7 @@ size_t URL::serialize(char* buffer, bool write)
 	for(uint8_t i = 0; i< resources.items; i++)
 	{
 		if( write ){ strcpy(buffer, resources[i]); }
-		buffer += strlen(buffer);
+		buffer += strlen(resources[i]);
 		if( write ){ *buffer = '/'; }
 		buffer++;
 	}

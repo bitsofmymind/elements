@@ -156,7 +156,7 @@ size_t Response::serialize( char* buffer, bool write)
 			*( buffer + 1 ) = ' ';
 		}
 		buffer += 2;
-		if( write ) {	strcpy(buffer, content_type); }
+		if( write ) { strcpy(buffer, content_type); }
 		buffer += strlen(content_type); //Moves the pointer after the content type
 		if( write )
 		{

@@ -86,11 +86,11 @@ size_t Message::serialize( char* buffer, bool write )
 		}
 
 		size_t cl = content_length;
-		while( cl > 10 )
+		do
 		{
 			buffer++;
 			cl /= 10;
-		}
+		}while( cl > 0 );
 
 		if( write )
 		{
@@ -108,7 +108,7 @@ size_t Message::serialize( char* buffer, bool write )
 		*buffer = '\r';
 		*(buffer + 1) = '\n';
 	}
-	buffer++;
+	buffer+=2;
 
 	return buffer - start;
 }
