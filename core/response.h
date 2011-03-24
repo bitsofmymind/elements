@@ -16,142 +16,91 @@
 class Response: public Message
 {
 	public:
-
 		//STATUS CODES DEFINITIONS
 		typedef uint16_t status_code;
+
+		//Informational: 1xx
+		#define CONTINUE_100 100
+		#define SWITCHING_PROTOCOLS_101 101
+
+		//Successful: 2xx
 		#define OK_200 200
+		#define CREATED_201 201
+		#define ACCEPTED_202 202
+		#define NON_AUTHORITATIVE_INFORMATION_203 203
+		#define NO_CONTENT_204 204
+		#define RESET_CONTENT_205 205
+		#define PARTIAL_CONTENT_206 206
 
-		#define PASS_308 308
+		//Redirection: 3xx
+		#define MULTIPLE_CHOICES_300 300
+		#define MOVED_PERMANENTLY_301 301
+		#define FOUND_302 302
+		#define SEE_OTHER_303 303
+		#define NOT_MODIFIED_304 304
+		#define USE_PROXY_305 305
+		//306 is no longer unused
+		#define TEMPORARY_REDIRECT_307 307
+		#define PASS_308 308 //Elements framework specific
 
+		//Client Error: 4xx
 		#define BAD_REQUEST_400 400
+		#define UNAUTHORIZED_401 401
+		#define PAYMENT_REQUIRED_402 402
+		#define FORBIDDEN_403 403
 		#define NOT_FOUND_404 404
+		#define METHOD_NOT_ALLOWED_405 405
+		#define NOT_ACCEPTABLE_406 406
+		#define PROXY_AUTHENTICATION_REQUIRED_407 407
+		#define REQUEST_TIMEOUT_408 408
+		#define CONFLICT_409 409
+		#define GONE_410 410
+		#define LENGTH_REQUIRED_411 411
+		#define PRECONDITION_FAILED_412 412
+		#define REQUEST_ENTITY_TOO_LARGE_413 413
+		#define REQUEST_URI_TOO_LONG_414 414
+		#define UNSUPPORTED_MEDIA_TYPE_415 415
+		#define REQUESTED_RANGE_NOT_SATISFIABLE_416 416
+		#define EXPECTATION_FAILED_417 417
 
+		//Server error: 5xx
 		#define INTERNAL_SERVER_ERROR_500 500
 		#define NOT_IMPLEMENTED_501 501
+		#define BAD_GATEWAY_502 502
+		#define SERVICE_UNAVAILABE_503 503
+		#define GATEWAY_TIMEOUT_504 504
+		#define HTTP_VERSION_NOT_SUPPORTED_503 503
 
 		//Response header fields
-		//static const char* ACCEPT_RANGES;
-		//static const char* AGE;
-		//static const char* ALLOW;
-		//static const char* ETAG;
-		//static const char* LOCATION;
-		//static const char* PROXY_AUTHENTICATE;
-		//static const char* RETRY_AFTER;
-		//static const char* SERVER;
-		//static const char* VARY;
-		//static const char* WWW_AUTHENTICATE;
+		//static const char* ACCEPT_RANGES_
+		//static const char* AGE_
+		//static const char* ALLOW_
+		//static const char* ETAG_
+		//static const char* LOCATION_
+		//static const char* PROXY_AUTHENTICATE_
+		//static const char* RETRY_AFTER_
+		//static const char* SERVER_
+		//static const char* VARY_
+		//static const char* WWW_AUTHENTICATE_
 
-		uint16_t response_code_int;
-		mime content_type;
-		Request* original_request;
+		uint16_t response_code_int_
+		mime content_type_
+		Request* original_request_
 
 	private:
-		static const Message::TYPE type = RESPONSE;
+		static const Message::TYPE type = RESPONSE_
 
 	public:
-		Response( const uint16_t response_code,	Request* request );
-		~Response();
+		Response( const uint16_t response_code,	Request* request )_
+		~Response()_
 
-		virtual void print();
-		virtual void serialize(char* buffer);
-		virtual size_t get_header_length(void);
+		virtual void print()_
+		virtual void serialize(char* buffer)_
+		virtual size_t get_header_length(void)_
 
 	protected:
 #if RESPONSE_DESERIALIZATION
-		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
+		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size)_
 #endif
-};
-
-//STATUS CODE DEFINITIONS
-//Informational: 1xx
-//static const string<uint8_t> CONTINUE_REASON_PHRASE;
-//static const string<uint8_t> CONTINUE_CODE;
-//static const string<uint8_t> SWITCHING_PROTOCOLS_REASON_PHRASE;
-//static const string<uint8_t> SWITCHING_PROTOCOLS_CODE;
-
-//Successful: 2xx
-//static const string<uint8_t> OK_REASON_PHRASE;
-//static const string<uint8_t> OK_CODE;
-//static const string<uint8_t> CREATED_REASON_PHRASE;
-//static const string<uint8_t> CREATED_CODE;
-//static const string<uint8_t> ACCEPTED_REASON_PHRASE;
-//static const string<uint8_t> ACCEPTED_CODE;
-//static const string<uint8_t> NON_AUTHORITATIVE_INFORMATION_REASON_PHRASE;
-//static const string<uint8_t> NON_AUTHORITATIVE_INFORMATION_CODE;
-//static const string<uint8_t> NO_CONTENT_REASON_PHRASE;
-//static const string<uint8_t> NO_CONTENT_CODE;
-//static const string<uint8_t> RESET_CONTENT_REASON_PHRASE;
-//static const string<uint8_t> RESET_CONTENT_CODE;
-//static const string<uint8_t> PARTIAL_CONTENT_REASON_PHRASE;
-//static const string<uint8_t> PARTIAL_CONTENT_CODE;
-
-//Redirection: 3xx
-//static const string<uint8_t> MULTIPLE_CHOICES_REASON_PHRASE;
-//static const string<uint8_t> MULTIPLE_CHOICES_CODE;
-//static const string<uint8_t> MOVED_PERMANENTLY_REASON_PHRASE;
-//static const string<uint8_t> MOVED_PERMANENTLY_CODE;
-//static const string<uint8_t> FOUND_REASON_PHRASE;
-//static const string<uint8_t> FOUND_CODE;
-//static const string<uint8_t> SEE_OTHER_REASON_PHRASE;
-//static const string<uint8_t> SEE_OTHER_CODE;
-//static const string<uint8_t> NOT_MODIFIED_REASON_PHRASE;
-//static const string<uint8_t> NOT_MODIFIED_CODE;
-//static const string<uint8_t> USE_PROXY_REASON_PHRASE;
-//static const string<uint8_t> USE_PROXY_CODE;
-//306 is no longer unused
-//static const string<uint8_t> TEMPORARY_REDIRECT_REASON_PHRASE;
-//static const string<uint8_t> TEMPORARY_REDIRECT_CODE;
-
-//Client Error: 4xx
-//static const Elements::string<uint8_t> BAD_REQUEST_REASON_PHRASE;
-//static const Elements::string<uint8_t> BAD_REQUEST_CODE;
-//static const string<uint8_t> UNAUTHORIZED_REASON_PHRASE;
-//static const string<uint8_t> UNAUTHORIZED_CODE;
-//static const string<uint8_t> PAYMENT_REQUIRED_REASON_PHRASE;
-//static const string<uint8_t> PAYMENT_REQUIRED_CODE;
-//static const string<uint8_t> FORBIDDEN_REASON_PHRASE;
-//static const string<uint8_t> FORBIDDEN_CODE;
-//static const Elements::string<uint8_t> NOT_FOUND_REASON_PHRASE;
-//static const Elements::string<uint8_t> NOT_FOUND_CODE;
-//static const string<uint8_t> METHOD_NOT_ALLOWED_REASON_PHRASE;
-//static const string<uint8_t> METHOD_NOT_ALLOWED_CODE;
-//static const string<uint8_t> NOT_ACCEPTABLE_REASON_PHRASE;
-//static const string<uint8_t> NOT_ACCEPTABLE_CODE;
-//static const string<uint8_t> PROXY_AUTHENTICATION_REQUIRED_REASON_PHRASE;
-//static const string<uint8_t> PROXY_AUTHENTICATION_REQUIRED_CODE;
-//static const string<uint8_t> REQUEST_TIMEOUT_REASON_PHRASE;
-//static const string<uint8_t> REQUEST_TIMEOUT_CODE;
-//static const string<uint8_t> CONFLICT_REASON_PHRASE;
-//static const string<uint8_t> CONFLICT_CODE;
-//static const string<uint8_t> GONE_REASON_PHRASE;
-//static const string<uint8_t> GONE_CODE;
-//static const string<uint8_t> LENGTH_REQUIRED_REASON_PHRASE;
-//static const string<uint8_t> LENGTH_REQUIRED_CODE;
-//static const string<uint8_t> PRECONDITION_FAILED_REASON_PHRASE;
-//static const string<uint8_t> PRECONDITION_FAILED_CODE;
-//static const string<uint8_t> REQUEST_ENTITY_TOO_LARGE_REASON_PHRASE;
-//static const string<uint8_t> REQUEST_ENTITY_TOO_LARGE_CODE;
-//static const string<uint8_t> REQUEST_URI_TOO_LONG_REASON_PHRASE;
-//static const string<uint8_t> REQUEST_URI_TOO_LONG_CODE;
-//static const string<uint8_t> UNSUPPORTED_MEDIA_TYPE_REASON_PHRASE;
-//static const string<uint8_t> UNSUPPORTED_MEDIA_TYPE_CODE;
-//static const string<uint8_t> REQUESTED_RANGE_NOT_SATISFIABLE_REASON_PHRASE;
-//static const string<uint8_t> REQUESTED_RANGE_NOT_SATISFIABLE_CODE;
-//static const string<uint8_t> EXPECTATION_FAILED_REASON_PHRASE;
-//static const string<uint8_t> EXPECTATION_FAILED_CODE;
-
-//Server error: 5xx
-//static const string<uint8_t> INTERNAL_SERVER_ERROR_REASON_PHRASE;
-//static const string<uint8_t> INTERNAL_SERVER_ERROR_CODE;
-//static const Elements::string<uint8_t> NOT_IMPLEMENTED_REASON_PHRASE;
-//static const Elements::string<uint8_t> NOT_IMPLEMENTED_CODE;
-//static const string<uint8_t> BAD_GATEWAY_REASON_PHRASE;
-//static const string<uint8_t> BAD_GATEWAY_CODE;
-//static const string<uint8_t> SERVICE_UNAVAILABE_REASON_PHRASE;
-//static const string<uint8_t> SERVICE_UNAVAILABE_CODE;
-//static const string<uint8_t> GATEWAY_TIMEOUT_REASON_PHRASE;
-//static const string<uint8_t> GATEWAY_TIMEOUT_CODE;
-//static const string<uint8_t> HTTP_VERSION_NOT_SUPPORTED_REASON_PHRASE;
-//static const string<uint8_t> HTTP_VERSION_NOT_SUPPORTED_CODE;
-
+}_
 #endif /* RESPONSE_H_ */
