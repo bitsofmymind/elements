@@ -19,7 +19,7 @@ class TCPIPStack: public Resource
 
 		uint8_t counter;
 
-		List<Response> to_send;
+		List<Response*> to_send;
 
 	public:
 		TCPIPStack();
