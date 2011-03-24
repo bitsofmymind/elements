@@ -403,6 +403,7 @@ DRESULT disk_read (
 #include "sd_mmc.h"
 #include "fat_file.h"
 #include <stdlib.h>
+#include <string.h>
 
 SDMMC::SDMMC(void):
 		Resource(),
@@ -424,14 +425,14 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 		uint8_t len  = 0;
 		URL* url = request->to_url;
 
-		if(!request->methodcmp("get", 3))
+		if(!strcmp("get", request->method))
 		{
 			return NOT_IMPLEMENTED_501;
 		}
 		//possible optimization: pass the url object to FILE_FAT object directly.
 		for( uint8_t i = url->cursor; i < url->resources.items; i++)
 		{
-			len += url->resources[i]->length + 1; // for '/'
+			len += strlen(url->resources[i]) + 1; // for '/'
 		}
 
 		char* path = (char*)ts_malloc(len + 1);
@@ -443,8 +444,8 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 		for(uint8_t i = url->cursor, pos = 0; i < url->resources.items; i++)
 		{
 			path[pos++] = '/';
-			memcpy((void*)(path  + pos), url->resources[i]->text, url->resources[i]->length);
-			pos += url->resources[i]->length;
+			memcpy((void*)(path  + pos), url->resources[i], strlen(url->resources[i]));
+			pos += strlen(url->resources[i]);
 		}
 
 		path[len] = '\0';
@@ -474,7 +475,7 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 					return NULL;
 				}
 				//response->body = render( request );
-				response->content_type = &Message::TEXT_HTML;
+				response->content_type = Message::TEXT_HTML;
 				response->body_file = file;
 				*return_message = response;
 				sc = OK_200;

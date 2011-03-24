@@ -30,7 +30,8 @@ class TCPIPStack: public Resource
 		virtual Response::status_code process(Response* response, Message** return_message);
 	protected:
 		void printip(uip_ipaddr_t addr);
-
+		void printip(uip_ipaddr_t addr, uint16_t port);
+		void cleanup(struct elements_app_state* s);
 };
 
 static TCPIPStack* stack;

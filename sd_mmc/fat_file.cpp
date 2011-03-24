@@ -10,8 +10,8 @@
 FATFile::FATFile(char* name):
 	name(name)
 {
-	File<uint16_t>::size = 0;
-	File<uint16_t>::cursor = 0;
+	File::size = 0;
+	File::cursor = 0;
 	open();
 }
 FATFile::~FATFile()
@@ -20,14 +20,14 @@ FATFile::~FATFile()
 	ts_free(name);
 }
 
-uint16_t FATFile::read(char* buffer, uint16_t length, bool async)
+uint16_t FATFile::read(char* buffer, size_t length)
 {
 	uint16_t bytes_read;
 	last_op_result = f_read(&file, buffer, length, &bytes_read);
 	cursor += bytes_read;
 	return bytes_read;
 }
-uint16_t FATFile::write(const char* buffer, uint16_t length,  bool async)
+uint16_t FATFile::write(const char* buffer, size_t length)
 {
 	return 0;
 }

@@ -11,7 +11,7 @@
 #include <utils/file.h>
 #include "ff.h"
 
-class FATFile: public File<uint16_t>
+class FATFile: public File
 {
 	char* name;
 	FIL file;
@@ -22,8 +22,8 @@ class FATFile: public File<uint16_t>
 	FATFile(char* name);
 	~FATFile();
 
-	virtual uint16_t read(char* buffer, uint16_t length, bool async);
-	virtual uint16_t write(const char* buffer, uint16_t length,  bool async);
+	virtual size_t read(char* buffer, size_t length);
+	virtual size_t write(const char* buffer, size_t length);
 	virtual int8_t open(void);
 	virtual void close(void);
 };

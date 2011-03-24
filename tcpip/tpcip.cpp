@@ -96,7 +96,7 @@ void TCPIPStack::run(void)
 	}
 	else if(periodic_timer <= get_uptime() )
 	{
-		periodic_timer = get_uptime() + 500;
+		periodic_timer = get_uptime() + 200;
 		for(uint8_t i = 0; i < UIP_CONNS; i++)
 		{
 			uip_periodic(i);
@@ -109,7 +109,7 @@ void TCPIPStack::run(void)
 
 		if( arp_timer <= get_uptime() )
 		{
-			arp_timer = get_uptime() + 10000;
+			arp_timer = get_uptime() + 1000;
 			uip_arp_timer();
 		}
 	}
@@ -129,6 +129,44 @@ void TCPIPStack::printip(uip_ipaddr_t addr)
 	VERBOSE_PRINT_BYTE('.');
 	VERBOSE_PRINT_DEC(((uint8_t*)addr)[3]);
 }
+void TCPIPStack::printip(uip_ipaddr_t addr, uint16_t port)
+{
+	/*If VERBOSITY is undefined, this method should be optimizes away by the compiler.*/
+
+	VERBOSE_PRINT_DEC(((uint8_t*)addr)[0]);
+	VERBOSE_PRINT_BYTE('.');
+	VERBOSE_PRINT_DEC(((uint8_t*)addr)[1]);
+	VERBOSE_PRINT_BYTE('.');
+	VERBOSE_PRINT_DEC(((uint8_t*)addr)[2]);
+	VERBOSE_PRINT_BYTE('.');
+	VERBOSE_PRINT_DEC(((uint8_t*)addr)[3]);
+	VERBOSE_PRINT_BYTE(':');
+	VERBOSE_PRINT_DEC(port);
+}
+
+void TCPIPStack::cleanup(struct elements_app_state* s)
+{
+	VERBOSE_PRINT_P("Cleanup on ");
+	printip(uip_conn->ripaddr, uip_conn->rport);
+	VERBOSE_PRINTLN();
+
+	if(s->body)
+	{
+		delete s->body;
+	}
+	if(s->header)
+	{
+		delete s->header;
+	}
+	else if(s->request)
+	{
+		delete s->request;
+	}
+
+	s->header = NULL;
+	s->request = NULL;
+	s->body = NULL;
+}
 
 void TCPIPStack::appcall(void)
 {
@@ -141,62 +179,56 @@ void TCPIPStack::appcall(void)
 	if(uip_aborted())
 	{
 		VERBOSE_PRINT_P("Connection from ");
-		printip(uip_conn->ripaddr);
+		printip(uip_conn->ripaddr, uip_conn->rport);
 		VERBOSE_PRINTLN_P(" aborted");
 	}
 	if(uip_timedout())
 	{
 		VERBOSE_PRINT_P("Connection from ");
-		printip(uip_conn->ripaddr);
+		printip(uip_conn->ripaddr, uip_conn->rport);
 		VERBOSE_PRINTLN_P(" timed out");
 	}
 	if(uip_closed())
 	{
 		VERBOSE_PRINT_P("Connection from ");
-		printip(uip_conn->ripaddr);
+		printip(uip_conn->ripaddr, uip_conn->rport);
 		VERBOSE_PRINTLN_P(" closed");
 	}
 
 	if(uip_closed() || uip_timedout() || uip_aborted())
 	{
-		if(s->body)
-		{
-			delete s->body;
-			s->body = NULL;
-		}
-		if(s->header)
-		{
-			delete s->header;
-			s->header = NULL;
-		}
-		else if(s->request)
-		{
-			delete s->request;
-			s->request = NULL;
-		}
+		cleanup(s);
+		return;
 	}
 
 	if(uip_connected())
 	{
-		printip(uip_conn->ripaddr);
+		printip(uip_conn->ripaddr, uip_conn->rport);
 		VERBOSE_PRINTLN_P(" connected");
 
-		s->request = new Request();
+		s->request = NULL;
 		s->body = NULL;
 		s->header = NULL;
-		if(!s->request)
-		{
-			uip_abort();
-			return;
-		}
 	}
 
 	if(uip_newdata())
 	{
-		Message::PARSER_RESULT res = s->request->parse((const char*)uip_appdata, uip_len);
 		VERBOSE_PRINT_P("New data from ");
-		printip(uip_conn->ripaddr);
+		printip(uip_conn->ripaddr, uip_conn->rport);
 		VERBOSE_PRINTLN();
+
+		if(!s->request)
+		{
+			cleanup(s);
+			s->request = new Request();
+			if(!s->request)
+			{
+				uip_abort();
+				return;
+			}
+		}
+
+		Message::PARSER_RESULT res = s->request->parse((const char*)uip_appdata, uip_len);
 		switch(res)
 		{
 			case Message::PARSING_COMPLETE:
@@ -214,6 +246,18 @@ void TCPIPStack::appcall(void)
 
 	if(uip_acked())
 	{
+		VERBOSE_PRINT_P("ACK from ");
+		printip(uip_conn->ripaddr, uip_conn->rport);
+		VERBOSE_PRINTLN();
+
+		if(s->header->cursor == s->header->size
+						&& s->body
+						&& s->body->cursor == s->body->size)
+		{
+			cleanup(s);
+			return;
+		}
+
 		size_t sent = 0;
 
 		if(s->header->cursor != s->header->size)
@@ -227,23 +271,25 @@ void TCPIPStack::appcall(void)
 			sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent);
 		}
 		uip_send(uip_appdata, sent);
-		if(s->header->cursor == s->header->size
+		/*if(s->header->cursor == s->header->size
 				&& s->body
 				&& s->body->cursor == s->body->size)
 		{
-			uip_close();
-		}
+			//uip_close();
+		}*/
 	}
 	if(uip_rexmit())
 	{
-		VERBOSE_PRINT_P("Connection from ");
-		printip(uip_conn->ripaddr);
-		VERBOSE_PRINTLN_P(" retransmit");
+		VERBOSE_PRINT_P("Retransmit from ");
+		printip(uip_conn->ripaddr, uip_conn->rport);
+		VERBOSE_PRINTLN();
+		//No rexmit for now
+		uip_abort();
 	}
 	if(uip_poll())
 	{
 		VERBOSE_PRINT_P("Polling for ");
-		printip(uip_conn->ripaddr);
+		printip(uip_conn->ripaddr, uip_conn->rport);
 		VERBOSE_PRINTLN();
 
 		for(uint8_t i = 0; i < to_send.items; i++ )
@@ -301,8 +347,10 @@ Response::status_code TCPIPStack::process(Response* response, Message** return_m
 	if(response->to_url->cursor >=  response->to_url->resources.items)
 	{
 		to_send.append(response);
+#if VERBOSITY
 		VERBOSE_PRINTLN_P("Received response: ");
 		print_transaction(response);
+#endif
 		return OK_200;
 	}
 
