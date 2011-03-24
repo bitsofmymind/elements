@@ -182,13 +182,13 @@ void TCPIPStack::appcall(void)
 		printip(uip_conn->ripaddr, uip_conn->rport);
 		VERBOSE_PRINTLN_P(" aborted");
 	}
-	if(uip_timedout())
+	else if(uip_timedout())
 	{
 		VERBOSE_PRINT_P("Connection from ");
 		printip(uip_conn->ripaddr, uip_conn->rport);
 		VERBOSE_PRINTLN_P(" timed out");
 	}
-	if(uip_closed())
+	else if(uip_closed())
 	{
 		VERBOSE_PRINT_P("Connection from ");
 		printip(uip_conn->ripaddr, uip_conn->rport);
@@ -200,8 +200,7 @@ void TCPIPStack::appcall(void)
 		cleanup(s);
 		return;
 	}
-
-	if(uip_connected())
+	else if(uip_connected())
 	{
 		printip(uip_conn->ripaddr, uip_conn->rport);
 		VERBOSE_PRINTLN_P(" connected");
@@ -210,8 +209,7 @@ void TCPIPStack::appcall(void)
 		s->body = NULL;
 		s->header = NULL;
 	}
-
-	if(uip_newdata())
+	else if(uip_newdata())
 	{
 		VERBOSE_PRINT_P("New data from ");
 		printip(uip_conn->ripaddr, uip_conn->rport);
@@ -243,8 +241,7 @@ void TCPIPStack::appcall(void)
 				return;
 		}
 	}
-
-	if(uip_acked())
+	else if(uip_acked())
 	{
 		VERBOSE_PRINT_P("ACK from ");
 		printip(uip_conn->ripaddr, uip_conn->rport);
@@ -277,8 +274,9 @@ void TCPIPStack::appcall(void)
 		{
 			//uip_close();
 		}*/
+
 	}
-	if(uip_rexmit())
+	else if(uip_rexmit())
 	{
 		VERBOSE_PRINT_P("Retransmit from ");
 		printip(uip_conn->ripaddr, uip_conn->rport);
@@ -286,7 +284,7 @@ void TCPIPStack::appcall(void)
 		//No rexmit for now
 		uip_abort();
 	}
-	if(uip_poll())
+	else if(uip_poll())
 	{
 		VERBOSE_PRINT_P("Polling for ");
 		printip(uip_conn->ripaddr, uip_conn->rport);
