@@ -475,7 +475,7 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 					return NULL;
 				}
 				//response->body = render( request );
-				response->content_type = Message::TEXT_HTML;
+				response->content_type = "text/html";
 				response->body_file = file;
 				*return_message = response;
 				sc = OK_200;

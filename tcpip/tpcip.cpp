@@ -268,12 +268,6 @@ void TCPIPStack::appcall(void)
 			sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent);
 		}
 		uip_send(uip_appdata, sent);
-		/*if(s->header->cursor == s->header->size
-				&& s->body
-				&& s->body->cursor == s->body->size)
-		{
-			//uip_close();
-		}*/
 
 	}
 	else if(uip_rexmit())
@@ -295,13 +289,14 @@ void TCPIPStack::appcall(void)
 			if(to_send[i]->original_request == s->request)
 			{
 				Response* response = to_send.remove(i);
-				size_t size = response->get_header_length();
+				size_t size = response->serialize( NULL, false);
+
 				char* buffer = (char*)ts_malloc(size);
 				if(!buffer)
 				{
 					uip_abort();
 				}
-				response->serialize(buffer);
+				response->serialize(buffer, true);
 				s->header = new MemFile(buffer, size);
 				if(!s->header)
 				{
