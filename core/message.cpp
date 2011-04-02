@@ -32,13 +32,17 @@ void Message::print()
 
 Message::Message():
 		content_length(0),
-		parsing_body(false)
+		parsing_body(false),
+		content_type(NULL)
 {
 	body_file = NULL;
 	header_length = 0;
 	header = NULL;
 	current_line_length = 0;
 	current_line = NULL;
+#if MESSAGE_AGE
+	age = get_uptime();
+#endif
 }
 Message::~Message()
 {

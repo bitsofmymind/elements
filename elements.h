@@ -16,6 +16,7 @@
 #define REQUEST_SERIALIZATION 1//Set to 1 if framework is to send request to another domain
 #define TIME_KEEPING 1
 #define URL_SERIALIZATION 1
+#define MESSAGE_AGE 1
 
 
 typedef uint64_t uptime_t;

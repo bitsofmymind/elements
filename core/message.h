@@ -65,6 +65,7 @@ class Message
 
 		File* body_file;
 		size_t content_length;
+		mime content_type;
 
 		char*  header;
 		size_t header_length;
@@ -73,6 +74,10 @@ class Message
 		size_t current_line_length;
 
 		bool parsing_body;
+
+#if MESSAGE_AGE
+		uptime_t age;
+#endif
 
 	public:
 		Message();

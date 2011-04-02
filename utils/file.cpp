@@ -78,7 +78,6 @@ MemFile::MemFile(char* data, size_t length):
 	File::cursor = 0;
 }
 
-
 MemFile::~MemFile(void)
 {
 	ts_free(data);

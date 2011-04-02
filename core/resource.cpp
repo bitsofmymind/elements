@@ -128,14 +128,16 @@ uint8_t Resource::send(Message* message)
         /*PROBLEM: In a case where a child's name string was allocated on the heap and it is removed
          * while a message is in flight, that name, since it was not copied, could be modified
          * and become something different.*/
+    	if(message->object_type == Message::REQUEST)
+    	{
+			const char* name = parent->get_name(this);
 
-    	const char* name = parent->get_name(this);
-
-        if(!message->to_url->is_absolute_path)
-        {
-            message->to_url->resources.insert(name,0);
-        }
-        message->from_url->resources.insert(name,0);
+			if(!message->to_url->is_absolute_path)
+			{
+				message->to_url->resources.insert(name,0);
+			}
+			message->from_url->resources.insert(name,0);
+    	}
         return parent->send(message);
     }
     return 1;
@@ -215,6 +217,7 @@ Response::status_code Resource::process( Request* request, Message** return_mess
 		if(!strcmp("get", request->method))
 		{
 			 *return_message = http_get( request );
+			 (*return_message)->content_type = "text/html";
 		}
 #endif
 #if HTTP_HEAD
@@ -249,7 +252,6 @@ Response* Resource::http_get(Request* request)
 		return NULL;
 	}
 	response->body_file = render( request );
-	response->content_type = "text/html";
 	if(response->body_file)
 	{
 		response->content_length = response->body_file->size;
@@ -402,7 +404,6 @@ Response* Resource::error(uint16_t error, Message* message)
 		if(!response)
 		{
 			//Memory could not be allocated for the response
-			delete message;
 			return NULL;
 		}
 		switch(error)

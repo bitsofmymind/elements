@@ -43,7 +43,6 @@ Response::Response(
 			original_request(_original_request)
 {
 	object_type = RESPONSE;
-	content_type = NULL;
 
 	if(_original_request != NULL)
 	{

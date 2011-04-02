@@ -212,6 +212,12 @@ void* GenericQueue::dequeue(void)
 	return list[start - 1];
 }
 
+void* GenericQueue::peek(void)
+{
+	if(items == 0) { return NULL; }
+	return list[start];
+}
+
 GenericLinkedList::GenericLinkedList():
 		start(NULL)
 {}

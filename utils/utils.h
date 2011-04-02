@@ -100,6 +100,7 @@ class GenericQueue
 
 		int8_t queue( void* object );
 		void* dequeue( void );
+		void* peek( void );
 
 };
 
@@ -108,6 +109,7 @@ template< class T > class Queue: public GenericQueue
 	public:
 		int8_t queue( T object );
 		T dequeue( void );
+		T peek( void );
 
 };
 
@@ -206,6 +208,12 @@ template< class T>
 T Queue<T>::dequeue(void)
 {
 	return (T)this->GenericQueue::dequeue( );
+}
+
+template< class T>
+T Queue<T>::peek(void)
+{
+	return (T)this->GenericQueue::peek( );
 }
 
 

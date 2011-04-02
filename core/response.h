@@ -84,7 +84,6 @@ class Response: public Message
 		//static const char* WWW_AUTHENTICATE;
 
 		uint16_t response_code_int;
-		mime content_type;
 		Request* original_request;
 
 	private:
