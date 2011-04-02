@@ -53,7 +53,7 @@ void Blinker::run(void)
 </html>"
 #define CONTENT_SIZE sizeof(CONTENT)
 
-char content_P[] PROGMEM = CONTENT;
+static char content_P[] PROGMEM = CONTENT;
 
 File* Blinker::render( Request* request )
 {
@@ -68,24 +68,30 @@ File* Blinker::render( Request* request )
 	uint8_t val_len = strlen(val);
 
 	MESSAGE_SIZE data_len = val_len + 1 + strlen("checked=\"checked\"") + 1 + 1;
+
 	char* data = (char*)ts_malloc(data_len);
 	if(!data)
 	{
 		return NULL;
 	}
 
-	char* ptr = data + val_len + 1;
-	memcpy(data, val, val_len + 1 );
+	memset(data, '\0', data_len);
+
+
+	char* ptr = data;
+	memcpy(ptr, val, val_len );
+	ptr += strlen(ptr) + 1;
+
 	if(state)
 	{
-		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\"") + 1);
+		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\""));
 		ptr += strlen("checked=\"checked\"") + 1;
-		*ptr = '\0';
+		ptr++;
 	}
 	else
 	{
-		*ptr++ = '\0';;
-		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\"") + 1);
+		ptr++;
+		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\""));
 	}
 
 	File* temp =  new Template(file, data, data_len, 3);
@@ -130,6 +136,7 @@ Response::status_code Blinker::process( Request* request, Message** return_messa
 			}
 
 			*return_message = http_get( request );
+			(*return_message)->content_type = "text/html";
 		}
 	}
 

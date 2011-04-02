@@ -289,19 +289,25 @@ void TCPIPStack::appcall(void)
 			if(to_send[i]->original_request == s->request)
 			{
 				Response* response = to_send.remove(i);
+
 				size_t size = response->serialize( NULL, false);
 
 				char* buffer = (char*)ts_malloc(size);
 				if(!buffer)
 				{
 					uip_abort();
+					delete response;
+					return;
 				}
 				response->serialize(buffer, true);
+
 				s->header = new MemFile(buffer, size);
 				if(!s->header)
 				{
 					ts_free(buffer);
 					uip_abort();
+					delete response;
+					return;
 				}
 
 				if(response->body_file)
