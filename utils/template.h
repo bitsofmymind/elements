@@ -9,20 +9,19 @@
 #define TEMPLATE_H_
 
 #include "file.h"
+#include "utils.h"
 
 class Template: public File
 {
 	protected:
 		File* file;
-		char* args;
-		char* argend;
-		char* argindex;
-		size_t previous_args_length;
-		size_t previous_read_length;
-		enum STATE {ARG, TEXT, DONE, SKIP} state;
+		List<char*> args;
+		List<char*> lens;
+		char* current;
+		enum STATE {ARG, TEXT, SKIP} state;
 
 	public:
-		Template(File* file, char* args, size_t arglen, uint8_t argc);
+		Template(File* file);
 		~Template();
 
 	public:
@@ -30,6 +29,7 @@ class Template: public File
 		virtual size_t write(const char* buffer, size_t length);
 		virtual int8_t open(void);
 		virtual void close(void);
+		void add_arg(char* arg, size_t arglen);
 
 };
 

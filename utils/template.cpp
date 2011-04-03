@@ -8,91 +8,85 @@
 #include "template.h"
 #include <pal/pal.h>
 
-Template::Template(File* file, char* args, size_t arglen, uint8_t argc):
-		args(args),
-		argend(args + arglen),
+Template::Template(File* file):
 		file(file),
-		argindex(args),
-		state(TEXT),
-		previous_args_length(0),
-		previous_read_length(0)
+		state(TEXT)
 {
 	File::cursor = 0;
-	File::size = file->size + arglen - 2 * argc; /*argc is substracted two times to remove the ~
-	and the null characters that separates the arguments.*/
+	File::size = file->size;
 }
 
 
 Template::~Template()
 {
-	ts_free(args);
+
+	while(args.items)
+	{
+		ts_free(args.remove(0));
+		lens.remove(0);
+	}
+
 	delete file;
+}
+
+void Template::add_arg(char* arg, size_t len)
+{
+	args.append(arg);
+	lens.append(arg + len );
+	size += len;
+	size--; //The ~ marker is removed
 }
 
 size_t Template::read(char* buffer, size_t length)
 {
-	if( state != ARG )
-	{
-		previous_read_length = file->read(buffer, length);
-		if(state == DONE)
-		{
-			return previous_read_length;
-		}
-	}
-
 	size_t i;
 
-	for(i = 0; i < length && previous_read_length != 0; i++)
+	for(i = 0; i < length; i++, buffer++)
 	{
-		if(state == SKIP)
+
+		if(state == ARG)
 		{
+			if(current < lens[0])
+			{
+				*buffer = *current++;
+				continue;
+			}
+
+			ts_free(args.remove(0));
+			lens.remove(0);
 			state = TEXT;
-			i++;
+		}
+
+		if(!file->read(buffer, 1))
+		{
+			break;
 		}
 
 		if(state == TEXT)
 		{
-			if(buffer[i] == '\\')
+			if(*buffer == '~')
+			{
+				if(args.items != 0)
+				{
+					current = args[0];
+					state = ARG;
+					i--;
+					buffer--;
+				}
+			}
+			else if(*buffer == '\\')
 			{
 				state = SKIP;
 			}
-			else if(buffer[i] == '~')
-			{
-				state = ARG;
-				file->cursor = File::cursor + i + 1 - previous_args_length;
-				//previous_arg_length = 0;
-				i--;
-				continue;
-			}
-			previous_read_length--;
 		}
-		else //state == ARG
+		else if(state == SKIP)
 		{
-
-			if(*argindex == '\0')
-			{
-
-				previous_args_length--;
-				state = TEXT;
-				argindex++;
-				if(i < length)
-				{
-					previous_read_length = file->read(buffer + i, length - i);
-					i--;
-					if(argindex >= argend )
-					{
-
-						state = DONE;
-						i += previous_read_length + 1;
-						break;
-					}
-				}
-				continue;
-			}
-			buffer[i] = *argindex++;
-			previous_args_length++;
+			state = TEXT;
 		}
+
+
 	}
+
 	File::cursor += i;
 	return i;
 }
