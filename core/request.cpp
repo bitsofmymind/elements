@@ -154,7 +154,7 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 	char buffer;
 	uint8_t index = 0;
 
-	body_file->cursor = 0;
+	body_file->cursor(0);
 
 	do
 	{

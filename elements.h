@@ -46,4 +46,7 @@ typedef uint64_t uptime_t;
 #define URL_ARGUMENTS 0
 #define URL_FRAGMENT 0
 
+/*File class controls*/
+#define REVERSIBLE 1
+
 #endif /* ELEMENTS_H_ */

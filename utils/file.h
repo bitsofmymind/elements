@@ -22,9 +22,10 @@ with the length property set to the amount of bytes
 class File
 {
 
+	protected:
+		size_t _cursor;
 	public:
 		size_t size;
-		size_t cursor;
 
 		virtual ~File();
 
@@ -34,6 +35,8 @@ class File
 		virtual size_t read(char* buffer, size_t length) = 0;
 		size_t extract(char* buffer);
 		virtual size_t write(const char* buffer, size_t length) = 0;
+		size_t cursor(void);
+		virtual void cursor(size_t val);
 		virtual int8_t open(void) = 0;
 		virtual void close(void) = 0;
 };

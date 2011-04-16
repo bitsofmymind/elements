@@ -10,9 +10,10 @@
 
 Template::Template(File* file):
 		file(file),
-		state(TEXT)
+		state(TEXT),
+		arg_index(0)
 {
-	File::cursor = 0;
+	File::_cursor = 0;
 	File::size = file->size;
 }
 
@@ -23,7 +24,6 @@ Template::~Template()
 	while(args.items)
 	{
 		ts_free(args.remove(0));
-		lens.remove(0);
 	}
 
 	delete file;
@@ -46,14 +46,12 @@ size_t Template::read(char* buffer, size_t length)
 
 		if(state == ARG)
 		{
-			if(current < lens[0])
+			if(current < lens[arg_index])
 			{
 				*buffer = *current++;
 				continue;
 			}
-
-			ts_free(args.remove(0));
-			lens.remove(0);
+			arg_index++;
 			state = TEXT;
 		}
 
@@ -66,9 +64,9 @@ size_t Template::read(char* buffer, size_t length)
 		{
 			if(*buffer == '~')
 			{
-				if(args.items != 0)
+				if(arg_index < args.items)
 				{
-					current = args[0];
+					current = args[arg_index];
 					state = ARG;
 					i--;
 					buffer--;
@@ -84,11 +82,23 @@ size_t Template::read(char* buffer, size_t length)
 			state = TEXT;
 		}
 
-
 	}
 
-	File::cursor += i;
+	File::_cursor += i;
 	return i;
+}
+
+void Template::cursor(size_t val)
+{
+	file->cursor(0);
+	_cursor = 0;
+	state = TEXT;
+	arg_index = 0;
+	char bit_bucket;
+	for(; val > 0; val--)
+	{
+		read(&bit_bucket, 1);
+	}
 }
 
 size_t Template::write(const char* buffer, size_t length)
