@@ -82,6 +82,7 @@
 #include "uip.h"
 #include "uipopt.h"
 #include "uip_arch.h"
+#include "global-conf.h"
 
 #if UIP_CONF_IPV6
 #include "uip-neighbor.h"
@@ -152,7 +153,11 @@ void *uip_urgdata;               /* The uip_urgdata pointer points to
 u16_t uip_urglen, uip_surglen;
 #endif /* UIP_URGDATA > 0 */
 
-u16_t uip_len, uip_slen;
+#if UIP_CONF_BUFFER_SIZE > 256
+uint16_t uip_len, uip_slen;
+#else
+uint8_t uip_len, uip_slen;
+#endif
                              /* The uip_len is either 8 or 16 bits,
 				depending on the maximum packet
 				size. */

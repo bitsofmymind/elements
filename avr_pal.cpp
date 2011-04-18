@@ -116,9 +116,19 @@ void init(void)
 
 	VERBOSE_PRINTLN_P("Ready...");
 
+#if HEARTBEAT
+	DDRD |= _BV(DDD7);
+#endif
+
 	sei();
 }
 
+#if HEARTBEAT
+void heart_beat(void)
+{
+	PIND = _BV(PIN7);
+}
+#endif
 
 ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)
 {

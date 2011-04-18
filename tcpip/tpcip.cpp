@@ -37,7 +37,6 @@ TCPIPStack::TCPIPStack():
 	uip_init();
 
 	struct uip_eth_addr mac = {UIP_ETHADDR0, UIP_ETHADDR1, UIP_ETHADDR2, UIP_ETHADDR3, UIP_ETHADDR4, UIP_ETHADDR5};
-
 	uip_setethaddr(mac);
 
 	uip_listen(HTONS(80));

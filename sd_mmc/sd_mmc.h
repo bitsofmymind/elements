@@ -21,7 +21,6 @@ class SDMMC: public Resource
 {
 	private:
 		FATFS* fatfs;
-		FIL* file;
 
 	public:
 		SDMMC();

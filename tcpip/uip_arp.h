@@ -54,8 +54,11 @@
 
 #include "uip.h"
 
-
+#if UIP_FIXEDETHADDR
+extern const struct uip_eth_addr uip_ethaddr;
+#else
 extern struct uip_eth_addr uip_ethaddr;
+#endif
 
 /**
  * The Ethernet header.
