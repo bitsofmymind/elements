@@ -22,8 +22,6 @@ class PGMSpaceFile: public File
 
 		virtual uint16_t read(char* buffer, uint16_t length);
 		virtual uint16_t write(const char* buffer, uint16_t length);
-		virtual int8_t open(void);
-		virtual void close(void);
 };
 
 #endif /* PGMSPACE_FILE_H_ */

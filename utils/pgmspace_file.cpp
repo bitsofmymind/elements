@@ -28,5 +28,3 @@ uint16_t PGMSpaceFile::write(const char* buffer, uint16_t length)
 {
 	return 0;
 }
-int8_t PGMSpaceFile::open(void){ return 0; }
-void PGMSpaceFile::close(void){}
