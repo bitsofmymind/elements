@@ -117,6 +117,9 @@ Message* Resource::dispatch( Message* message )
 			}
 	}
 
+#if VERBOSITY
+	print_transaction(message);
+#endif
 
 	return return_message;
 }
@@ -193,7 +196,7 @@ Resource* Resource::remove_child(const char* name)
 
 void Resource::print_transaction(Message* message)
 {
-	/*If VERBOSITYis undefined, this method should be optimizes away by the compiler.*/
+	/*If VERBOSITY is undefined, this method should be optimizes away by the compiler.*/
 
 	VERBOSE_PRINT("from: ");
 	message->from_url->print();
@@ -210,9 +213,6 @@ Response::status_code Resource::process( Request* request, Message** return_mess
 
 	if(request->to_url->cursor >=  request->to_url->resources.items)
 	{
-#if VERBOSITY
-		print_transaction(request);
-#endif
 #if HTTP_GET
 		if(!strcmp("get", request->method))
 		{

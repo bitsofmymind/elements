@@ -14,8 +14,11 @@
 #include "resource.h"
 #include "../pal/pal.h"
 #include <stdint.h>
-
-Processing::Processing(Resource* bound):Resource(),
+#if PROCESSING_AS_AUTHORITY
+Processing::Processing(Resource* bound): Authority(),
+#else
+Processing::Processing(Resource* bound): Resource(),
+#endif
 		bound(bound),
 		current(this)
 {

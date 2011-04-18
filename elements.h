@@ -18,6 +18,8 @@
 #define URL_SERIALIZATION 1
 #define MESSAGE_AGE 1
 
+#define HEARTBEAT 1
+#define PROCESSING_AS_AUTHORITY 1
 
 typedef uint64_t uptime_t;
 #define MAX_UPTIME 18446744073709551615ULL

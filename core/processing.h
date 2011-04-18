@@ -14,8 +14,14 @@
 #include "request.h"
 #include "resource.h"
 #include "../utils/utils.h"
-
+#if PROCESSING_AS_AUTHORITY
+#include "authority.h"
+#endif
+#if PROCESSING_AS_AUTHORITY
+class Processing: public Authority
+#else
 class Processing: public Resource
+#endif
 {
 	private:
 		Resource* bound;
