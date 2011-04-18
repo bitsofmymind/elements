@@ -195,7 +195,7 @@ static u16_t lastport;       /* Keeps track of the last port used for
 
 /* Temporary variables. */
 u8_t uip_acc32[4];
-static u8_t c, opt;
+//static u8_t c, opt;
 
 /* Structures and definitions. */
 #define TCP_FIN 0x01
@@ -382,10 +382,10 @@ uip_udpchksum(void)
 void
 uip_init(void)
 {
-  for(c = 0; c < UIP_LISTENPORTS; ++c) {
+  for(uint8_t c = 0; c < UIP_LISTENPORTS; ++c) {
     uip_listenports[c] = 0;
   }
-  for(c = 0; c < UIP_CONNS; ++c) {
+  for(uint8_t c = 0; c < UIP_CONNS; ++c) {
     uip_conns[c].tcpstateflags = UIP_CLOSED;
   }
 #if UIP_ACTIVE_OPEN
@@ -521,7 +521,7 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 void
 uip_unlisten(u16_t port)
 {
-  for(c = 0; c < UIP_LISTENPORTS; ++c) {
+  for(uint8_t c = 0; c < UIP_LISTENPORTS; ++c) {
     if(uip_listenports[c] == port) {
       uip_listenports[c] = 0;
       return;
@@ -532,7 +532,7 @@ uip_unlisten(u16_t port)
 void
 uip_listen(u16_t port)
 {
-  for(c = 0; c < UIP_LISTENPORTS; ++c) {
+  for(uint8_t c = 0; c < UIP_LISTENPORTS; ++c) {
     if(uip_listenports[c] == 0) {
       uip_listenports[c] = port;
       return;
@@ -1211,7 +1211,7 @@ uip_process(u8_t flag)
   {
 	  uint16_t tmp = BUF->destport;
 	  /* Next, check listening connections. */
-	  for(c = 0; c < UIP_LISTENPORTS; ++c) {
+	  for(uint8_t c = 0; c < UIP_LISTENPORTS; ++c) {
 		if(tmp == uip_listenports[c])
 		  goto found_listen;
 	  }
@@ -1233,21 +1233,23 @@ uip_process(u8_t flag)
   BUF->tcpoffset = 5 << 4;
 
   /* Flip the seqno and ackno fields in the TCP header. */
-  c = BUF->seqno[3];
-  BUF->seqno[3] = BUF->ackno[3];
-  BUF->ackno[3] = c;
-  
-  c = BUF->seqno[2];
-  BUF->seqno[2] = BUF->ackno[2];
-  BUF->ackno[2] = c;
-  
-  c = BUF->seqno[1];
-  BUF->seqno[1] = BUF->ackno[1];
-  BUF->ackno[1] = c;
-  
-  c = BUF->seqno[0];
-  BUF->seqno[0] = BUF->ackno[0];
-  BUF->ackno[0] = c;
+  {
+	  uint8_t c = BUF->seqno[3];
+	  BUF->seqno[3] = BUF->ackno[3];
+	  BUF->ackno[3] = c;
+
+	  c = BUF->seqno[2];
+	  BUF->seqno[2] = BUF->ackno[2];
+	  BUF->ackno[2] = c;
+
+	  c = BUF->seqno[1];
+	  BUF->seqno[1] = BUF->ackno[1];
+	  BUF->ackno[1] = c;
+
+	  c = BUF->seqno[0];
+	  BUF->seqno[0] = BUF->ackno[0];
+	  BUF->ackno[0] = c;
+  }
 
   /* We also have to increase the sequence number we are
      acknowledging. If the least significant byte overflowed, we need
@@ -1285,7 +1287,7 @@ uip_process(u8_t flag)
      CLOSED connections are found. Thanks to Eddie C. Dost for a very
      nice algorithm for the TIME_WAIT search. */
   uip_connr = 0;
-  for(c = 0; c < UIP_CONNS; ++c) {
+  for(uint8_t c = 0; c < UIP_CONNS; ++c) {
     if(uip_conns[c].tcpstateflags == UIP_CLOSED) {
       uip_connr = &uip_conns[c];
       break;
@@ -1333,8 +1335,8 @@ uip_process(u8_t flag)
 
   /* Parse the TCP MSS option, if present. */
   if((BUF->tcpoffset & 0xf0) > 0x50) {
-    for(c = 0; c < ((BUF->tcpoffset >> 4) - 5) << 2 ;) {
-      opt = uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + c];
+    for(uint8_t c = 0; c < ((BUF->tcpoffset >> 4) - 5) << 2 ;) {
+      uint8_t opt = uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + c];
       if(opt == TCP_OPT_END) {
 	/* End of options. */
 	break;
@@ -1403,11 +1405,13 @@ uip_process(u8_t flag)
   }
   /* Calculated the length of the data, if the application has sent
      any data to us. */
-  c = (BUF->tcpoffset >> 4) << 2;
-  /* uip_len will contain the length of the actual TCP data. This is
-     calculated by subtracing the length of the TCP header (in
-     c) and the length of the IP header (20 bytes). */
-  uip_len = uip_len - c - UIP_IPH_LEN;
+  {
+	  uint8_t c = (BUF->tcpoffset >> 4) << 2;
+	  /* uip_len will contain the length of the actual TCP data. This is
+		 calculated by subtracing the length of the TCP header (in
+		 c) and the length of the IP header (20 bytes). */
+	  uip_len = uip_len - c - UIP_IPH_LEN;
+  }
 
   /* First, check if the sequence number of the incoming packet is
      what we're expecting next. If not, we send out an ACK with the
