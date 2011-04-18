@@ -196,7 +196,6 @@ static u16_t lastport;       /* Keeps track of the last port used for
 /* Temporary variables. */
 u8_t uip_acc32[4];
 static u8_t c, opt;
-static u16_t tmp16;
 
 /* Structures and definitions. */
 #define TCP_FIN 0x01
@@ -1209,11 +1208,13 @@ uip_process(u8_t flag)
     goto reset;
   }
   
-  tmp16 = BUF->destport;
-  /* Next, check listening connections. */
-  for(c = 0; c < UIP_LISTENPORTS; ++c) {
-    if(tmp16 == uip_listenports[c])
-      goto found_listen;
+  {
+	  uint16_t tmp = BUF->destport;
+	  /* Next, check listening connections. */
+	  for(c = 0; c < UIP_LISTENPORTS; ++c) {
+		if(tmp == uip_listenports[c])
+		  goto found_listen;
+	  }
   }
   
   /* No matching connection found, so we send a RST packet. */
@@ -1260,9 +1261,11 @@ uip_process(u8_t flag)
   }
  
   /* Swap port numbers. */
-  tmp16 = BUF->srcport;
-  BUF->srcport = BUF->destport;
-  BUF->destport = tmp16;
+  {
+	  uint16_t tmp = BUF->srcport;
+	  BUF->srcport = BUF->destport;
+	  BUF->destport = tmp;
+  }
   
   /* Swap IP addresses. */
   uip_ipaddr_copy(BUF->destipaddr, BUF->srcipaddr);
@@ -1341,10 +1344,10 @@ uip_process(u8_t flag)
       } else if(opt == TCP_OPT_MSS &&
 		uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 1 + c] == TCP_OPT_MSS_LEN) {
 	/* An MSS option with the right option length. */
-	tmp16 = ((u16_t)uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 2 + c] << 8) |
+	uint16_t tmp = ((u16_t)uip_buf[UIP_TCPIP_HLEN + UIP_LLH_LEN + 2 + c] << 8) |
 	  (u16_t)uip_buf[UIP_IPTCPH_LEN + UIP_LLH_LEN + 3 + c];
 	uip_connr->initialmss = uip_connr->mss =
-	  tmp16 > UIP_TCP_MSS? UIP_TCP_MSS: tmp16;
+	  tmp > UIP_TCP_MSS? UIP_TCP_MSS: tmp;
 	
 	/* And we are done processing options. */
 	break;
@@ -1623,12 +1626,14 @@ uip_process(u8_t flag)
        and the application will retransmit it. This is called the
        "persistent timer" and uses the retransmission mechanim.
     */
-    tmp16 = ((u16_t)BUF->wnd[0] << 8) + (u16_t)BUF->wnd[1];
-    if(tmp16 > uip_connr->initialmss ||
-       tmp16 == 0) {
-      tmp16 = uip_connr->initialmss;
+    {
+		uint16_t tmp = ((u16_t)BUF->wnd[0] << 8) + (u16_t)BUF->wnd[1];
+		if(tmp > uip_connr->initialmss ||
+		   tmp == 0) {
+		  tmp = uip_connr->initialmss;
+		}
+		uip_connr->mss = tmp;
     }
-    uip_connr->mss = tmp16;
 
     /* If this packet constitutes an ACK for outstanding data (flagged
        by the UIP_ACKDATA flag, we should call the application since it
