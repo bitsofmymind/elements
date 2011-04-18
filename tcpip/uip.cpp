@@ -193,9 +193,6 @@ static u16_t lastport;       /* Keeps track of the last port used for
 				a new connection. */
 #endif /* UIP_ACTIVE_OPEN */
 
-/* Temporary variables. */
-u8_t uip_acc32[4];
-//static u8_t c, opt;
 
 /* Structures and definitions. */
 #define TCP_FIN 0x01
@@ -250,27 +247,27 @@ void uip_log(char *msg);
 
 #if ! UIP_ARCH_ADD32
 void
-uip_add32(u8_t *op32, u16_t op16)
+uip_add32(u8_t *res, u8_t *op32, u16_t op16)
 {
-  uip_acc32[3] = op32[3] + (op16 & 0xff);
-  uip_acc32[2] = op32[2] + (op16 >> 8);
-  uip_acc32[1] = op32[1];
-  uip_acc32[0] = op32[0];
+  res[3] = op32[3] + (op16 & 0xff);
+  res[2] = op32[2] + (op16 >> 8);
+  res[1] = op32[1];
+  res[0] = op32[0];
   
-  if(uip_acc32[2] < (op16 >> 8)) {
-    ++uip_acc32[1];
-    if(uip_acc32[1] == 0) {
-      ++uip_acc32[0];
+  if(res[2] < (op16 >> 8)) {
+    ++res[1];
+    if(res[1] == 0) {
+      ++res[0];
     }
   }
   
   
-  if(uip_acc32[3] < (op16 & 0xff)) {
-    ++uip_acc32[2];
-    if(uip_acc32[2] == 0) {
-      ++uip_acc32[1];
-      if(uip_acc32[1] == 0) {
-	++uip_acc32[0];
+  if(res[3] < (op16 & 0xff)) {
+    ++res[2];
+    if(res[2] == 0) {
+      ++res[1];
+      if(res[1] == 0) {
+	++res[0];
       }
     }
   }
@@ -675,11 +672,7 @@ uip_reass(void)
 static void
 uip_add_rcv_nxt(u16_t n)
 {
-  uip_add32(uip_conn->rcv_nxt, n);
-  uip_conn->rcv_nxt[0] = uip_acc32[0];
-  uip_conn->rcv_nxt[1] = uip_acc32[1];
-  uip_conn->rcv_nxt[2] = uip_acc32[2];
-  uip_conn->rcv_nxt[3] = uip_acc32[3];
+	uip_add32(uip_conn->rcv_nxt, uip_conn->rcv_nxt, n);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -1431,18 +1424,20 @@ uip_process(u8_t flag)
      data. If so, we update the sequence number, reset the length of
      the outstanding data, calculate RTT estimations, and reset the
      retransmission timer. */
-  if((BUF->flags & TCP_ACK) && uip_outstanding(uip_connr)) {
-    uip_add32(uip_connr->snd_nxt, uip_connr->len);
+  if((BUF->flags & TCP_ACK) && uip_outstanding(uip_connr))
+  {
+      uint8_t temp[4];
+	  uip_add32(temp, uip_connr->snd_nxt, uip_connr->len);
 
-    if(BUF->ackno[0] == uip_acc32[0] &&
-       BUF->ackno[1] == uip_acc32[1] &&
-       BUF->ackno[2] == uip_acc32[2] &&
-       BUF->ackno[3] == uip_acc32[3]) {
+    if(BUF->ackno[0] == temp[0] &&
+       BUF->ackno[1] == temp[1] &&
+       BUF->ackno[2] == temp[2] &&
+       BUF->ackno[3] == temp[3]) {
       /* Update sequence number. */
-      uip_connr->snd_nxt[0] = uip_acc32[0];
-      uip_connr->snd_nxt[1] = uip_acc32[1];
-      uip_connr->snd_nxt[2] = uip_acc32[2];
-      uip_connr->snd_nxt[3] = uip_acc32[3];
+      uip_connr->snd_nxt[0] = temp[0];
+      uip_connr->snd_nxt[1] = temp[1];
+      uip_connr->snd_nxt[2] = temp[2];
+      uip_connr->snd_nxt[3] = temp[3];
 	
 
       /* Do RTT estimation, unless we have done retransmissions. */
@@ -1747,7 +1742,7 @@ uip_process(u8_t flag)
        hasn't closed its end yet. Thus we do nothing but wait for a
        FIN from the other side. */
     if(uip_len > 0) {
-      uip_add_rcv_nxt(uip_len);
+    	uip_add_rcv_nxt(uip_len);
     }
     if(BUF->flags & TCP_FIN) {
       if(uip_flags & UIP_ACKDATA) {
@@ -1773,7 +1768,7 @@ uip_process(u8_t flag)
       
   case UIP_FIN_WAIT_2:
     if(uip_len > 0) {
-      uip_add_rcv_nxt(uip_len);
+    	uip_add_rcv_nxt(uip_len);
     }
     if(BUF->flags & TCP_FIN) {
       uip_connr->tcpstateflags = UIP_TIME_WAIT;
