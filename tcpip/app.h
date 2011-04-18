@@ -11,6 +11,7 @@ typedef struct elements_app_state
 	Request* request;
 	File* header;
 	File* body;
+	size_t last_sent;
 } uip_tcp_appstate_t;
 
 void elements_appcall(void);

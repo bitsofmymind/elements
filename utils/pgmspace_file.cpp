@@ -11,16 +11,16 @@ PGMSpaceFile::PGMSpaceFile(PGM_P text, uint16_t size):
 	text(text)
 {
 	File::size = size;
-	File::cursor = 0;
+	File::_cursor = 0;
 
 }
 
 uint16_t PGMSpaceFile::read(char* buffer, uint16_t length)
 {
 	uint16_t i = 0;
-	for(; i < length && cursor < size; cursor++, i++)
+	for(; i < length && _cursor < size; _cursor++, i++)
 	{
-		buffer[i] = pgm_read_byte(text + cursor);
+		buffer[i] = pgm_read_byte(text + _cursor);
 	}
 	return i;
 }

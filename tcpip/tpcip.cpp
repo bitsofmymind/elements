@@ -166,6 +166,7 @@ void TCPIPStack::cleanup(struct elements_app_state* s)
 	s->header = NULL;
 	s->request = NULL;
 	s->body = NULL;
+	s->last_sent = 0;
 }
 
 void TCPIPStack::appcall(void)
@@ -208,6 +209,7 @@ void TCPIPStack::appcall(void)
 		s->request = NULL;
 		s->body = NULL;
 		s->header = NULL;
+		s->last_sent;
 	}
 	else if(uip_newdata())
 	{
@@ -241,15 +243,33 @@ void TCPIPStack::appcall(void)
 				return;
 		}
 	}
-	else if(uip_acked())
+	else if(uip_acked() || uip_rexmit())
 	{
-		VERBOSE_PRINT_P("ACK from ");
+		if(uip_acked())
+		{
+			VERBOSE_PRINT_P("ACK from ");
+		}
+		else
+		{
+			VERBOSE_PRINT_P("Retransmit from ");
+
+			if(s->body->cursor() < s->last_sent)
+			{
+				size_t header_sent = s->last_sent - s->body->cursor();
+				s->header->cursor(s->header->cursor() - header_sent);
+				s->body->cursor(0);
+			}
+			else
+			{
+				s->body->cursor( s->body->cursor() - s->last_sent );
+			}
+		}
 		printip(uip_conn->ripaddr, uip_conn->rport);
 		VERBOSE_PRINTLN();
 
-		if(s->header->cursor == s->header->size
+		if(s->header->cursor() == s->header->size
 						&& s->body
-						&& s->body->cursor == s->body->size)
+						&& s->body->cursor() == s->body->size)
 		{
 			cleanup(s);
 			return;
@@ -257,26 +277,19 @@ void TCPIPStack::appcall(void)
 
 		size_t sent = 0;
 
-		if(s->header->cursor != s->header->size)
+		if(s->header->cursor() != s->header->size)
 		{
 			sent += s->header->read((char*)uip_appdata, uip_mss());
 		}
 		if(s->body &&
-				s->header->cursor == s->header->size &&
+				s->header->cursor() == s->header->size &&
 				sent < uip_mss())
 		{
 			sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent);
 		}
 		uip_send(uip_appdata, sent);
+		s->last_sent = sent;
 
-	}
-	else if(uip_rexmit())
-	{
-		VERBOSE_PRINT_P("Retransmit from ");
-		printip(uip_conn->ripaddr, uip_conn->rport);
-		VERBOSE_PRINTLN();
-		//No rexmit for now
-		uip_abort();
 	}
 	else if(uip_poll())
 	{
@@ -318,12 +331,13 @@ void TCPIPStack::appcall(void)
 				size_t sent = 0;
 				sent += s->header->read((char*)uip_appdata, uip_mss());
 				if(s->body &&
-						s->header->cursor == s->header->size &&
+						s->header->cursor() == s->header->size &&
 						sent < uip_mss())
 				{
 					sent += s->body->read((char*)uip_appdata + sent, uip_mss() - sent);
 				}
 				uip_send(uip_appdata, sent);
+				s->last_sent = sent;
 				VERBOSE_PRINTLN_P("Sending reply packet");
 
 				/*This is a bit messy, people should not have to know whether to delete a request object or not*/
@@ -346,10 +360,6 @@ Response::status_code TCPIPStack::process(Response* response, Message** return_m
 	if(response->to_url->cursor >=  response->to_url->resources.items)
 	{
 		to_send.append(response);
-#if VERBOSITY
-		VERBOSE_PRINTLN_P("Received response: ");
-		print_transaction(response);
-#endif
 		return OK_200;
 	}
 

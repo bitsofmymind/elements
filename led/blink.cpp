@@ -57,51 +57,41 @@ static char content_P[] PROGMEM = CONTENT;
 
 File* Blinker::render( Request* request )
 {
-	File* file = new PGMSpaceFile(content_P, CONTENT_SIZE);
-	if(!file)
+	File* f = new PGMSpaceFile(content_P, CONTENT_SIZE);
+	if(!f)
 	{
 		return NULL;
 	}
+	Template* t = new Template(f);
+	if(!t)
+	{
+		delete f;
+		return NULL;
+	}
 
-	char val[6];
+	char* val = (char*)ts_malloc(10);
+	if(!val)
+	{
+		delete t;
+		return NULL;
+	}
 	itoa(_interval, val , 10);
-	uint8_t val_len = strlen(val);
+	t->add_arg( val, strlen(val) );
 
-	MESSAGE_SIZE data_len = val_len + 1 + strlen("checked=\"checked\"") + 1 + 1;
+	char* c = (char*)ts_malloc(strlen("checked=\"checked\"") + 1);
+	memcpy(c, "checked=\"checked\"", strlen("checked=\"checked\""));
 
-	char* data = (char*)ts_malloc(data_len);
-	if(!data)
+	if(!state)
 	{
-		return NULL;
+		t->add_arg(NULL, 0);
 	}
-
-	memset(data, '\0', data_len);
-
-
-	char* ptr = data;
-	memcpy(ptr, val, val_len );
-	ptr += strlen(ptr) + 1;
-
+	t->add_arg( c, strlen("checked=\"checked\"") );
 	if(state)
 	{
-		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\""));
-		ptr += strlen("checked=\"checked\"") + 1;
-		ptr++;
-	}
-	else
-	{
-		ptr++;
-		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\""));
+		t->add_arg(NULL, 0);
 	}
 
-	File* temp =  new Template(file, data, data_len, 3);
-	if(!temp)
-	{
-		delete file;
-		ts_free(data);
-		return NULL;
-	}
-	return temp;
+	return t;
 
 }
 

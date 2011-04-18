@@ -171,19 +171,19 @@ void power_on (void)
 
 	CS_HIGH();
 
-	SPCR |= _BV(SPE) + _BV(MSTR) + _BV(SPR1) + _BV(SPR0);			/* Enable SPI function in mode 0 */
-	SPSR &= ~(_BV(SPI2X));			/* SPI 2x mode */
+	//SPCR |= _BV(SPE) + _BV(MSTR) + _BV(SPR1) + _BV(SPR0);			/* Enable SPI function in mode 0 */
+	//SPSR &= ~(_BV(SPI2X));			/* SPI 2x mode */
 }
 
 
 static
 void power_off (void)
 {
-	SPCR = 0;				/* Disable SPI function */
+	//SPCR = 0;				/* Disable SPI function */
 	//DDRB  = 0b11000000;		/* Disable drivers */
 	//PORTB = 0b10110000;
 
-	SPI_DDR &= ~(_BV(SCK_PIN) + _BV(MOSI_PIN) + _BV(CS_PIN) + _BV(MISO_PIN));
+	//SPI_DDR &= ~(_BV(SCK_PIN) + _BV(MOSI_PIN) + _BV(CS_PIN) + _BV(MISO_PIN));
 
 	//PORTE |=  0x80;			/* Socket power off */
 	Stat |= STA_NOINIT;
@@ -210,7 +210,7 @@ uint8_t rcvr_datablock (
 	} while ((token == 0xFF) && timer > get_uptime());
 	if(token != 0xFE) return 0;		/* If not valid data token, retutn with error */
 
-	do {							/* Receive the data block into buffer */
+	do {							/*	SDMMC sd;* Receive the data block into buffer */
 		rcvr_spi_m(buff++);
 		rcvr_spi_m(buff++);
 		rcvr_spi_m(buff++);
@@ -419,7 +419,6 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 {
 	Response::status_code sc = Resource::process(request, return_message);
 
-
 	if(sc == PASS_308)
 	{
 		uint8_t len  = 0;
@@ -517,6 +516,7 @@ void SDMMC::run(void)
 				 * delay.*/
 				//Debug::println("Disk inserted");
 				Stat &= ~STA_NODISK; //Indicate the presence of disk in the socket
+				VERBOSE_PRINTLN_P("Disk detected");
 			}
 			else if(!disk_initialize()) //If there is a disk and it has been debounced
 			{
@@ -526,7 +526,8 @@ void SDMMC::run(void)
 				if(!fatfs)
 				{
 					//allocation of fatfs failed!
-					//Debug::println("Alloc failed");
+					ERROR_PRINTLN_P("Alloc failed");
+					power_off();
 				}
 				else
 				{
@@ -540,7 +541,7 @@ void SDMMC::run(void)
 			//Initialization will be attempted again in 100ms if it failed.
 
 		}
-		schedule(10);
+		schedule(100);
 	}
 	else //If there is no disk in the socket
 	{

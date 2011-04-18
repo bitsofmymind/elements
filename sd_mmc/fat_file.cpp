@@ -11,7 +11,7 @@ FATFile::FATFile(char* name):
 	name(name)
 {
 	File::size = 0;
-	File::cursor = 0;
+	File::_cursor = 0;
 	open();
 }
 FATFile::~FATFile()
@@ -24,7 +24,7 @@ uint16_t FATFile::read(char* buffer, size_t length)
 {
 	uint16_t bytes_read;
 	last_op_result = f_read(&file, buffer, length, &bytes_read);
-	cursor += bytes_read;
+	_cursor += bytes_read;
 	return bytes_read;
 }
 uint16_t FATFile::write(const char* buffer, size_t length)
