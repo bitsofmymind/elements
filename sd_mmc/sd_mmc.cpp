@@ -424,7 +424,7 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 		uint8_t len  = 0;
 		URL* url = request->to_url;
 
-		if(!strcmp("get", request->method))
+		if(strcmp(request->method, "get"))
 		{
 			return NOT_IMPLEMENTED_501;
 		}
@@ -476,6 +476,7 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 				//response->body = render( request );
 				response->content_type = "text/html";
 				response->body_file = file;
+				response->content_length = file->size;
 				*return_message = response;
 				sc = OK_200;
 			}
