@@ -69,8 +69,6 @@ size_t ConstFile::read(char* buffer, size_t length)
 	return i;
 }
  size_t ConstFile::write(const char* buffer, size_t length) { return 0; }
- int8_t ConstFile::open(void){ return 0; }
- void ConstFile::close(void){}
 
 
 MemFile::MemFile(char* data):
@@ -112,6 +110,4 @@ size_t MemFile::read(char* buffer, size_t length)
 	}
 	return i;
 }
- int8_t MemFile::open(void){ return 0; }
- void MemFile::close(void){}
 

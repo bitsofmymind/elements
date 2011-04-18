@@ -37,8 +37,6 @@ class File
 		virtual size_t write(const char* buffer, size_t length) = 0;
 		size_t cursor(void);
 		virtual void cursor(size_t val);
-		virtual int8_t open(void) = 0;
-		virtual void close(void) = 0;
 };
 
 class ConstFile: public File
@@ -52,8 +50,6 @@ class ConstFile: public File
 
 		virtual size_t read(char* buffer, size_t length);
 		virtual size_t write(const char* buffer, size_t length);
-		virtual int8_t open(void);
-		virtual void close(void);
 };
 
 class MemFile: public File
@@ -69,8 +65,6 @@ class MemFile: public File
 
 		virtual size_t read(char* buffer, size_t length);
 		virtual size_t write(const char* buffer, size_t length);
-		virtual int8_t open(void);
-		virtual void close(void);
 };
 
 

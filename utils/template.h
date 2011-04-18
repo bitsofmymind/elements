@@ -29,8 +29,6 @@ class Template: public File
 		virtual size_t read(char* buffer, size_t length);
 		virtual size_t write(const char* buffer, size_t length);
 		virtual void cursor(size_t val);
-		virtual int8_t open(void);
-		virtual void close(void);
 		void add_arg(char* arg, size_t arglen);
 
 };

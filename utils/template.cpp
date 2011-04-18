@@ -101,18 +101,6 @@ void Template::cursor(size_t val)
 	}
 }
 
-size_t Template::write(const char* buffer, size_t length)
-{
+size_t Template::write(const char* buffer, size_t length) {}
 
-}
-
-int8_t Template::open(void)
-{
-	return 0;
-}
-
-void Template::close(void)
-{
-
-}
 
