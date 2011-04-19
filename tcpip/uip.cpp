@@ -153,7 +153,7 @@ void *uip_urgdata;               /* The uip_urgdata pointer points to
 u16_t uip_urglen, uip_surglen;
 #endif /* UIP_URGDATA > 0 */
 
-#if UIP_CONF_BUFFER_SIZE > 256
+#if UIP_CONF_BUFFER_SIZE > 254 //254 because uip uses UIP_BUFSIZE + 2
 uint16_t uip_len, uip_slen;
 #else
 uint8_t uip_len, uip_slen;

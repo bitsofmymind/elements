@@ -1131,7 +1131,7 @@ extern void *uip_urgdata;
  * packet.
  *
  */
-#if UIP_CONF_BUFFER_SIZE > 256
+#if UIP_CONF_BUFFER_SIZE > 254 //254 because uip uses UIP_BUFSIZE + 2
 extern u16_t uip_len;
 #else
 extern uint8_t uip_len;

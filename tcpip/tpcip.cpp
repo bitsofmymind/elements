@@ -140,7 +140,7 @@ void TCPIPStack::printip(uip_ipaddr_t addr, uint16_t port)
 	VERBOSE_PRINT_BYTE('.');
 	VERBOSE_PRINT_DEC(((uint8_t*)addr)[3]);
 	VERBOSE_PRINT_BYTE(':');
-	VERBOSE_PRINT_DEC(port);
+	VERBOSE_PRINT_DEC(HTONS(port));
 }
 
 void TCPIPStack::cleanup(struct elements_app_state* s)
