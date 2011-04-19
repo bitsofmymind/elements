@@ -9,7 +9,6 @@
 #define ESERIAL_H_
 
 #include <core/resource.h>
-#include <utils/types.h>
 #include <pal/pal.h>
 #include <core/request.h>
 
@@ -17,7 +16,8 @@ class ESerial: public Resource
 {
 
 	#define MESSAGE_BUFFER_INCREMENT_SIZE 20
-	volatile Elements::string<uint8_t> buffer;
+	char* buffer;
+	volatile uint16_t index;
 	volatile uint16_t buffer_size;
 	uint16_t content_length;
 	volatile uint16_t received;

@@ -10,6 +10,7 @@
 #include "diskio.h"
 #include <pal/pal.h>
 #include <avr_pal.h>
+#include "ffconf.h""
 
 /*--------------------------------------------------------------------------
 
@@ -171,8 +172,8 @@ void power_on (void)
 
 	CS_HIGH();
 
-	//SPCR |= _BV(SPE) + _BV(MSTR) + _BV(SPR1) + _BV(SPR0);			/* Enable SPI function in mode 0 */
-	//SPSR &= ~(_BV(SPI2X));			/* SPI 2x mode */
+	SPCR |= _BV(SPE) + _BV(MSTR) + _BV(SPR1) + _BV(SPR0);			/* Enable SPI function in mode 0 */
+	SPSR &= ~(_BV(SPI2X));			/* SPI 2x mode */
 }
 
 
@@ -406,8 +407,7 @@ DRESULT disk_read (
 #include <string.h>
 
 SDMMC::SDMMC(void):
-		Resource(),
-		fatfs(NULL)
+		Resource()
 {
 	CARD_DETECT_DDR &= ~_BV(CARD_DETECT_PIN);
 	CARD_DETECT_PORT |= _BV(CARD_DETECT_PIN); //Turns on the pull-up for CARD_DETECT_PIN
@@ -483,18 +483,18 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 			else
 			{
 
-				delete file;
 				if(file->last_op_result == FR_NO_FILE || file->last_op_result == FR_NO_PATH)
 				{
 					sc = NOT_FOUND_404;
 				}
 				else
 				{
-					/*Debug::print("error opening file ");
-					Debug::println(file->last_op_result, DEC);*/
+					ERROR_PRINT_P("error opening file ");
+					ERROR_NPRINTLN(file->last_op_result, DEC);
 
 					sc = INTERNAL_SERVER_ERROR_500;
 				}
+				delete file;
 			}
 
 		}
@@ -522,18 +522,10 @@ void SDMMC::run(void)
 			else if(!disk_initialize()) //If there is a disk and it has been debounced
 			{
 				//STA_NOINIT was cleared in disk_initialized because it succeeded
-				fatfs = (FATFS*)ts_malloc(sizeof(FATFS)); //Allocates FATFS struct
+
+				f_mount(0, &fatfs); //Mounts the disk
 				VERBOSE_PRINTLN_P("Disk initialized");
-				if(!fatfs)
-				{
-					//allocation of fatfs failed!
-					ERROR_PRINTLN_P("Alloc failed");
-					power_off();
-				}
-				else
-				{
-					f_mount(0, fatfs); //Mounts the disk
-				}
+
 			}
 			else
 			{
@@ -546,11 +538,9 @@ void SDMMC::run(void)
 	}
 	else //If there is no disk in the socket
 	{
-		if(fatfs) //If fatfs was previously allocated
+		if(!(Stat & STA_NOINIT)) //If a disk has been initialized
 		{
 			VERBOSE_PRINTLN_P("Disk removed");
-			ts_free(fatfs);
-			fatfs = NULL;
 			f_mount(0, NULL); //unmounts the disk
 			power_off(); //Power it off
 		}

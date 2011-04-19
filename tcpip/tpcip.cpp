@@ -231,7 +231,7 @@ void TCPIPStack::appcall(void)
 		switch(res)
 		{
 			case Message::PARSING_COMPLETE:
-				VERBOSE_PRINTLN_P("Parsing_complete, sending");
+				VERBOSE_PRINTLN_P("Parsing complete, sending");
 				send(s->request);
 				break;
 			case Message::PARSING_SUCESSFUL:

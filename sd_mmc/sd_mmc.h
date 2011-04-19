@@ -20,7 +20,7 @@
 class SDMMC: public Resource
 {
 	private:
-		FATFS* fatfs;
+		FATFS fatfs;
 
 	public:
 		SDMMC();
