@@ -17,15 +17,11 @@ static ESerial* instance;
 ESerial::ESerial():
 		Resource(),
 		buffer_size(0),
-		body_started(false),
-		received(0),
-		newcomm(true)
+		index(0),
+		buffer(0),
+		age(0)
 {
 	instance = this;
-
-	index = 0;
-	buffer = 0;
-
 }
 
 void ESerial::receive(uint8_t c)
@@ -50,12 +46,13 @@ void ESerial::receive(uint8_t c)
 				ts_free(buffer);
 			}
 			buffer = NULL;
-			index = received = buffer_size = 0;
+			index = buffer_size = 0;
 			return;
 		}
 	}
 
-	received++;
+	age = get_uptime();
+
 	buffer[index++] = c;
 
 	schedule(ASAP);
@@ -64,104 +61,62 @@ void ESerial::receive(uint8_t c)
 
 void ESerial::run(void)
 {
-	uint16_t rec_alt;
-	uint16_t len;
+	size_t len;
+	char* buf;
 
-	bool rec = false;
 	ATOMIC
 	{
-		rec_alt = received;
+		if(age + MAX_AGE > get_uptime())
+		{
+			schedule(10);
+			return;
+		}
 		len = index;
-		received = 0;
+		buf = buffer;
+		index = buffer_size = 0;
+		buffer = NULL;
 	}
 
-	while(rec_alt)
+	Request* request = new Request();
+	if(!request)
 	{
-		rec = true;
-
-		if(len > 2
-				&& buffer[len - rec_alt - 1 ] == ';'
-				&& buffer[len - rec_alt] == ';'
-				&& buffer[len - rec_alt - 2] != '\r' )
-		{
-			buffer[len - rec_alt-1 ] = '\r';
-			buffer[len - rec_alt] = '\n';
-		}
-
-		if(len > 4
-				&& buffer[len - rec_alt - 3] == '\r'
-				&& buffer[len - rec_alt - 2] == '\n'
-				&& buffer[len - rec_alt - 1] == '\r'
-				&& buffer[len - rec_alt] == '\n')
-		{
-			char* message_buffer =  buffer;
-			size_t message_len = index;
-
-			if(rec_alt)
-			{
-				ATOMIC
-				{
-					buffer = (char*)ts_malloc(rec_alt + received + MESSAGE_BUFFER_INCREMENT_SIZE);
-					if(buffer)
-					{
-						index = received + rec_alt;
-						buffer_size = received + MESSAGE_BUFFER_INCREMENT_SIZE + rec_alt;
-						memcpy(buffer, message_buffer + message_len, received + rec_alt);
-						//print("remaining: "); println(buffer.text, buffer.length);
-					}
-					else{ received = index = buffer_size = 0; }
-				}
-
-			}
-			else
-			{
-				ATOMIC
-				{
-					received = index = buffer_size = 0;
-				}
-			}
-
-			Request* request = new Request();
-			if(!request)
-			{
-				//Debug::println("not enough space");
-			}
-			Message::PARSER_RESULT res = request->parse(message_buffer, message_len);
-			switch(res)
-			{
-				case Message::PARSING_COMPLETE:
-					VERBOSE_PRINTLN_P("Parsing complete, sending");
-					send(request);
-					break;
-				case Message::PARSING_SUCESSFUL:
-					VERBOSE_PRINTLN_P("Parsing incomplete");
-				default:
-					VERBOSE_PRINTLN_P("Parsing Error");
-					delete request;
-			}
-			ts_free(message_buffer);
-		}
-		rec_alt--;
+		//Debug::println("not enough space");
 	}
 
-	if(rec)
+	for(size_t i = 1; i < len; i++)
 	{
-		timeout = get_uptime() + 100;
-		schedule(100);
-	}
-	else if(timeout <= get_uptime())
-	{
-		//Debug::println("timed out");
-		ATOMIC
+		if( buf[i-1] == ';' && buf[i] == ';')
 		{
-			if(buffer && index){ ts_free(buffer); }
-			buffer = 0;
-			received = index = buffer_size = 0;
+			buf[i-1] = '\r';
+			buf[i] = '\n';
 		}
-		schedule(NEVER);
-		newcomm = true;
 	}
 
+	Message::PARSER_RESULT res = request->parse(buf, len);
+	switch(res)
+	{
+		case Message::PARSING_COMPLETE:
+			VERBOSE_PRINTLN_P("Parsing complete, sending");
+			send(request);
+			break;
+		case Message::PARSING_SUCESSFUL:
+			VERBOSE_PRINTLN_P("Parsing incomplete");
+		default:
+			VERBOSE_PRINTLN_P("Parsing Error");
+			delete request;
+	}
+
+	ts_free(buf);
+
+	ATOMIC
+	{
+		if(index)
+		{
+			schedule(ASAP);
+			return;
+		}
+	}
+	schedule(NEVER);
 }
 
 Response::status_code ESerial::process(Response* response, Message** return_message)

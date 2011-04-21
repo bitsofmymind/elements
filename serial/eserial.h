@@ -16,15 +16,14 @@ class ESerial: public Resource
 {
 
 	#define MESSAGE_BUFFER_INCREMENT_SIZE 20
+	#define MAX_AGE 100
+
 	char* buffer;
 	volatile uint16_t index;
 	volatile uint16_t buffer_size;
-	uint16_t content_length;
-	volatile uint16_t received;
+	volatile uptime_t age;
 	bool body_started;
 	bool newcomm;
-
-	uptime_t timeout;
 
 	public:
 		ESerial();
