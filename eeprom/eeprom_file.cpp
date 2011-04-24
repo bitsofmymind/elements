@@ -7,40 +7,30 @@
 #include "eeprom_file.h"
 #include <string.h>
 
-EEPROMFile::EEPROMFile(EEPROM_24LCXX* eeprom, uint16_t addr):
+EEPROMFile::EEPROMFile(EEPROM_24LCXX* eeprom, uint16_t addr, uint16_t length):
 	File(),
 	_eeprom(eeprom),
 	_addr(addr)
 {
-
+	File::size = length;
 }
 
 size_t EEPROMFile::read(char* buffer, size_t length)
 {
-	size_t total = 0;
-	while(true)
+	size_t i;
+	size_t bytes_read = length % 64;
+	for( i = 0; i < length && _cursor < size; bytes_read = 64 )
 	{
-		if(length < 64)
-		{
-			total += _eeprom->read(_addr, length);
-			memcpy(_eeprom->page_buffer, buffer, length);
-			break;
-		}
-		else
-		{
-			uint8_t read = _eeprom->read(_addr, 64);
-			total += read;
-			memcpy(_eeprom->page_buffer, buffer, length);
-			if(read < 64)
-			{
-				break;
-			}
-			buffer += 64;
-			length -= 64;
-		}
+		_eeprom->read(_addr, bytes_read);
+		memcpy(buffer, _eeprom->page_buffer, bytes_read);
+		i += bytes_read;
+		_cursor += bytes_read;
+		_addr += bytes_read;
+		buffer += bytes_read;
+
 	}
 
-	return total;
+	return i;
 }
 size_t EEPROMFile::write(const char* buffer, size_t length)
 {

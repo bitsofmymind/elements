@@ -39,7 +39,7 @@ class EEPROM_24LCXX: public Resource
 		uint8_t format_file_system(void);
 		uint8_t create_file(const char* name, uint16_t size);
 		uint8_t find_file(const char* name, uint16_t* entry_addr);
-		uint8_t modify_file(uint16_t addr, uint16_t start, const char* buffer, uint16_t len);
+		uint8_t append_to_file(uint16_t addr, File* content);
 		uint8_t delete_file(uint16_t addr);
 
 	protected:

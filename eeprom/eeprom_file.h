@@ -17,10 +17,12 @@ class EEPROMFile: public File
 		EEPROM_24LCXX* _eeprom;
 		uint16_t _addr;
 	public:
-		EEPROMFile(EEPROM_24LCXX* eeprom, uint16_t addr);
+		EEPROMFile(EEPROM_24LCXX* eeprom, uint16_t addr, uint16_t length);
 
 		virtual size_t read(char* buffer, size_t length);
 		virtual size_t write(const char* buffer, size_t length);
+
+		//implemente cursor
 };
 
 #endif /* EEPROM_FILE_H_ */

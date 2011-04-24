@@ -27,14 +27,18 @@
 
 /*File system defines*/
 #define FILE_ENTRY_SIZE 			16
-
 #define ID 							0xAB
+
 #define FILE_SYSTEM					0
 #define FILE_SYSTEM_ID				FILE_SYSTEM
 #define LAST_FILE_PTR				FILE_SYSTEM_ID + 1
 #define SPACE_USED					LAST_FILE_PTR + 2
 #define NUMBER_OF_FILES				SPACE_USED + 2
-#define FIRST_FILE					sizeof(file_system)
+#define FIRST_FILE					FILE_SYSTEM + sizeof(file_system)
+
+#define FILE_SIZE					0
+#define FILE_NAME					FILE_SIZE + sizeof(uint16_t)
+#define END							FILE_NAME + 13
 
 EEPROM_24LCXX::EEPROM_24LCXX():
 	Resource()
@@ -51,11 +55,12 @@ EEPROM_24LCXX::EEPROM_24LCXX():
 	TWBR = (F_CPU / 100000UL - 16) / 2;
 #endif
 
-	if(!read(FILE_SYSTEM, sizeof(file_system)))
+	if(!read(FILE_SYSTEM_ID, sizeof(file_system)))
 	{
 		ERROR_PRINTLN_P("Read operation from EEPROM failed");
 		return;
 	}
+	file_system* fs = (file_system*)page_buffer;
 	if(fs->id != ID)
 	{
 		if(format_file_system())
@@ -66,16 +71,15 @@ EEPROM_24LCXX::EEPROM_24LCXX():
 	else
 	{
 		VERBOSE_PRINTLN_P("File system detected");
-
 	}
 
-	VERBOSE_PRINT_P("id: ");
+	VERBOSE_PRINT_P("id: 0x");
 	VERBOSE_NPRINTLN(fs->id, HEX);
 	VERBOSE_PRINT_P("space used: ");
-	VERBOSE_NPRINTLN(fs->space_used, HEX);
+	VERBOSE_NPRINTLN(fs->space_used, DEC);
 	VERBOSE_PRINT_P("number_of_files: ");
-	VERBOSE_NPRINTLN(fs->number_of_files, HEX);
-	VERBOSE_PRINT_P("last file: ");
+	VERBOSE_NPRINTLN(fs->number_of_files, DEC);
+	VERBOSE_PRINT_P("last file: 0x");
 	VERBOSE_NPRINTLN(fs->last_file_ptr, HEX);
 
 	VERBOSE_PRINTLN_P("EEPROM ready");
@@ -85,7 +89,7 @@ uint8_t EEPROM_24LCXX::format_file_system(void)
 {
 	VERBOSE_PRINTLN_P("Formatting file system.");
 	page_buffer[0] = ID;
-	file_system* fs = (file_system*)page_buffer;
+	file_system* fs = (file_system*)(page_buffer);
 	fs->last_file_ptr = 0;
 	fs->number_of_files = 0;
 	fs->space_used = sizeof(file_system);
@@ -99,38 +103,43 @@ uint8_t EEPROM_24LCXX::format_file_system(void)
 
 uint8_t EEPROM_24LCXX::create_file( const char* name, uint16_t size)
 {
-	VERBOSE_PRINTLN_P("Creating file");
-	read(LAST_FILE_PTR , 2);
+	VERBOSE_PRINT_P("Creating file \"");
+	VERBOSE_PRINT(name);
+	VERBOSE_PRINT_P("\" of size ");
+	VERBOSE_NPRINTLN(size, DEC);
 
-	uint16_t addr = *((uint16_t*)page_buffer);
-	file_entry* fe = (file_entry*)page_buffer;
+	read(FILE_SYSTEM , sizeof(file_system));
 
-	if(addr == 0x0000)
+	file_system* fs = (file_system*)page_buffer;
+	uint16_t addr;
+
+	if(fs->number_of_files)
 	{
-		VERBOSE_PRINTLN_P("First file");
-		addr = FIRST_FILE;
-	}
-	else
-	{
-		read(addr, FILE_ENTRY_SIZE);
-		addr += FILE_ENTRY_SIZE + fe->size;
-		if(EEPROM_SIZE - (addr + FILE_ENTRY_SIZE) > size + FILE_ENTRY_SIZE)
+		addr = fs->space_used;
+		if(EEPROM_SIZE - (addr + FILE_ENTRY_SIZE) < size + FILE_ENTRY_SIZE)
 		{
 			VERBOSE_PRINTLN_P("Not enough space for file");
 			return 1;
 		}
 	}
+	else
+	{
+		VERBOSE_PRINTLN_P("First file");
+		addr = FIRST_FILE;
+	}
 
+	fs->last_file_ptr = addr;
+	fs->number_of_files++;
+	fs->space_used += size + FILE_ENTRY_SIZE;
+	write(FILE_SYSTEM, sizeof(file_system));
+
+	file_entry* fe = (file_entry*)page_buffer;
 	fe->size = size;
 	fe->end  = '\0';
 	strncpy(fe->name, name, 13);
 	write(addr, FILE_ENTRY_SIZE);
 
-	((file_system*)page_buffer)->last_file_ptr = addr;
-	((file_system*)page_buffer)->space_used = size + addr;
-	((file_system*)page_buffer)->number_of_files++;
-	write(LAST_FILE_PTR, sizeof(file_system));
-
+	VERBOSE_PRINTLN_P("File created");
 	return 0;
 }
 
@@ -152,7 +161,7 @@ uint8_t EEPROM_24LCXX::find_file(const char* name, uint16_t* entry_addr)
 			if(!strcmp(name, ((file_entry*)page_buffer)->name))
 			{
 				*entry_addr = addr;
-				break;
+				return 0;
 			}
 			if(addr == last_file)
 			{
@@ -162,64 +171,84 @@ uint8_t EEPROM_24LCXX::find_file(const char* name, uint16_t* entry_addr)
 		}
 	}
 
-	return 0;
+	return 1;
 }
 
-uint8_t EEPROM_24LCXX::modify_file(uint16_t addr, uint16_t start, const char* buffer, uint16_t len)
+uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 {
+	VERBOSE_PRINT_P("Modifying file at 0x");
+	VERBOSE_NPRINT(addr, HEX);
+	VERBOSE_PRINT_P(" with ");
+	VERBOSE_NPRINT(content->size, DEC);
+	VERBOSE_PRINTLN_P(" bytes");
 	read(FILE_SYSTEM, sizeof(file_system));
 	file_system* fs = (file_system*)page_buffer;
 
 	uint16_t end = fs->space_used;
 
-	if(end > EEPROM_SIZE || end < end - len)
+	if(EEPROM_SIZE - end < content->size)
 	{
+		VERBOSE_PRINTLN_P("Not enough space!");
 		return 1;
 	}
 
-	fs->last_file_ptr += len;
-	fs->space_used = end + len;
+	if(addr != fs->last_file_ptr)
+	{
+		fs->last_file_ptr += content->size;
+	}
+	fs->space_used += content->size;
 
 	write(FILE_SYSTEM, sizeof(file_system));
 
-	for(uint8_t size_to_move = (end - (addr +start )) % PAGE_SIZE; end > start + addr;  size_to_move = PAGE_SIZE)
+	read(addr + FILE_SIZE, sizeof(uint16_t));
+	file_entry* fe = (file_entry*)page_buffer;
+	uint16_t start = fe->size + FILE_ENTRY_SIZE + addr;;
+	fe->size += content->size;
+	write(addr + FILE_SIZE, sizeof(uint16_t));
+
+	for(uint8_t size_to_move = (end - start) % PAGE_SIZE; end > start; size_to_move = PAGE_SIZE)
 	{
-		read(end, size_to_move);
-		write(end + len, size_to_move);
 		end -= size_to_move;
+		read(end, size_to_move);
+		write(end + content->size, size_to_move);
 	}
 
-	for(uint8_t size_to_copy = len % PAGE_SIZE; len > 0; size_to_copy = PAGE_SIZE)
+	/*for(uint8_t size_to_copy = content->size % PAGE_SIZE; true ; size_to_copy = PAGE_SIZE)
 	{
-		memcpy(page_buffer, buffer, size_to_copy);
+		if(content->read(page_buffer, size_to_copy) < size_to_copy)
+		{
+			break;
+		}
 		write(addr, size_to_copy);
-		buffer += size_to_copy;
 		addr += size_to_copy;
-		len -= size_to_copy;
-	}
+	}*/
 
 	return 0;
 }
 uint8_t EEPROM_24LCXX::delete_file(uint16_t addr)
 {
-	read(addr, 2);
+	VERBOSE_PRINT_P("Deleting file at 0x");
+	VERBOSE_NPRINTLN(addr, HEX);
+	read(addr + FILE_SIZE, sizeof(uint16_t));
 	uint16_t file_size = *((uint16_t*)page_buffer);
 
 	read(FILE_SYSTEM, sizeof(file_system));
 	file_system* fs = (file_system*)page_buffer;
 	uint16_t end = fs->space_used;
 
-	fs->last_file_ptr -= file_size;
-	fs->space_used -= file_size;
+	if(addr == FIRST_FILE){	fs->last_file_ptr = 0;}
+	else{fs->last_file_ptr -= file_size + FILE_ENTRY_SIZE;}
+	fs->space_used -= file_size + FILE_ENTRY_SIZE;
 	fs->number_of_files--;
 	write(FILE_SYSTEM, sizeof(file_system));
 
 	uint16_t next_addr = addr + FILE_ENTRY_SIZE + file_size;
-
 	uint8_t bytes_read = PAGE_SIZE; //prevents wrapping around at the end of the memory
 
 	for(; next_addr < end; next_addr += bytes_read ,addr += bytes_read )
 	{
+		VERBOSE_NPRINTLN(next_addr, HEX);
+		VERBOSE_NPRINTLN(end, HEX);
 		bytes_read = read(next_addr, bytes_read);
 		write(addr, bytes_read);
 	}
@@ -339,13 +368,11 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 	}
 	else if(url->cursor + 1 == url->resources.items)
 	{
-		VERBOSE_PRINTLN_P("request");
-
 		uint16_t addr;
 
 		if(!strcmp(request->method, "get"))
 		{
-
+			get_file:
 			find_file(url->resources[url->cursor], &addr);
 			if(!addr)
 			{
@@ -356,42 +383,49 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 				Response* response = new Response(OK_200, request);
 				if(!response) {	return INTERNAL_SERVER_ERROR_500; }
 
-				File* file = new EEPROMFile(this, addr);
+				File* file = new EEPROMFile(this, addr + FILE_ENTRY_SIZE, ((file_entry*)page_buffer)->size);
 				if(!file)
 				{
 					response->original_request = NULL;
 					delete response;
 					sc = INTERNAL_SERVER_ERROR_500;
 				}
-
+				response->content_length = file->size;
 				response->body_file = file;
 				response->content_type = "text/html";
+				*return_message = response;
 				sc = OK_200;
 			}
 
 		}
-		/*else if(!strcmp(request->method, "post"))
+		else if(!strcmp(request->method, "post"))
 		{
 			find_file(url->resources[url->cursor], &addr);
-			if(!addr)
+			if(!addr && create_file(url->resources[url->cursor], request->content_length))
 			{
+				sc = INTERNAL_SERVER_ERROR_500;
+			}
+			else
+			{
+				if(request->content_length > 0)
+				{
+					append_to_file(addr, request->body_file);
+				}
+				goto get_file;
 			}
 		}
 		else if(!strcmp(request->method, "delete"))
 		{
 			find_file(url->resources[url->cursor], &addr);
-			if(!addr)
+			if(addr)
 			{
-				goto error;
+				delete_file(addr);
+				sc = GONE_410;
 			}
-
-			delete_file(addr);
-			sc = GONE_410;
-			goto error;
-		}*/
+		}
 	}
 
-	return NOT_FOUND_404;
+	return sc;
 }
 
 uint8_t EEPROM_24LCXX::write(uint16_t addr, uint8_t len)
@@ -403,7 +437,10 @@ uint8_t EEPROM_24LCXX::write(uint16_t addr, uint8_t len)
 
 	restart:
 	if (n++ >= MAX_ITER)
+	{
+		ERROR_PRINTLN_P("Write timeout!");
 		return -1;
+	}
 
 	begin:
 
@@ -495,13 +532,30 @@ uint8_t EEPROM_24LCXX::write(uint16_t addr, uint8_t len)
 			default:
 				goto error;
 		}
+		if(!(++addr % PAGE_SIZE))
+		{
+			/*We have just crossed a page boundary!*/
+			TWCR = _BV(TWINT) | _BV(TWSTO) | _BV(TWEN); /* send stop condition */
+			memcpy(page_buffer, page_buffer + wrote, --len);
+			VERBOSE_PRINTLN_P("crossed");
+			wrote += write(addr, len);
+			goto quit_no_stop;
+		}
 	}
 	quit:
 	TWCR = _BV(TWINT) | _BV(TWSTO) | _BV(TWEN); /* send stop condition */
 
+	quit_no_stop:
+
+	VERBOSE_PRINT_P("Wrote ");
+	VERBOSE_NPRINT(wrote, DEC);
+	VERBOSE_PRINT_P(" at 0x");
+	VERBOSE_NPRINTLN(addr - wrote, HEX);
+
 	return wrote;
 
 	error:
+	ERROR_PRINTLN_P("Write error!");
 	goto quit;
 
 }
@@ -515,6 +569,7 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 	restart:
 	if (n++ >= MAX_ITER)
 	{
+		ERROR_PRINTLN_P("Read timeout!");
 		return -1;
 	}
 
@@ -546,7 +601,7 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 		case TW_MT_SLA_ACK:
 			break;
 
-		case TW_MT_SLA_NACK:	/* nack during select: device busy writing */
+		case TW_MT_SLA_NACK:	/* nack during select: device busy wrVERBOSE_PRINTLN_P("asd");iting */
 		/* Note [11] */
 			goto restart;
 
@@ -567,7 +622,6 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 
 		case TW_MT_DATA_NACK:
 			goto quit;
-
 		case TW_MT_ARB_LOST:
 			goto begin;
 
@@ -657,8 +711,14 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 	/* Note [14] */
 	TWCR = _BV(TWINT) | _BV(TWSTO) | _BV(TWEN); /* send stop condition */
 
+	VERBOSE_PRINT_P("Read ");
+	VERBOSE_NPRINT(rec, DEC);
+	VERBOSE_PRINT_P(" at 0x");
+	VERBOSE_NPRINTLN(addr, HEX);
+
 	return rec;
 
 	error:
+	ERROR_PRINTLN_P("Read error!");
 	goto quit;
 }
