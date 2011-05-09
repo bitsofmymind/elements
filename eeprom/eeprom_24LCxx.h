@@ -28,7 +28,7 @@ class EEPROM_24LCXX: public Resource
 		};
 		struct file_system
 		{
-			const uint8_t id;
+			uint8_t id;
 			uint16_t last_file_ptr;
 			uint16_t space_used;
 			uint8_t number_of_files;
@@ -37,7 +37,7 @@ class EEPROM_24LCXX: public Resource
 		EEPROM_24LCXX();
 
 		uint8_t format_file_system(void);
-		uint8_t create_file(const char* name, uint16_t size);
+		uint8_t create_file(const char* name);
 		uint8_t find_file(const char* name, uint16_t* entry_addr);
 		uint8_t append_to_file(uint16_t addr, File* content);
 		uint8_t delete_file(uint16_t addr);

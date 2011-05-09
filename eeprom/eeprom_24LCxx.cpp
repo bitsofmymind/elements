@@ -77,7 +77,7 @@ EEPROM_24LCXX::EEPROM_24LCXX():
 	VERBOSE_NPRINTLN(fs->id, HEX);
 	VERBOSE_PRINT_P("space used: ");
 	VERBOSE_NPRINTLN(fs->space_used, DEC);
-	VERBOSE_PRINT_P("number_of_files: ");
+	VERBOSE_PRINT_P("number of files: ");
 	VERBOSE_NPRINTLN(fs->number_of_files, DEC);
 	VERBOSE_PRINT_P("last file: 0x");
 	VERBOSE_NPRINTLN(fs->last_file_ptr, HEX);
@@ -101,12 +101,10 @@ uint8_t EEPROM_24LCXX::format_file_system(void)
 	return 0;
 }
 
-uint8_t EEPROM_24LCXX::create_file( const char* name, uint16_t size)
+uint8_t EEPROM_24LCXX::create_file( const char* name)
 {
 	VERBOSE_PRINT_P("Creating file \"");
-	VERBOSE_PRINT(name);
-	VERBOSE_PRINT_P("\" of size ");
-	VERBOSE_NPRINTLN(size, DEC);
+	VERBOSE_PRINTLN(name);
 
 	read(FILE_SYSTEM , sizeof(file_system));
 
@@ -116,9 +114,9 @@ uint8_t EEPROM_24LCXX::create_file( const char* name, uint16_t size)
 	if(fs->number_of_files)
 	{
 		addr = fs->space_used;
-		if(EEPROM_SIZE - (addr + FILE_ENTRY_SIZE) < size + FILE_ENTRY_SIZE)
+		if(EEPROM_SIZE - (addr + FILE_ENTRY_SIZE) < FILE_ENTRY_SIZE)
 		{
-			VERBOSE_PRINTLN_P("Not enough space for file");
+			ERROR_PRINTLN_P("Not enough space for file");
 			return 1;
 		}
 	}
@@ -130,11 +128,11 @@ uint8_t EEPROM_24LCXX::create_file( const char* name, uint16_t size)
 
 	fs->last_file_ptr = addr;
 	fs->number_of_files++;
-	fs->space_used += size + FILE_ENTRY_SIZE;
+	fs->space_used += FILE_ENTRY_SIZE;
 	write(FILE_SYSTEM, sizeof(file_system));
 
 	file_entry* fe = (file_entry*)page_buffer;
-	fe->size = size;
+	fe->size = 0;
 	fe->end  = '\0';
 	strncpy(fe->name, name, 13);
 	write(addr, FILE_ENTRY_SIZE);
@@ -188,7 +186,7 @@ uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 
 	if(EEPROM_SIZE - end < content->size)
 	{
-		VERBOSE_PRINTLN_P("Not enough space!");
+		ERROR_PRINTLN_P("Not enough space!");
 		return 1;
 	}
 
@@ -213,15 +211,12 @@ uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 		write(end + content->size, size_to_move);
 	}
 
-	/*for(uint8_t size_to_copy = content->size % PAGE_SIZE; true ; size_to_copy = PAGE_SIZE)
+	for(uint8_t copied = PAGE_SIZE; copied == PAGE_SIZE ;)
 	{
-		if(content->read(page_buffer, size_to_copy) < size_to_copy)
-		{
-			break;
-		}
-		write(addr, size_to_copy);
-		addr += size_to_copy;
-	}*/
+		copied = content->read(page_buffer, PAGE_SIZE);
+		write(start, copied);
+		start += copied;
+	}
 
 	return 0;
 }
@@ -236,32 +231,52 @@ uint8_t EEPROM_24LCXX::delete_file(uint16_t addr)
 	file_system* fs = (file_system*)page_buffer;
 	uint16_t end = fs->space_used;
 
-	if(addr == FIRST_FILE){	fs->last_file_ptr = 0;}
-	else{fs->last_file_ptr -= file_size + FILE_ENTRY_SIZE;}
+	if(addr == FIRST_FILE && fs->number_of_files == 1){	fs->last_file_ptr = 0;}
+	else if(addr == fs->last_file_ptr)
+	{
+		uint16_t current = FIRST_FILE;
+		file_entry* fe = (file_entry*)page_buffer;
+		for(uint8_t i = 1; i < fs->number_of_files - 1; i++)
+		{
+			read(current + FILE_SIZE, sizeof(uint16_t));
+			current += FILE_ENTRY_SIZE + fe->size;
+		}
+		read(FILE_SYSTEM, sizeof(file_system));
+		fs->last_file_ptr = current;
+	}
+	else
+	{
+		fs->last_file_ptr -= file_size + FILE_ENTRY_SIZE;
+	}
+
 	fs->space_used -= file_size + FILE_ENTRY_SIZE;
 	fs->number_of_files--;
+
 	write(FILE_SYSTEM, sizeof(file_system));
 
 	uint16_t next_addr = addr + FILE_ENTRY_SIZE + file_size;
-	uint8_t bytes_read = PAGE_SIZE; //prevents wrapping around at the end of the memory
+	uint8_t bytes_read = (file_size + FILE_ENTRY_SIZE ) % PAGE_SIZE;
 
-	for(; next_addr < end; next_addr += bytes_read ,addr += bytes_read )
+	for(; next_addr < end; bytes_read = PAGE_SIZE )
 	{
-		VERBOSE_NPRINTLN(next_addr, HEX);
-		VERBOSE_NPRINTLN(end, HEX);
-		bytes_read = read(next_addr, bytes_read);
+		read(next_addr, bytes_read);
 		write(addr, bytes_read);
+		next_addr += bytes_read;
+		addr += bytes_read;
 	}
+
+	return 0;
 }
 
 #define CONTENT \
-"<html>\
-	<body>\
-		<h2>24LC2xx EEPROM file system</h2>\n\
+"<html>\n\
+	<head><title>24LCxx EEPROM file system</title></head>\n\
+	<body>\n\
+		<h2>24LCxx EEPROM file system</h2>\n\
 		<br/>\n\
 		<form name=\"fmtform\" method=\"post\">\n\
-			<input type=\"hidden\" name=\"fmt\" value=\"1\"/>n\
-			<button value=\"Format\" onclick=\"format()\"/>\n\
+			<input type=\"hidden\" name=\"fmt\" value=\"1\"/>\n\
+			<input type=\"button\" value=\"Format\" onclick=\"format()\"/>\n\
 		</form>\n\
 		<script type=\"text/javascript\">\n\
 		function format()\n\
@@ -271,11 +286,36 @@ uint8_t EEPROM_24LCXX::delete_file(uint16_t addr)
 		}\n\
 		</script>\n\
 		<h3>Informations</h3>\n\
-		Number of Files:~\n\
+		Number of Files:~<br/>\n\
 		Space used:~\n\
-		<h3>Add file</h3>\n\
-		<form name=\"addfile\">\n\
+		<h3>Upload file</h3>\n\
+		<form>\n\
+			Name:<input type=\"text\" id=\"file_name\" size=\"13\"/>\n\
+			<input type=\"button\" value=\"Upload\" onclick=\"upload()\"/>\n\
+			<i><span id=\"status\"></span></i><br/>\n\
+			<textarea cols=\"100\" rows=\"320\" id=\"file\"></textarea>\n\
 		</form>\n\
+		<script type=\"text/javascript\">\n\
+			function upload()\n\
+			{\n\
+				var name=document.getElementById(\"file_name\").value;\n\
+				if(!name){ alert(\"No file name provided!\"); return;}\n\
+				var status=document.getElementById(\"status\");\n\
+				var file=document.getElementById(\"file\").value.match(RegExp('.{1,'+50+'}','g'));\n\
+				if(!file){ alert(\"No content provided!\"); return;}\n\
+				var len=file.length;\n\
+				status.innerHTML=\"Uploaded 0/\"+len;\n\
+				while(file.length)\n\
+				{\n\
+					var ajax_obj=new XMLHttpRequest();\n\
+					ajax_obj.open(\"POST\", document.URL+\"/\"+name, false);\n\
+					ajax_obj.send(file.shift());\n\
+					status.innerHTML=\"Uploaded \"+ (len-file.length) +'/'+len;\n\
+					if(ajax_obj.status==404){status.innerHTML=\"Failed!\"; return;}\n\
+				}\n\
+				status.innerHTML=\"Done\";\n\
+			}\n\
+		</script>\n\
 	</body>\n\
 </html>"
 #define CONTENT_SIZE sizeof(CONTENT) - 1
@@ -333,6 +373,7 @@ Response* EEPROM_24LCXX::http_get(Request* request)
 
 
 	response->body_file = t;
+	response->content_length = t->size;
 	response->content_type = "text/html";
 	return response;
 }
@@ -401,12 +442,16 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 		else if(!strcmp(request->method, "post"))
 		{
 			find_file(url->resources[url->cursor], &addr);
-			if(!addr && create_file(url->resources[url->cursor], request->content_length))
+			if(!addr && create_file(url->resources[url->cursor]))
 			{
 				sc = INTERNAL_SERVER_ERROR_500;
 			}
 			else
 			{
+				if(!addr)
+				{
+					find_file(url->resources[url->cursor], &addr);
+				}
 				if(request->content_length > 0)
 				{
 					append_to_file(addr, request->body_file);

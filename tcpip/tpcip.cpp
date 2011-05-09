@@ -359,6 +359,7 @@ Response::status_code TCPIPStack::process(Response* response, Message** return_m
 	if(response->to_url->cursor >=  response->to_url->resources.items)
 	{
 		to_send.append(response);
+		response->print();
 		return OK_200;
 	}
 
