@@ -20,16 +20,13 @@ size_t EEPROMFile::read(char* buffer, size_t length)
 {
 	size_t i;
 	uint8_t bytes_read;
+
 	if(length > size - _cursor)
 	{
-		bytes_read = size - _cursor;
-	}
-	else
-	{
-		bytes_read = length;
+		length = size - _cursor;
 	}
 
-	length %= PAGE_SIZE;
+	bytes_read = length % PAGE_SIZE;
 
 	for( i = 0; i < length && _cursor + i < size; bytes_read = PAGE_SIZE)
 	{

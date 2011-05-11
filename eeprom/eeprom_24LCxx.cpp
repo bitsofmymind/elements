@@ -143,6 +143,9 @@ uint8_t EEPROM_24LCXX::create_file( const char* name)
 
 uint8_t EEPROM_24LCXX::find_file(const char* name, uint16_t* entry_addr)
 {
+	VERBOSE_PRINT_P("Finding file ");
+	VERBOSE_PRINT(name);
+	VERBOSE_PRINT_P(" ... ");
 	read(LAST_FILE_PTR, 2);
 	uint16_t last_file = *((uint16_t*)page_buffer);
 	uint16_t addr = FIRST_FILE;
@@ -159,6 +162,8 @@ uint8_t EEPROM_24LCXX::find_file(const char* name, uint16_t* entry_addr)
 			if(!strcmp(name, ((file_entry*)page_buffer)->name))
 			{
 				*entry_addr = addr;
+				VERBOSE_PRINT_P("Found at 0x");
+				VERBOSE_NPRINTLN(addr, HEX);
 				return 0;
 			}
 			if(addr == last_file)
@@ -168,7 +173,7 @@ uint8_t EEPROM_24LCXX::find_file(const char* name, uint16_t* entry_addr)
 			addr += ((file_entry*)page_buffer)->size + FILE_ENTRY_SIZE;
 		}
 	}
-
+	VERBOSE_PRINTLN_P("Not found");
 	return 1;
 }
 
@@ -179,6 +184,7 @@ uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 	VERBOSE_PRINT_P(" with ");
 	VERBOSE_NPRINT(content->size, DEC);
 	VERBOSE_PRINTLN_P(" bytes");
+
 	read(FILE_SYSTEM, sizeof(file_system));
 	file_system* fs = (file_system*)page_buffer;
 
@@ -200,7 +206,7 @@ uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 
 	read(addr + FILE_SIZE, sizeof(uint16_t));
 	file_entry* fe = (file_entry*)page_buffer;
-	uint16_t start = fe->size + FILE_ENTRY_SIZE + addr;;
+	uint16_t start = fe->size + FILE_ENTRY_SIZE + addr;
 	fe->size += content->size;
 	write(addr + FILE_SIZE, sizeof(uint16_t));
 
@@ -480,6 +486,11 @@ uint8_t EEPROM_24LCXX::write(uint16_t addr, uint8_t len)
 	uint8_t twst;
 	uint8_t wrote = 0;
 
+	if(len > PAGE_SIZE)
+	{
+		return 0;
+	}
+
 	restart:
 	if (n++ >= MAX_ITER)
 	{
@@ -608,8 +619,13 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 {
 	uint8_t n = 0;
 	uint8_t twst;
-	uint8_t rec = 0;
 	uint8_t twcr = 0;
+	uint8_t rec = 0;
+
+	if(len > PAGE_SIZE)
+	{
+		return 0;
+	}
 
 	restart:
 	if (n++ >= MAX_ITER)
@@ -730,6 +746,7 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 		default:
 			goto error;
 	}
+
 
 	for (twcr = _BV(TWINT) | _BV(TWEN) | _BV(TWEA) /* Note [13] */; len > 0; len--)
 	{
