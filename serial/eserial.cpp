@@ -22,6 +22,8 @@ ESerial::ESerial():
 		age(0)
 {
 	instance = this;
+
+
 }
 
 void ESerial::receive(uint8_t c)
@@ -131,10 +133,10 @@ Response::status_code ESerial::process(Response* response, Message** return_mess
 		do
 		{
 			read = body->read(buffer, 10);
-			Debug::print(buffer, read);
+			DEBUG_TPRINT(buffer, read);
 		} while(read == 10);
 
-		Debug::println();
+		DEBUG_PRINTLN();
 	}
 
 	delete response;

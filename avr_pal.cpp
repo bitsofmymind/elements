@@ -81,7 +81,7 @@ void init(void)
 	//GTCCR |= _BV(PSRASY); //Clears the prescaler register
 	TCNT2 = 0; //Clears the timer
 	OCR2 = TIMER2_OUTPUT_COMPARE;*/
-
+#if OUTPUT_ERRORS || OUTPUT_WARNING || VERBOSITY || OUTPUT_DEBUG
 	uint16_t baud_setting;
 	bool use_u2x;
 
@@ -113,6 +113,7 @@ void init(void)
 	UBRR0L = baud_setting;
 
 	UCSR0B |= _BV(RXCIE0) + _BV(TXEN0) + _BV(RXEN0);
+#endif
 
 	VERBOSE_PRINTLN_P("Ready...");
 
@@ -146,7 +147,7 @@ ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)
 	}
 }*/
 
-#if OUTPUT_ERRORS || OUTPUT_WARNING || VERBOSITY
+#if OUTPUT_ERRORS || OUTPUT_WARNING || VERBOSITY || OUTPUT_DEBUG
 //Should be able to deactivate from a avr implementation specific config file
 
 void Debug::print(char c)

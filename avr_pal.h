@@ -64,7 +64,7 @@ void init(void);
 #define VERBOSE_NPRINTLN_P(a, l)
 #endif
 
-#if OUTPUT_ERRORS || OUTPUT_WARNINGS || VERBOSITY
+#if OUTPUT_ERRORS || OUTPUT_WARNINGS || VERBOSITY || OUTPUT_DEBUG
 
 #define DEBUG_PRINT_P(a)  Debug_P::print(PSTR(a));
 #define DEBUG_NPRINT_P(a, l)  Debug_P::print(PSTR(a), l);

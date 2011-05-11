@@ -74,13 +74,13 @@ EEPROM_24LCXX::EEPROM_24LCXX():
 	}
 
 	VERBOSE_PRINT_P("id: 0x");
-	VERBOSE_NPRINTLN(fs->id, HEX);
+	VERBOSE_TPRINTLN(fs->id, HEX);
 	VERBOSE_PRINT_P("space used: ");
-	VERBOSE_NPRINTLN(fs->space_used, DEC);
+	VERBOSE_TPRINTLN(fs->space_used, DEC);
 	VERBOSE_PRINT_P("number of files: ");
-	VERBOSE_NPRINTLN(fs->number_of_files, DEC);
+	VERBOSE_TPRINTLN(fs->number_of_files, DEC);
 	VERBOSE_PRINT_P("last file: 0x");
-	VERBOSE_NPRINTLN(fs->last_file_ptr, HEX);
+	VERBOSE_TPRINTLN(fs->last_file_ptr, HEX);
 
 	VERBOSE_PRINTLN_P("EEPROM ready");
 }
@@ -163,7 +163,7 @@ uint8_t EEPROM_24LCXX::find_file(const char* name, uint16_t* entry_addr)
 			{
 				*entry_addr = addr;
 				VERBOSE_PRINT_P("Found at 0x");
-				VERBOSE_NPRINTLN(addr, HEX);
+				VERBOSE_TPRINTLN(addr, HEX);
 				return 0;
 			}
 			if(addr == last_file)
@@ -180,9 +180,9 @@ uint8_t EEPROM_24LCXX::find_file(const char* name, uint16_t* entry_addr)
 uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 {
 	VERBOSE_PRINT_P("Modifying file at 0x");
-	VERBOSE_NPRINT(addr, HEX);
+	VERBOSE_TPRINT(addr, HEX);
 	VERBOSE_PRINT_P(" with ");
-	VERBOSE_NPRINT(content->size, DEC);
+	VERBOSE_TPRINT(content->size, DEC);
 	VERBOSE_PRINTLN_P(" bytes");
 
 	read(FILE_SYSTEM, sizeof(file_system));
@@ -229,7 +229,7 @@ uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 uint8_t EEPROM_24LCXX::delete_file(uint16_t addr)
 {
 	VERBOSE_PRINT_P("Deleting file at 0x");
-	VERBOSE_NPRINTLN(addr, HEX);
+	VERBOSE_TPRINTLN(addr, HEX);
 	read(addr + FILE_SIZE, sizeof(uint16_t));
 	uint16_t file_size = *((uint16_t*)page_buffer);
 
@@ -604,9 +604,9 @@ uint8_t EEPROM_24LCXX::write(uint16_t addr, uint8_t len)
 	quit_no_stop:
 
 	VERBOSE_PRINT_P("Wrote ");
-	VERBOSE_NPRINT(wrote, DEC);
+	VERBOSE_TPRINT(wrote, DEC);
 	VERBOSE_PRINT_P(" at 0x");
-	VERBOSE_NPRINTLN(addr - wrote, HEX);
+	VERBOSE_TPRINTLN(addr - wrote, HEX);
 
 	return wrote;
 
@@ -774,9 +774,9 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 	TWCR = _BV(TWINT) | _BV(TWSTO) | _BV(TWEN); /* send stop condition */
 
 	VERBOSE_PRINT_P("Read ");
-	VERBOSE_NPRINT(rec, DEC);
+	VERBOSE_TPRINT(rec, DEC);
 	VERBOSE_PRINT_P(" at 0x");
-	VERBOSE_NPRINTLN(addr, HEX);
+	VERBOSE_TPRINTLN(addr, HEX);
 
 	return rec;
 

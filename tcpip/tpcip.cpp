@@ -120,27 +120,21 @@ void TCPIPStack::printip(uip_ipaddr_t addr)
 {
 	/*If VERBOSITY is undefined, this method should be optimizes away by the compiler.*/
 
-	VERBOSE_PRINT_DEC(((uint8_t*)addr)[0]);
-	VERBOSE_PRINT_BYTE('.');
-	VERBOSE_PRINT_DEC(((uint8_t*)addr)[1]);
-	VERBOSE_PRINT_BYTE('.');
-	VERBOSE_PRINT_DEC(((uint8_t*)addr)[2]);
-	VERBOSE_PRINT_BYTE('.');
-	VERBOSE_PRINT_DEC(((uint8_t*)addr)[3]);
+	VERBOSE_TPRINT(((uint8_t*)addr)[0], DEC);
+	VERBOSE_TPRINT('.', BYTE);
+	VERBOSE_TPRINT(((uint8_t*)addr)[1], DEC);
+	VERBOSE_TPRINT('.', BYTE);
+	VERBOSE_TPRINT(((uint8_t*)addr)[2], DEC);
+	VERBOSE_TPRINT('.', BYTE);
+	VERBOSE_TPRINT(((uint8_t*)addr)[3], DEC);
 }
 void TCPIPStack::printip(uip_ipaddr_t addr, uint16_t port)
 {
 	/*If VERBOSITY is undefined, this method should be optimizes away by the compiler.*/
 
-	VERBOSE_PRINT_DEC(((uint8_t*)addr)[0]);
-	VERBOSE_PRINT_BYTE('.');
-	VERBOSE_PRINT_DEC(((uint8_t*)addr)[1]);
-	VERBOSE_PRINT_BYTE('.');
-	VERBOSE_PRINT_DEC(((uint8_t*)addr)[2]);
-	VERBOSE_PRINT_BYTE('.');
-	VERBOSE_PRINT_DEC(((uint8_t*)addr)[3]);
-	VERBOSE_PRINT_BYTE(':');
-	VERBOSE_PRINT_DEC(HTONS(port));
+	printip(addr);
+	VERBOSE_TPRINT(':', BYTE);
+	VERBOSE_TPRINT(HTONS(port), DEC);
 }
 
 void TCPIPStack::cleanup(struct elements_app_state* s)
