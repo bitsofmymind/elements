@@ -9,9 +9,7 @@
 #include <string.h>
 #include <pal/pal.h>
 
-
-File::~File(void)
-{}
+File::~File(){ }
 
 #if VERBOSITY
 

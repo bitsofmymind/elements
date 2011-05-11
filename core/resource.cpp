@@ -116,11 +116,6 @@ Message* Resource::dispatch( Message* message )
 				return_message = error(sc, (Request*)message);
 			}
 	}
-
-#if VERBOSITY
-	print_transaction(message);
-#endif
-
 	return return_message;
 }
 
@@ -211,6 +206,13 @@ void Resource::print_transaction(Message* message)
 Response::status_code Resource::process( Request* request, Message** return_message )
 {
 
+#if VERBOSITY
+	if(request->to_url->cursor < request->to_url->resources.items)
+	{
+		print_transaction(request);
+	}
+#endif
+
 	if(request->to_url->cursor >=  request->to_url->resources.items)
 	{
 #if HTTP_GET
@@ -290,14 +292,12 @@ Response* Resource::http_trace( Request* request )
 
 Response::status_code Resource::process(Response* response, Message** return_message)
 {
+#if VERBOSITY
 	if(response->to_url->cursor >=  response->to_url->resources.items)
 	{
-#if VERBOSITY
 		print_transaction(response);
-#endif
-		delete response;
-		return OK_200;
 	}
+#endif
 	return PASS_308;
 }
 

@@ -21,6 +21,9 @@ Processing::Processing(Resource* bound): Resource(),
 #endif
 		bound(bound),
 		current(this)
+#if HEARTBEAT
+		,heartbeat(1000)
+#endif
 {
 
 }
@@ -55,6 +58,13 @@ void Processing::start(void)
 				processing_sleep( sleep_amount );
 			}
 		}
+		#if HEARTBEAT
+			if(heartbeat < get_uptime())
+			{
+				heart_beat();
+				heartbeat = get_uptime() + 1000;
+			}
+		#endif
 	}
 }
 

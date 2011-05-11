@@ -26,6 +26,9 @@ class Processing: public Resource
 	private:
 		Resource* bound;
 		Resource* current;
+#if HEARTBEAT
+		uptime_t heartbeat;
+#endif
 
 	public:
 		Processing(Resource* bound);

@@ -46,6 +46,9 @@ void increase_uptime(uptime_t time);
 extern void processing_wake();
 extern void processing_sleep(uptime_t time);
 
+#if HEARTBEAT
+extern void heart_beat(void);
+#endif
 
 void* ts_malloc(size_t size);
 void ts_free(void* block);
@@ -139,7 +142,7 @@ void* ts_realloc(void* ptr, size_t size);
 #if VERBOSITY
 
 #define VERBOSE_PRINT(a) DEBUG_PRINT(a)
-#define VERBOSE_NPRINT(a, l) DEBUG_PRINT(a, l)
+#define VERBOSE_NPRINT(a, l) DEBUG_NPRINT(a, l)
 #define VERBOSE_PRINT_DEC(a) DEBUG_PRINT_DEC(a);
 #define VERBOSE_PRINT_HEX(a) DEBUG_PRINT_HEX(a);
 #define VERBOSE_PRINT_OCT(a) DEBUG_PRINT_OCT(a);

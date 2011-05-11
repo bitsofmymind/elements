@@ -23,7 +23,7 @@ class Template: public File
 
 	public:
 		Template(File* file);
-		~Template();
+		virtual ~Template();
 
 	public:
 		virtual size_t read(char* buffer, size_t length);

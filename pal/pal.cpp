@@ -48,12 +48,6 @@ uptime_t get_uptime( void )
 void increase_uptime(uptime_t time)
 {
 	system_uptime += time;
-#if HEARTBEAT
-	if(!(system_uptime % 1000))
-	{
-		VERBOSE_PRINT('#');
-	}
-#endif
 }
 
 /*This is the Interrupt handling function for time keeping, it should be vectored to every millisecond.*/
