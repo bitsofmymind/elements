@@ -67,37 +67,21 @@ void* ts_realloc(void* ptr, size_t size);
 
 #define ERROR_PRINT(a) DEBUG_PRINT(a)
 #define ERROR_NPRINT(a, l) DEBUG_NPRINT(a, l)
-#define ERROR_PRINT_DEC(a) DEBUG_PRINT_DEC(a);
-#define ERROR_PRINT_HEX(a) DEBUG_PRINT_HEX(a);
-#define ERROR_PRINT_OCT(a) DEBUG_PRINT_OCT(a);
-#define ERROR_PRINT_BIN(a) DEBUG_PRINT_BIN(a);
-#define ERROR_PRINT_BYTE(a) DEBUG_PRINT(a);
+#define ERROR_TPRINT(a, t) DEBUG_TPRINT(a, t);
 
 #define ERROR_PRINTLN(a) DEBUG_PRINTLN(a);
 #define ERROR_NPRINTLN(a, l) DEBUG_NPRINTLN(a, l);
-#define ERROR_PRINTLN_DEC(a) DEBUG_PRINTLN_DEC(a);
-#define ERROR_PRINTLN_HEX(a) DEBUG_PRINTLN_HEX(a);
-#define ERROR_PRINTLN_OCT(a) DEBUG_PRINTLN_OCT(a);
-#define ERROR_PRINTLN_BIN(a) DEBUG_PRINTLN_BIN(a);
-#define ERROR_PRINTLN_BYTE(a) DEBUG_PRINTLN(a);
+#define ERROR_TPRINTLN(a, t) DEBUG_TPRINTLN(a, t);
 
 #else
 
 #define ERROR_PRINT(a)
 #define ERROR_NPRINT(a, l)
-#define ERROR_PRINT_DEC(a)
-#define ERROR_PRINT_HEX(a)
-#define ERROR_PRINT_OCT(a)
-#define ERROR_PRINT_BIN(a)
-#define ERROR_PRINT_BYTE(a)
+#define ERROR_TPRINT(a, t)
 
 #define ERROR_PRINTLN(a)
 #define ERROR_NPRINTLN(a, l)
-#define ERROR_PRINTLN_DEC(a)
-#define ERROR_PRINTLN_HEX(a)
-#define ERROR_PRINTLN_OCT(a)
-#define ERROR_PRINTLN_BIN(a)
-#define ERROR_PRINTLN_BYTE(a)
+#define ERROR_TPRINTLN(a, t)
 
 #endif
 
@@ -105,37 +89,21 @@ void* ts_realloc(void* ptr, size_t size);
 
 #define WARNING_PRINT(a) DEBUG_PRINT(a)
 #define WARNING_NPRINT(a, l) DEBUG_NPRINT(a, l)
-#define WARNING_PRINT_DEC(a) DEBUG_PRINT_DEC(a);
-#define WARNING_PRINT_HEX(a) DEBUG_PRINT_HEX(a);
-#define WARNING_PRINT_OCT(a) DEBUG_PRINT_OCT(a);
-#define WARNING_PRINT_BIN(a) DEBUG_PRINT_BIN(a);
-#define WARNING_PRINT_BYTE(a) DEBUG_PRINT(a);
+#define WARNING_TPRINT(a, t) DEBUG_TPRINT(a, t);
 
 #define WARNING_PRINTLN(a) DEBUG_PRINTLN(a);
 #define WARNING_NPRINTLN(a, l) DEBUG_NPRINTLN(a, l);
-#define WARNING_PRINTLN_DEC(a) DEBUG_PRINTLN_DEC(a);
-#define WARNING_PRINTLN_HEX(a) DEBUG_PRINTLN_HEX(a);
-#define WARNING_PRINTLN_OCT(a) DEBUG_PRINTLN_OCT(a);
-#define WARNING_PRINTLN_BIN(a) DEBUG_PRINTLN_BIN(a);
-#define WARNING_PRINTLN_BYTE(a) DEBUG_PRINTLN(a);
+#define WARNING_TPRINTLN(a, t) DEBUG_TPRINTLN(a, t);
 
 #else
 
 #define WARNING_PRINT(a)
 #define WARNING_NPRINT(a, l)
-#define WARNING_PRINT_DEC(a)
-#define WARNING_PRINT_HEX(a)
-#define WARNING_PRINT_OCT(a)
-#define WARNING_PRINT_BIN(a)
-#define WARNING_PRINT_BYTE(a)
+#define WARNING_TPRINT(a, t)
 
 #define WARNING_PRINTLN(a)
 #define WARNING_NPRINTLN(a, l)
-#define WARNING_PRINTLN_DEC(a)
-#define WARNING_PRINTLN_HEX(a)
-#define WARNING_PRINTLN_OCT(a)
-#define WARNING_PRINTLN_BIN(a)
-#define WARNING_PRINTLN_BYTE(a)
+#define WARNING_TPRINTLN(a, t)
 
 #endif
 
@@ -143,41 +111,25 @@ void* ts_realloc(void* ptr, size_t size);
 
 #define VERBOSE_PRINT(a) DEBUG_PRINT(a)
 #define VERBOSE_NPRINT(a, l) DEBUG_NPRINT(a, l)
-#define VERBOSE_PRINT_DEC(a) DEBUG_PRINT_DEC(a);
-#define VERBOSE_PRINT_HEX(a) DEBUG_PRINT_HEX(a);
-#define VERBOSE_PRINT_OCT(a) DEBUG_PRINT_OCT(a);
-#define VERBOSE_PRINT_BIN(a) DEBUG_PRINT_BIN(a);
-#define VERBOSE_PRINT_BYTE(a) DEBUG_PRINT(a);
+#define VERBOSE_TPRINT(a, t) DEBUG_TPRINT(a, t)
 
 #define VERBOSE_PRINTLN(a) DEBUG_PRINTLN(a);
 #define VERBOSE_NPRINTLN(a, l) DEBUG_NPRINTLN(a, l);
-#define VERBOSE_PRINTLN_DEC(a) DEBUG_PRINTLN_DEC(a);
-#define VERBOSE_PRINTLN_HEX(a) DEBUG_PRINTLN_HEX(a);
-#define VERBOSE_PRINTLN_OCT(a) DEBUG_PRINTLN_OCT(a);
-#define VERBOSE_PRINTLN_BIN(a) DEBUG_PRINTLN_BIN(a);
-#define VERBOSE_PRINTLN_BYTE(a) DEBUG_PRINTLN(a);
+#define VERBOSE_TPRINTLN(a, t) DEBUG_TPRINTLN(a, t)
 
 #else
 
 #define VERBOSE_PRINT(a)
 #define VERBOSE_NPRINT(a, l)
-#define VERBOSE_PRINT_DEC(a)
-#define VERBOSE_PRINT_HEX(a)
-#define VERBOSE_PRINT_OCT(a)
-#define VERBOSE_PRINT_BIN(a)
-#define VERBOSE_PRINT_BYTE(a)
+#define VERBOSE_TPRINT(a, t)
 
 #define VERBOSE_PRINTLN(a)
 #define VERBOSE_NPRINTLN(a, l)
-#define VERBOSE_PRINTLN_DEC(a)
-#define VERBOSE_PRINTLN_HEX(a)
-#define VERBOSE_PRINTLN_OCT(a)
-#define VERBOSE_PRINTLN_BIN(a)
-#define VERBOSE_PRINTLN_BYTE(a)
+#define VERBOSE_TPRINTLN(a, t)
 
 #endif
 
-#if OUTPUT_ERRORS || OUTPUT_WARNINGS || VERBOSITY
+#if OUTPUT_ERRORS || OUTPUT_WARNINGS || VERBOSITY || OUTPUT_DEBUG
 
 #define DEC 10
 #define HEX 16
@@ -187,19 +139,12 @@ void* ts_realloc(void* ptr, size_t size);
 
 #define DEBUG_PRINT(a) Debug::print(a);
 #define DEBUG_NPRINT(a, l) Debug::print(a, l);
-#define DEBUG_PRINT_DEC(a) Debug::print(a, DEC);
-#define DEBUG_PRINT_HEX(a) Debug::print(a, HEX);
-#define DEBUG_PRINT_OCT(a) Debug::print(a, OCT);
-#define DEBUG_PRINT_BIN(a) Debug::print(a, BIN);
-#define DEBUG_PRINT_BYTE(a) Debug::print(a);
+#define DEBUG_TPRINT(a, t) Debug::print(a, t);
 
 #define DEBUG_PRINTLN(a) Debug::println(a);
 #define DEBUG_NPRINTLN(a, l) Debug::println(a, l);
-#define DEBUG_PRINTLN_DEC(a) Debug::println(a, DEC);
-#define DEBUG_PRINTLN_HEX(a) Debug::println(a, HEX);
-#define DEBUG_PRINTLN_OCT(a) Debug::println(a, OCT);
-#define DEBUG_PRINTLN_BIN(a) Debug::println(a, BIN);
-#define DEBUG_PRINTLN_BYTE(a) Debug::println(a);
+#define DEBUG_TPRINTLN(a, t) Debug::println(a, t);
+
 
 namespace Debug
 {
@@ -229,18 +174,12 @@ namespace Debug
 #else
 #define DEBUG_PRINT(a)
 #define DEBUG_NPRINT(a, l)
-#define DEBUG_PRINT_DEC(a)
-#define DEBUG_PRINT_HEX(a)
-#define DEBUG_PRINT_OCT(a)
-#define DEBUG_PRINT_BIN(a)
-#define DEBUG_PRINT_BYTE(a)
+#define DEBUG_TPRINT(a, t)
+
 
 #define DEBUG_PRINTLN(a)
 #define DEBUG_NPRINTLN(a, l)
-#define DEBUG_PRINTLN_DEC(a)
-#define DEBUG_PRINTLN_HEX(a)
-#define DEBUG_PRINTLN_OCT(a)
-#define DEBUG_PRINTLN_BIN(a)
-#define DEBUG_PRINTLN_BYTE(a)
+#define DEBUG_TPRINTLN(a, t)
+
 #endif
 #endif /* PAL_H_ */

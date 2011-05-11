@@ -22,11 +22,8 @@ void Message::print()
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
 	 * this method should be optimizes away by the compiler.*/
 
-	if(content_length)
-	{
-		DEBUG_PRINT("Content-Length: ");
-		DEBUG_PRINTLN_DEC(content_length);
-	}
+	DEBUG_PRINT("Content-Length: ");
+	DEBUG_TPRINTLN(content_length, DEC);
 }
 
 
@@ -69,41 +66,40 @@ size_t Message::serialize( char* buffer, bool write )
 {
 	char* start = buffer;
 
-	if(content_length)
+
+	if( write ){ strcpy( buffer, CONTENT_LENGTH ); }
+	buffer += 14; //strlen(CONTENT_LENGTH);
+	if( write )
 	{
-		if( write ){ strcpy( buffer, CONTENT_LENGTH ); }
-		buffer += 14; //strlen(CONTENT_LENGTH);
-		if( write )
-		{
-			*buffer = ':';
-			*(buffer + 1) = ' ';
-		}
-		buffer += 2;
-
-		if( write )
-		{
-#if ITOA
-			itoa(content_length, buffer, 10);
-#else
-			sprintf(buffer, "%d", content_length);
-#endif
-		}
-
-		size_t cl = content_length;
-		do
-		{
-			buffer++;
-			cl /= 10;
-		}while( cl > 0 );
-
-		if( write )
-		{
-			*buffer = '\r';
-			*(buffer + 1) = '\n';
-		}
-		buffer += 2;
-
+		*buffer = ':';
+		*(buffer + 1) = ' ';
 	}
+	buffer += 2;
+
+	if( write )
+	{
+#if ITOA
+		itoa(content_length, buffer, 10);
+#else
+		sprintf(buffer, "%d", content_length);
+#endif
+	}
+
+	size_t cl = content_length;
+	do
+	{
+		buffer++;
+		cl /= 10;
+	}while( cl > 0 );
+
+	if( write )
+	{
+		*buffer = '\r';
+		*(buffer + 1) = '\n';
+	}
+	buffer += 2;
+
+
 
 	//Serialize other fields here
 

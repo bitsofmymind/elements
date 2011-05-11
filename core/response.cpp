@@ -24,8 +24,8 @@ void Response::print(void)
 
 	DEBUG_PRINT("% Response: ");
 	DEBUG_PRINT(" HTTP/1.0");
-	DEBUG_PRINT_BYTE(' ');
-	DEBUG_PRINTLN_DEC(response_code_int);
+	DEBUG_TPRINT(' ', BYTE);
+	DEBUG_TPRINTLN(response_code_int, DEC);
 	if(content_type)
 	{
 		DEBUG_PRINT("Content-Type: ");

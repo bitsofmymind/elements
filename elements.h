@@ -30,6 +30,9 @@ typedef uint64_t uptime_t;
 
 #define BODY_ARGS_PARSING 1
 
+/*Debug output controls*/
+#define OUTPUT_DEBUG 1
+
 /*Verbosity controls*/
 #define OUTPUT_ERRORS 1
 #define OUTPUT_WARNINGS 1

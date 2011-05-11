@@ -317,12 +317,12 @@ void URL::print(void)
 #endif
 	if(is_absolute_path)
 	{
-		DEBUG_PRINT_BYTE('/');
+		DEBUG_TPRINT('/', BYTE);
 	}
 	for(uint8_t i = 0; i < resources.items; i++)
 	{
 		DEBUG_PRINT(resources[i]);
-		DEBUG_PRINT_BYTE('/');
+		DEBUG_TPRINT('/', BYTE);
 	}
 #if URL_ARGUMENTS
 	if(arguments)

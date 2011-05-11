@@ -113,7 +113,7 @@ bool unregister_interrupt_handler( void ( *handler_pointer )( void ), void* vect
 	return false;
 }
 */
-#if OUTPUT_ERRORS || OUTPUT_WARNING || VERBOSITY
+#if OUTPUT_ERRORS || OUTPUT_WARNING || VERBOSITY || OUTPUT_DEBUG
 void printNumber(uint32_t n, uint8_t base)
 {
   unsigned char buf[8 * sizeof(int32_t)]; // Assumes 8-bit chars.

@@ -19,7 +19,7 @@ void File::print(void)
 	char c;
 	while(read(&c, 1))
 	{
-		DEBUG_PRINT_BYTE(c);
+		DEBUG_TPRINT(c, BYTE);
 	}
 	_cursor = prev_cursor;
 }
