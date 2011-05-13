@@ -27,7 +27,10 @@ size_t EEPROMFile::read(char* buffer, size_t length)
 	}
 
 	bytes_read = length % PAGE_SIZE;
-
+	if(bytes_read == 0)
+	{
+		bytes_read = PAGE_SIZE;
+	}
 	for( i = 0; i < length && _cursor + i < size; bytes_read = PAGE_SIZE)
 	{
 		_eeprom->read(_addr + _cursor + i, bytes_read);
