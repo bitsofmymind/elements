@@ -148,12 +148,12 @@ void* ts_realloc(void* ptr, size_t size);
 
 namespace Debug
 {
-	extern void print(char);
+	extern void print_char(char);
 	extern void println(void);
 
 	void print(const char*);
 	void print(const char* str, uint16_t length);
-	void print(char, uint8_t);
+	void print(char, uint8_t = BYTE);
 	void print(uint8_t, uint8_t = BYTE);
 	void print(int16_t, uint8_t = DEC);
 	void print(uint16_t, uint8_t = DEC);

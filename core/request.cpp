@@ -40,7 +40,7 @@ void Request::print(void)
 	 * this method should be optimizes away by the compiler.*/
 	DEBUG_PRINT(" % Request: ");
 	DEBUG_PRINT(method);
-	DEBUG_TPRINT(' ', BYTE);
+	DEBUG_PRINT(' ');
 	to_url->print();
 	DEBUG_PRINTLN(" HTTP/1.0");
 	Message::print();

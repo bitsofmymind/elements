@@ -299,7 +299,7 @@ void URL::print(void)
 	if(protocol)
 	{
 		DEBUG_PRINT(protocol);
-		DEBUG_PRINT_BYTE(':');
+		DEBUG_PRINT(':');
 	}
 #endif
 #if URL_AUTHORITY
@@ -311,7 +311,7 @@ void URL::print(void)
 #if URL_PORT
 	if(port)
 	{
-		DEBUG_PRINT_BYTE(':');
+		DEBUG_PRINT(':');
 		DEBUG_PRINT(port);
 	}
 #endif
@@ -322,20 +322,20 @@ void URL::print(void)
 	for(uint8_t i = 0; i < resources.items; i++)
 	{
 		DEBUG_PRINT(resources[i]);
-		DEBUG_TPRINT('/', BYTE);
+		DEBUG_PRINT('/');
 	}
 #if URL_ARGUMENTS
 	if(arguments)
 	{
-		DEBUG_PRINT_BYTE('?');
+		DEBUG_PRINT('?');
 		for(uint8_t i = 0; i < arguments->items; i++)
 		{
 			DEBUG_PRINT((*arguments)[i]->key)
-			DEBUG_PRINT_BYTE('=');
+			DEBUG_PRINT('=');
 			DEBUG_PRINT((*arguments)[i]->value)
 			if(i != arguments->items - 1)
 			{
-				DEBUG_PRINT_BYTE('&');
+				DEBUG_PRINT('&');
 			}
 		}
 	}
@@ -343,7 +343,7 @@ void URL::print(void)
 #if URL_FRAGMENT
 	if(fragment)
 	{
-		DEBUG_PRINT_BYTE('#');
+		DEBUG_PRINT('#');
 		DEBUG_PRINT(fragment);
 	}
 #endif

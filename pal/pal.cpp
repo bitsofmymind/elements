@@ -120,7 +120,7 @@ void printNumber(uint32_t n, uint8_t base)
   uint32_t i = 0;
 
   if (n == 0) {
-	  Debug::print('0');
+	  Debug::print_char('0');
     return;
   }
 
@@ -130,7 +130,7 @@ void printNumber(uint32_t n, uint8_t base)
   }
 
   for (; i > 0; i--)
-	  Debug::print((char) (buf[i - 1] < 10 ?
+	  Debug::print_char((char) (buf[i - 1] < 10 ?
       '0' + buf[i - 1] :
       'A' + buf[i - 1] - 10));
 }
@@ -139,7 +139,7 @@ void Debug::print(const char* str)
 {
 	while(*str)
 	{
-		Debug::print((char)(*str++));
+		Debug::print_char((char)(*str++));
 	}
 }
 
@@ -174,10 +174,10 @@ void Debug::print(uint16_t n, uint8_t base)
 void Debug::print(int32_t n, uint8_t base)
 {
   if (base == 0) {
-	  Debug::print(n);
+	  Debug::print_char(n);
   } else if (base == 10) {
     if (n < 0) {
-    	Debug::print('-');
+    	Debug::print_char('-');
       n = -n;
     }
     printNumber(n, 10);
@@ -188,7 +188,7 @@ void Debug::print(int32_t n, uint8_t base)
 
 void Debug::print(uint32_t n, uint8_t base)
 {
-  if (base == 0) { Debug::print(n); }
+  if (base == 0) { Debug::print_char(n); }
   else { printNumber(n, base); }
 }
 
