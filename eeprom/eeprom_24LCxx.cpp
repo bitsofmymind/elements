@@ -177,6 +177,35 @@ uint8_t EEPROM_24LCXX::find_file(const char* name, uint16_t* entry_addr)
 	return 1;
 }
 
+uint8_t EEPROM_24LCXX::find_file(uint8_t index, uint16_t* entry_addr)
+{
+	VERBOSE_PRINT_P("Finding index ");
+	VERBOSE_TPRINT(index, DEC);
+	VERBOSE_PRINT_P(" ... ");
+	read(LAST_FILE_PTR, 2);
+	uint16_t last_file = *((uint16_t*)page_buffer);
+	uint16_t addr = FIRST_FILE;
+	uint8_t res;
+
+	*entry_addr = 0;
+
+	if(last_file != 0x0000)
+	{
+		for(uint8_t i = 0; i <= index; i++, addr += ((file_entry*)page_buffer)->size + FILE_ENTRY_SIZE)
+		{
+			res = read(addr, FILE_ENTRY_SIZE);
+			if(!res){ return res; }
+			if(addr > last_file)
+			{
+				return 1;
+				VERBOSE_PRINTLN_P("Not found");
+			}
+		}
+	}
+	*entry_addr = addr;
+	return 0;
+}
+
 uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 {
 	VERBOSE_PRINT_P("Modifying file at 0x");
@@ -276,52 +305,49 @@ uint8_t EEPROM_24LCXX::delete_file(uint16_t addr)
 
 #define CONTENT \
 "<html>\n\
-	<head><title>24LCxx EEPROM file system</title></head>\n\
-	<body>\n\
-		<h2>24LCxx EEPROM file system</h2>\n\
-		<br/>\n\
-		<form name=\"fmtform\" method=\"post\">\n\
-			<input type=\"hidden\" name=\"fmt\" value=\"1\"/>\n\
-			<input type=\"button\" value=\"Format\" onclick=\"format()\"/>\n\
-		</form>\n\
+	<head>\n\
+		<title>24LCxx EEPROM configuration</title>\n\
 		<script type=\"text/javascript\">\n\
-		function format()\n\
-		{\n\
-			var answer=confirm(\"Are you sure you want to format the file system?\");\n\
-			if(answer){ document.fmtform.submit(); }\n\
-		}\n\
-		</script>\n\
-		<h3>Informations</h3>\n\
-		Number of Files:~<br/>\n\
-		Space used:~\n\
-		<h3>Upload file</h3>\n\
-		<form>\n\
-			Name:<input type=\"text\" id=\"file_name\" size=\"13\"/>\n\
-			<input type=\"button\" value=\"Upload\" onclick=\"upload()\"/>\n\
-			<i><span id=\"status\"></span></i><br/>\n\
-			<textarea cols=\"100\" rows=\"320\" id=\"file\"></textarea>\n\
-		</form>\n\
-		<script type=\"text/javascript\">\n\
+			function status(text){var status=document.getElementById(\"status\");status.innerHTML=text;}\n\
+			function format()\n\
+			{\n\
+				var answer=confirm(\"Are you sure you want to format the file system?\");\n\
+				if(answer)\n\
+				{\n\
+					var fmt = new XMLHttpRequest();\n\
+					fmt.open(\"DELETE\", document.URL, false);\n\
+					fmt.send()\n\
+					if(fmt.status==200){status(\"Formatted\");}\n\
+					else{status(\"Failed!\");}\n\
+				}\n\
+			}\n\
 			function upload()\n\
 			{\n\
-				var name=document.getElementById(\"file_name\").value;\n\
-				if(!name){ alert(\"No file name provided!\"); return;}\n\
-				var status=document.getElementById(\"status\");\n\
-				var file=document.getElementById(\"file\").value.match(RegExp('.{1,'+50+'}','g'));\n\
+				\n\
+				var file=document.getElementById(\"file\").value.match(RegExp('[\\\\s\\\\S]{1,'+50+'}','g'));\n\
 				if(!file){ alert(\"No content provided!\"); return;}\n\
 				var len=file.length;\n\
-				status.innerHTML=\"Uploaded 0/\"+len;\n\
+				status(\"Uploaded 0/\"+len);\n\
 				while(file.length)\n\
 				{\n\
 					var ajax_obj=new XMLHttpRequest();\n\
-					ajax_obj.open(\"POST\", document.URL+\"/\"+name, false);\n\
+					ajax_obj.open(\"POST\", document.URL + \"/conf\", false);\n\
 					ajax_obj.send(file.shift());\n\
-					status.innerHTML=\"Uploaded \"+ (len-file.length) +'/'+len;\n\
-					if(ajax_obj.status==404){status.innerHTML=\"Failed!\"; return;}\n\
+					status(\"Uploaded \"+ (len-file.length) +'/'+len);\n\
+					if(ajax_obj.status==404){status(\"Failed!\"); return;}\n\
 				}\n\
 				status.innerHTML=\"Done\";\n\
 			}\n\
 		</script>\n\
+	</head>\n\
+	<body>\n\
+		<h1>Upload configuration HTML file</h1>\n\
+		This page is used to upload the configuration HTML file to the file system. To further access file system<br/>\n\
+		functions, a more detailed HTML file should be used.<br/>\n\
+		<button type=\"button\" onclick=\"format()\">Format</button>\n\
+		<button type=\"button\" onclick=\"upload()\">Upload</button>\n\
+		<i><span id=\"status\"></span></i><br/>\n\
+		<textarea cols=\"100\" rows=\"320\" id=\"file\"></textarea>\n\
 	</body>\n\
 </html>"
 #define CONTENT_SIZE sizeof(CONTENT) - 1
@@ -340,6 +366,30 @@ Response* EEPROM_24LCXX::http_get(Request* request)
 		delete response;
 		return NULL;
 	}
+	response->body_file = f;
+	response->content_length = f->size;
+	response->content_type = "text/html";
+	return response;
+}
+
+#define STATS \
+"{\"space_used\":~,files:[~]}"
+#define STATS_SIZE sizeof(STATS) - 1
+
+static char stats_P[] PROGMEM = STATS;
+
+Response* EEPROM_24LCXX::get_stats(Request* request)
+{
+	Response* response = new Response(OK_200, request);
+	if(!response) {	return NULL; }
+
+	File* f = new PGMSpaceFile(stats_P, STATS_SIZE);
+	if(!f)
+	{
+		response->original_request = NULL;
+		delete response;
+		return NULL;
+	}
 
 	Template* t = new Template(f);
 	if(!t)
@@ -350,21 +400,9 @@ Response* EEPROM_24LCXX::http_get(Request* request)
 		return NULL;
 	}
 
-
 	read(FILE_SYSTEM, sizeof(file_system));
 	file_system* fs = (file_system*)page_buffer;
-	char* val = (char*)ts_malloc(4);
-	if(!val)
-	{
-		response->original_request = NULL;
-		delete f;
-		delete t;
-		delete response;
-		return NULL;
-	}
-	itoa(fs->number_of_files, val, 10);
-	t->add_arg(val, strlen(val));
-
+	char* val;
 	val = (char*)ts_malloc(6);
 	if(!val)
 	{
@@ -377,31 +415,78 @@ Response* EEPROM_24LCXX::http_get(Request* request)
 	itoa(fs->space_used, val, 10);
 	t->add_arg(val, strlen(val));
 
-
+	if(fs->number_of_files)
+	{
+		uint8_t size = 0; //The last \0 will be accounted for by the last ","
+		uint8_t number_of_files = fs->number_of_files;
+		uint16_t addr;
+		for(uint8_t i = 0; i < number_of_files; i++)
+		{
+			find_file( i, &addr );
+			size += strlen(((file_entry*)page_buffer)->name) + 3/*For ',' and '""' */;
+		}
+		val = (char*)ts_malloc(size);
+		if(!val)
+		{
+			val = (char*)ts_malloc(2);
+			if(!val)
+			{
+				response->original_request = NULL;
+				delete f;
+				delete t;
+				delete response;
+				return NULL;
+			}
+			val[0] = ' ';
+			val[1] = '\0';
+		}
+		else
+		{
+			for(uint8_t i = 0, pos=0; i < number_of_files; i++)
+			{
+				find_file( i, &addr );
+				val[pos++]='\"';
+				strcpy(&val[pos], ((file_entry*)page_buffer)->name);
+				pos += strlen(((file_entry*)page_buffer)->name);
+				val[pos++]='\"';
+				val[ pos++ ]= ',';
+			}
+			val[size - 1] = '\0';
+		}
+		t->add_arg(val, strlen(val));
+	}
+	else
+	{
+		val = (char*)ts_malloc(2);
+		if(!val)
+		{
+			response->original_request = NULL;
+			delete f;
+			delete t;
+			delete response;
+			return NULL;
+		}
+		val[0] = ' ';
+		val[1] = '\0';
+		t->add_arg(val, strlen(val));
+	}
 	response->body_file = t;
 	response->content_length = t->size;
-	response->content_type = "text/html";
+	response->content_type = "application/json";
 	return response;
 }
 
 Response::status_code EEPROM_24LCXX::process( Request* request, Message** return_message )
 {
+
+	print_transaction(request);
+
 	URL* url = request->to_url;
 	Response::status_code sc = NOT_FOUND_404;
 
 	if(url->cursor == url->resources.items)
 	{
-		if(!strcmp(request->method, "post"))
-		{
-			char format;
-			uint8_t len = request->find_arg("fmt", &format, 1);
-			if(len && format == '1')
-			{
-				format_file_system();
-			}
-			goto get;
-		}
-		else if(!strcmp(request->method, "get"))
+		if(!strcmp(request->method, "get"))
 		{
 			get:
 			*return_message = http_get(request);
@@ -411,6 +496,11 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 			}
 			else { sc = OK_200;	}
 		}
+		else if(!strcmp(request->method, "delete"))
+		{
+			format_file_system();
+			goto get;
+		}
 		else { sc = NOT_IMPLEMENTED_501; }
 	}
 	else if(url->cursor + 1 == url->resources.items)
@@ -419,6 +509,17 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 
 		if(!strcmp(request->method, "get"))
 		{
+			if(!strcmp(url->resources[url->cursor], "stats"))
+			{
+				*return_message = get_stats(request);
+				if(!*return_message)
+				{
+					sc = INTERNAL_SERVER_ERROR_500;
+				}
+				else { sc = OK_200;	}
+				return sc;
+			}
+
 			get_file:
 			find_file(url->resources[url->cursor], &addr);
 			if(!addr)
@@ -447,6 +548,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 		}
 		else if(!strcmp(request->method, "post"))
 		{
+
 			find_file(url->resources[url->cursor], &addr);
 			if(!addr && create_file(url->resources[url->cursor]))
 			{
@@ -625,6 +727,10 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 	if(len > PAGE_SIZE)
 	{
 		return 0;
+	}
+	else if(len == 0)
+	{
+
 	}
 
 	restart:

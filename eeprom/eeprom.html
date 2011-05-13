@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>24LCxx EEPROM file system</title>
+		<script type="text/javascript">
+			function status(text)
+			{
+				var status=document.getElementById("status");
+				status.innerHTML=text;
+			}
+			function upload()
+			{	
+				var file=document.getElementById("file").value.match(RegExp('[\\s\\S]{1,'+50+'}','g'));
+				if(!file){ alert("No content provided!"); return;}
+				var len=file.length;
+				status("Uploaded 0/"+len);
+				while(file.length)
+				{
+					var ajax_obj=new XMLHttpRequest();
+					ajax_obj.open("POST", document.URL + "conf", false);
+					ajax_obj.send(file.shift());
+					status("Uploaded "+ (len-file.length) +'/'+len);
+					if(ajax_obj.status==404){status("Failed!"); return;}
+				}
+				status.innerHTML="Done";
+				populate();
+			}
+			function populate()
+			{
+				var ajax_obj=new XMLHttpRequest();
+				ajax_obj.open("GET", document.URL+"/../stats", true);
+				ajax_obj.send();
+				ajax_obj.onreadstatechange=function()
+				{
+					if(ajax_obj.ready_State==4&&ajax_obj.status==200)
+					{
+						var stats = JSON.parse(ajax_obj.responseText);
+						document.getElementById("space_used").innerHTML=stats.space_used;
+						var el=document.getElementById("file_list");
+						while(stats.files)
+						{
+							var name=stats.files();
+							el.innerHTML += '<li><b><a href="'+document.URL+'/'+name+'">'+name+'</a></b> | <a onclick="edit('+ name +')">Edit</a> <a onclick="delete('+name+')">Delete</a></li>';
+						}					
+					}
+				}
+			}
+			populate();
+		</script>
+	</head>
+	<body>
+		<h2>24LCxx EEPROM file system</h2>
+		<br/>
+		<h3>File list</h3>
+		Space used:<span id="space">?</span><br>
+		<ol id="file_list">?</ol>
+		<h3>Upload file</h3>
+		<form>
+			Name:<input type="text" id="file_name" size="13"/>
+			<input type="button" value="Upload" onclick="upload()"/>
+			<i><span id="status"></span></i><br/>
+			<textarea cols="100" rows="320" id="file"></textarea>
+		</form>
+	</body>
+</html>

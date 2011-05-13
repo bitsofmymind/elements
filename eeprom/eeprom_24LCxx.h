@@ -39,6 +39,7 @@ class EEPROM_24LCXX: public Resource
 		uint8_t format_file_system(void);
 		uint8_t create_file(const char* name);
 		uint8_t find_file(const char* name, uint16_t* entry_addr);
+		uint8_t find_file(uint8_t index, uint16_t* entry_addr);
 		uint8_t append_to_file(uint16_t addr, File* content);
 		uint8_t delete_file(uint16_t addr);
 
@@ -48,6 +49,7 @@ class EEPROM_24LCXX: public Resource
 		uint8_t read(uint16_t addr, uint8_t len);
 
 		Response* http_get(Request* request);
+		Response* get_stats(Request* request);
 		virtual Response::status_code process( Request* request, Message** return_message );
 };
 
