@@ -121,11 +121,11 @@ void TCPIPStack::printip(uip_ipaddr_t addr)
 	/*If VERBOSITY is undefined, this method should be optimizes away by the compiler.*/
 
 	VERBOSE_TPRINT(((uint8_t*)addr)[0], DEC);
-	VERBOSE_TPRINT('.', BYTE);
+	VERBOSE_PRINT('.');
 	VERBOSE_TPRINT(((uint8_t*)addr)[1], DEC);
-	VERBOSE_TPRINT('.', BYTE);
+	VERBOSE_PRINT('.');
 	VERBOSE_TPRINT(((uint8_t*)addr)[2], DEC);
-	VERBOSE_TPRINT('.', BYTE);
+	VERBOSE_PRINT('.');
 	VERBOSE_TPRINT(((uint8_t*)addr)[3], DEC);
 }
 void TCPIPStack::printip(uip_ipaddr_t addr, uint16_t port)
@@ -133,7 +133,7 @@ void TCPIPStack::printip(uip_ipaddr_t addr, uint16_t port)
 	/*If VERBOSITY is undefined, this method should be optimizes away by the compiler.*/
 
 	printip(addr);
-	VERBOSE_TPRINT(':', BYTE);
+	VERBOSE_PRINT(':');
 	VERBOSE_TPRINT(HTONS(port), DEC);
 }
 

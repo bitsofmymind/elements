@@ -29,8 +29,7 @@
 			{
 				var ajax_obj=new XMLHttpRequest();
 				ajax_obj.open("GET", document.URL+"/../stats", true);
-				ajax_obj.send();
-				ajax_obj.onreadstatechange=function()
+				ajax_obj.onreadystatechange=function()
 				{
 					if(ajax_obj.ready_State==4&&ajax_obj.status==200)
 					{
@@ -44,6 +43,7 @@
 						}					
 					}
 				}
+				ajax_obj.send();
 			}
 			populate();
 		</script>

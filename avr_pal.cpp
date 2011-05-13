@@ -150,7 +150,7 @@ ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)
 #if OUTPUT_ERRORS || OUTPUT_WARNING || VERBOSITY || OUTPUT_DEBUG
 //Should be able to deactivate from a avr implementation specific config file
 
-void Debug::print(char c)
+void Debug::print_char(char c)
 {
 	  loop_until_bit_is_set(UCSR0A, UDRE0);
 	  UDR0 = c;
