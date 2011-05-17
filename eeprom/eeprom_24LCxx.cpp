@@ -26,7 +26,7 @@
 #define DEVICE_WRITE_PROTECTED 2
 
 /*File system defines*/
-#define FILE_ENTRY_SIZE 			16
+#define FILE_ENTRY_SIZE 			sizeof(file_entry)
 #define ID 							0xAB
 
 #define FILE_SYSTEM					0
@@ -38,7 +38,7 @@
 
 #define FILE_SIZE					0
 #define FILE_NAME					FILE_SIZE + sizeof(uint16_t)
-#define END							FILE_NAME + 13
+#define END							FILE_NAME + FILE_NAME_MAX_SIZE
 
 EEPROM_24LCXX::EEPROM_24LCXX():
 	Resource()
@@ -351,7 +351,7 @@ uint8_t EEPROM_24LCXX::delete_file(uint16_t addr)
 						}\n\
 						else if(ajax_obj.status==404){status(\"Failed!\");}\n\
 					}\n\
-					ajax_obj.open(\"POST\", document.URL + \"/conf\", true);\n\
+					ajax_obj.open(\"POST\", document.URL + \"/conf.xhtml\", true);\n\
 					ajax_obj.send(file.shift());\n\
 				}\n\
 				upload_part();\n\
@@ -386,7 +386,7 @@ Response* EEPROM_24LCXX::http_get(Request* request)
 	}
 	response->body_file = f;
 	response->content_length = f->size;
-	response->content_type = "text/xhtml+xml";
+	response->content_type = "application/xhtml+xml";
 	return response;
 }
 
@@ -558,7 +558,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 				}
 				response->content_length = file->size;
 				response->body_file = file;
-				response->content_type = "text/xhtml+xml";
+				response->content_type = "application/xhtml+xml";
 				*return_message = response;
 				sc = OK_200;
 			}

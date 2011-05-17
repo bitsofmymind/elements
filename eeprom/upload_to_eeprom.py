@@ -20,7 +20,7 @@ tty = os.open(args.tty, os.O_RDWR) #We need low-level IO here so we open the fil
 cmd = args.cmd
 
 
-if  name and len(name) > 13:
+if  name and len(name) > 21:
     print >> sys.stderr,  'Name is too long, a maximum of 13 characters is supported'
     raise Exception()
 
@@ -53,7 +53,7 @@ try:
     cmd_data += '\0'
     if name:
         cmd_data += name
-    for i in range(20 - len(cmd_data)): cmd_data += '\0' #padding with null chars
+    for i in range(24 - len(cmd_data)): cmd_data += '\0' #padding with null chars
     os.write(tty, cmd_data)
     
     def rec_ack():
@@ -88,12 +88,12 @@ try:
             if progress >= total: 
                 print '' 
                 break
-            to_send = file.read(20)
-            if len(to_send) < 20:
-                for i in range(20 - len(to_send)): to_send += '\0' #padding with null chars
+            to_send = file.read(24)
+            if len(to_send) < 24:
+                for i in range(24 - len(to_send)): to_send += '\0' #padding with null chars
             os.write(tty, to_send)
             rec_ack()
-            progress += 20
+            progress += 24
         
         
     print "Done!"

@@ -10,10 +10,12 @@
 
 #include <core/resource.h>
 
+#define FILE_NAME_MAX_SIZE 21
 #define PAGE_SIZE 64
+
 #define EEPROM_SIZE 32768
 #define UPLOAD_FROM_UART 1
-#define UART_BUFFER_SIZE 20
+#define UART_BUFFER_SIZE sizeof(file_entry)
 
 class EEPROM_24LCXX: public Resource
 {
@@ -28,10 +30,12 @@ class EEPROM_24LCXX: public Resource
 		volatile uptime_t last_rx;
 #endif
 
+
+
 		struct file_entry
 		{
 			uint16_t size;
-			char name[13];
+			char name[FILE_NAME_MAX_SIZE];
 			//The end of name is indicated by a 0
 			char end;
 		};
