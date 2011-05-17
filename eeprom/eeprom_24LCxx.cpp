@@ -48,6 +48,14 @@ EEPROM_24LCXX::EEPROM_24LCXX():
 	/* has prescaler (mega128 & newer) */
 	TWSR = 0;
 
+#if UPLOAD_FROM_UART
+	instance = this;
+	uart_pos = 0;
+	uart_buffer = NULL;
+	uart_state = CMD;
+	last_rx = 0;
+#endif
+
 
 #if F_CPU < 3600000UL
 	TWBR = 10;			/* smallest TWBR value, see note [5] */
@@ -208,7 +216,7 @@ uint8_t EEPROM_24LCXX::find_file(uint8_t index, uint16_t* entry_addr)
 
 uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 {
-	VERBOSE_PRINT_P("Modifying file at 0x");
+	VERBOSE_PRINT_P("Appending to file at 0x");
 	VERBOSE_TPRINT(addr, HEX);
 	VERBOSE_PRINT_P(" with ");
 	VERBOSE_TPRINT(content->size, DEC);
@@ -323,20 +331,30 @@ uint8_t EEPROM_24LCXX::delete_file(uint16_t addr)
 			}\n\
 			function upload()\n\
 			{\n\
-				\n\
 				var file=document.getElementById(\"file\").value.match(RegExp('[\\\\s\\\\S]{1,'+50+'}','g'));\n\
 				if(!file){ alert(\"No content provided!\"); return;}\n\
 				var len=file.length;\n\
 				status(\"Uploaded 0/\"+len);\n\
-				while(file.length)\n\
+				function upload_part()\n\
 				{\n\
 					var ajax_obj=new XMLHttpRequest();\n\
-					ajax_obj.open(\"POST\", document.URL + \"/conf\", false);\n\
+					ajax_obj.onreadystatechange= function()\n\
+					{\n\
+						if(ajax_obj.status==200&&ajax_obj.readyState==4)\n\
+						{\n\
+							if(file.length)\n\
+							{\n\
+								status(\"Uploaded \"+ (len-file.length) +'/'+len);\n\
+								upload_part();\n\
+							}\n\
+							else{status.(\"Done\");}\n\
+						}\n\
+						else if(ajax_obj.status==404){status(\"Failed!\");}\n\
+					}\n\
+					ajax_obj.open(\"POST\", document.URL + \"/conf\", true);\n\
 					ajax_obj.send(file.shift());\n\
-					status(\"Uploaded \"+ (len-file.length) +'/'+len);\n\
-					if(ajax_obj.status==404){status(\"Failed!\"); return;}\n\
 				}\n\
-				status.innerHTML=\"Done\";\n\
+				upload_part();\n\
 			}\n\
 		</script>\n\
 	</head>\n\
@@ -368,12 +386,12 @@ Response* EEPROM_24LCXX::http_get(Request* request)
 	}
 	response->body_file = f;
 	response->content_length = f->size;
-	response->content_type = "text/html";
+	response->content_type = "text/xhtml+xml";
 	return response;
 }
 
 #define STATS \
-"{\"space_used\":~,files:[~]}"
+"{\"space_used\":~,\"files\":[~]}"
 #define STATS_SIZE sizeof(STATS) - 1
 
 static char stats_P[] PROGMEM = STATS;
@@ -540,7 +558,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 				}
 				response->content_length = file->size;
 				response->body_file = file;
-				response->content_type = "text/html";
+				response->content_type = "text/xhtml+xml";
 				*return_message = response;
 				sc = OK_200;
 			}
@@ -890,3 +908,101 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 	ERROR_PRINTLN_P("Read error!");
 	goto quit;
 }
+
+#if UPLOAD_FROM_UART
+void ack(void)
+{
+	UCSR0B |= _BV(TXEN0);
+	loop_until_bit_is_set(UCSR0A, UDRE0);
+	UDR0 = '1';
+	loop_until_bit_is_set(UCSR0A, UDRE0);
+	UCSR0B &= ~(_BV(TXEN0));
+}
+void nack(void)
+{
+	UCSR0B |= _BV(TXEN0);
+	loop_until_bit_is_set(UCSR0A, UDRE0);
+	UDR0 = '7';
+	loop_until_bit_is_set(UCSR0A, UDRE0);
+	UCSR0B &= ~(_BV(TXEN0));
+}
+void EEPROM_24LCXX::receive_from_uart(char c)
+{
+
+
+	UCSR0B &= ~(_BV(TXEN0)); /* This disables the UART, effectively preventing PRINT functions
+	from operating. The reason for that is to prevent synchronous UART usage during an
+	interrupt and to allow us to send control data.*/
+	if(last_rx + 10000 < get_uptime())
+	{
+		uart_state = CMD;
+		uart_pos = 0;
+	}
+
+	if(!uart_buffer)
+	{
+		uart_buffer = (char*)ts_malloc(UART_BUFFER_SIZE);
+		if(!uart_buffer){ return; }
+	}
+	uart_buffer[uart_pos++] = c;
+	last_rx = get_uptime();
+
+	switch(uart_state)
+	{
+		case CMD:
+			if(uart_pos == UART_BUFFER_SIZE)
+			{
+				uart_pos = 0;
+				if(!strcmp(uart_buffer, "fmt"))
+				{
+					format_file_system();
+					ack();
+				}
+				else
+				{
+					find_file(uart_buffer + 4, &working_addr);
+
+					if(!strcmp(uart_buffer, "dat"))
+					{
+						if(!working_addr)
+						{
+							create_file(uart_buffer + 4);
+							find_file(uart_buffer + 4, &working_addr);
+						}
+
+						uart_state = DATA;
+						ack();
+						break;
+					}
+					else if(!strcmp(uart_buffer, "del") && working_addr)
+					{
+						delete_file(working_addr);
+						ack();
+					}
+					else { nack(); }
+				}
+
+				ts_free(uart_buffer);
+				uart_buffer = NULL;
+			}
+			break;
+		case DATA:
+			if(uart_pos ==  UART_BUFFER_SIZE)
+			{
+				uart_pos = 0;
+				MemFile f(uart_buffer, UART_BUFFER_SIZE);
+				append_to_file(working_addr, &f);
+				ack();
+			}
+			break;
+		default: break;
+	}
+	UCSR0B |= _BV(TXEN0);
+}
+
+#include "avr/interrupt.h"
+ISR(USART_RX_vect)
+{
+	instance->receive_from_uart(UDR0);
+}
+#endif
