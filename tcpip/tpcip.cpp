@@ -95,7 +95,7 @@ void TCPIPStack::run(void)
 	}
 	else if(periodic_timer <= get_uptime() )
 	{
-		periodic_timer = get_uptime() + 200;
+		periodic_timer = get_uptime() + 20;
 		for(uint8_t i = 0; i < UIP_CONNS; i++)
 		{
 			uip_periodic(i);
@@ -108,7 +108,7 @@ void TCPIPStack::run(void)
 
 		if( arp_timer <= get_uptime() )
 		{
-			arp_timer = get_uptime() + 1000;
+			arp_timer = get_uptime() + 100;
 			uip_arp_timer();
 		}
 	}
@@ -166,10 +166,6 @@ void TCPIPStack::appcall(void)
 {
 	struct elements_app_state *s = &(uip_conn->appstate);
 
-	//string<uint8_t> txt = MAKE_STRING("HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\ncounter is 0");
-
-	//txt.text[txt.length - 1] = counter++ + 42;
-
 	if(uip_aborted())
 	{
 		VERBOSE_PRINT_P("Connection from ");
@@ -202,7 +198,7 @@ void TCPIPStack::appcall(void)
 		s->request = NULL;
 		s->body = NULL;
 		s->header = NULL;
-		s->last_sent;
+		s->last_sent = 0;
 	}
 	else if(uip_newdata())
 	{
@@ -353,7 +349,7 @@ Response::status_code TCPIPStack::process(Response* response, Message** return_m
 	if(response->to_url->cursor >=  response->to_url->resources.items)
 	{
 		to_send.append(response);
-		response->print();
+		print_transaction(response);
 		return OK_200;
 	}
 

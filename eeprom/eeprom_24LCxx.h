@@ -14,6 +14,9 @@
 #define PAGE_SIZE 64
 
 #define EEPROM_SIZE 32768
+
+#define UPLOAD_FROM_WEB 0
+
 #define UPLOAD_FROM_UART 1
 #define UART_BUFFER_SIZE sizeof(file_entry)
 
@@ -29,8 +32,6 @@ class EEPROM_24LCXX: public Resource
 		uint16_t working_addr;
 		volatile uptime_t last_rx;
 #endif
-
-
 
 		struct file_entry
 		{
@@ -62,8 +63,9 @@ class EEPROM_24LCXX: public Resource
 
 		uint8_t write(uint16_t addr, uint8_t len);
 		uint8_t read(uint16_t addr, uint8_t len);
-
+#if UPLOAD_FROM_WEB
 		Response* http_get(Request* request);
+#endif
 		Response* get_stats(Request* request);
 		virtual Response::status_code process( Request* request, Message** return_message );
 

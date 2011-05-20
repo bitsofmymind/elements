@@ -310,7 +310,7 @@ uint8_t EEPROM_24LCXX::delete_file(uint16_t addr)
 
 	return 0;
 }
-
+#if UPLOAD_FROM_WEB
 #define CONTENT \
 "<html>\n\
 	<head>\n\
@@ -386,9 +386,10 @@ Response* EEPROM_24LCXX::http_get(Request* request)
 	}
 	response->body_file = f;
 	response->content_length = f->size;
-	response->content_type = "application/xhtml+xml";
+	response->content_type = Message::APPLICATION_XHTML_XML;
 	return response;
 }
+#endif
 
 #define STATS \
 "{\"space_used\":~,\"files\":[~]}"
@@ -490,7 +491,7 @@ Response* EEPROM_24LCXX::get_stats(Request* request)
 	}
 	response->body_file = t;
 	response->content_length = t->size;
-	response->content_type = "application/json";
+	response->content_type = MIME::APPLICATION_JSON;
 	return response;
 }
 
@@ -558,7 +559,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 				}
 				response->content_length = file->size;
 				response->body_file = file;
-				response->content_type = "application/xhtml+xml";
+				//response->content_type = "application/xhtml+xml";
 				*return_message = response;
 				sc = OK_200;
 			}
@@ -723,10 +724,10 @@ uint8_t EEPROM_24LCXX::write(uint16_t addr, uint8_t len)
 
 	quit_no_stop:
 
-	VERBOSE_PRINT_P("Wrote ");
+	/*VERBOSE_PRINT_P("Wrote ");
 	VERBOSE_TPRINT(wrote, DEC);
 	VERBOSE_PRINT_P(" at 0x");
-	VERBOSE_TPRINTLN(addr - wrote, HEX);
+	VERBOSE_TPRINTLN(addr - wrote, HEX);*/
 
 	return wrote;
 
@@ -897,10 +898,10 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 	/* Note [14] */
 	TWCR = _BV(TWINT) | _BV(TWSTO) | _BV(TWEN); /* send stop condition */
 
-	VERBOSE_PRINT_P("Read ");
+	/*VERBOSE_PRINT_P("Read ");
 	VERBOSE_TPRINT(rec, DEC);
 	VERBOSE_PRINT_P(" at 0x");
-	VERBOSE_TPRINTLN(addr, HEX);
+	VERBOSE_TPRINTLN(addr, HEX);*/
 
 	return rec;
 
@@ -922,7 +923,7 @@ void nack(void)
 {
 	UCSR0B |= _BV(TXEN0);
 	loop_until_bit_is_set(UCSR0A, UDRE0);
-	UDR0 = '7';
+	UDR0 = '0';
 	loop_until_bit_is_set(UCSR0A, UDRE0);
 	UCSR0B &= ~(_BV(TXEN0));
 }
@@ -990,6 +991,7 @@ void EEPROM_24LCXX::receive_from_uart(char c)
 			if(uart_pos ==  UART_BUFFER_SIZE)
 			{
 				uart_pos = 0;
+
 				MemFile f(uart_buffer, UART_BUFFER_SIZE);
 				append_to_file(working_addr, &f);
 				ack();

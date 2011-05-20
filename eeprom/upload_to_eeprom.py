@@ -67,11 +67,8 @@ try:
             ack = os.read(tty, 1)
             if len(ack) and ( ord(ack) == 10 ):
                 ack = ''
-#                print ack
             timeout += 1
             time.sleep(0.001)
-            
-        print ord(ack)
 
         if ack != '1':
              print >> sys.stderr,  'nack'
@@ -90,7 +87,7 @@ try:
                 break
             to_send = file.read(24)
             if len(to_send) < 24:
-                for i in range(24 - len(to_send)): to_send += '\0' #padding with null chars
+                for i in range(24 - len(to_send)): to_send += ' ' #padding with spaces, null chars get parsed by the XML parser
             os.write(tty, to_send)
             rec_ack()
             progress += 24

@@ -261,8 +261,8 @@ void enc28j60Init(void)
 	// Data order MSB first
 	cbi(SPCR,DORD);
 	// switch to f/4 2X = f/2 bitrate
-	sbi(SPCR, SPR0);
-	sbi(SPCR, SPR1);
+	cbi(SPCR, SPR0);
+	cbi(SPCR, SPR1);
 	cbi(SPSR, SPI2X);
 	// enable SPI
 	sbi(SPCR, SPE);
