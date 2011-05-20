@@ -193,6 +193,7 @@ void Resource::print_transaction(Message* message)
 {
 	/*If VERBOSITY is undefined, this method should be optimizes away by the compiler.*/
 
+#if VERBOSITY
 	VERBOSE_PRINT("from: ");
 	message->from_url->print();
 	VERBOSE_PRINTLN();
@@ -201,6 +202,7 @@ void Resource::print_transaction(Message* message)
 	VERBOSE_PRINTLN();
 	message->print();
 	VERBOSE_PRINTLN();
+#endif
 }
 
 Response::status_code Resource::process( Request* request, Message** return_message )
@@ -219,7 +221,7 @@ Response::status_code Resource::process( Request* request, Message** return_mess
 		if(!strcmp("get", request->method))
 		{
 			 *return_message = http_get( request );
-			 (*return_message)->content_type = "text/html";
+			 (*return_message)->content_type = MIME::TEXT_HTML;
 		}
 #endif
 #if HTTP_HEAD
@@ -355,9 +357,8 @@ void Resource::schedule(uptime_t time)
 
 File* Resource::render( Request* request )
 {
-	return new ConstFile("o");//<html><body>There are currently no representation associated with this resource.</body></html>");
+	return new ConstFile("o");
 }
-
 Resource* Resource::get_next_child_to_visit(void)
 {
 	if(children && children_sleep_clock <= get_uptime() )
@@ -409,7 +410,6 @@ Response* Resource::error(uint16_t error, Message* message)
 		switch(error)
 		{
 			case NOT_FOUND_404:
-				//response->body_file = new ConstFile("<html><body>Not found</body></html>");
 				response->body_file = new ConstFile("?");
 				response->content_length = response->body_file->size;
 				break;

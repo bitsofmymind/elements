@@ -12,6 +12,7 @@
 #include "url.h"
 #include <utils/utils.h>
 #include <utils/file.h>
+#include "mime.h"
 
 
 #ifndef MESSAGE_SIZE
@@ -30,7 +31,6 @@ class Message
 			LINE_OVERFLOW,
 			HEADER_MALFORMED,
 			OUT_OF_MEMORY };
-
 		//General header fields
 		//static const char * CACHE_CONTROL;
 		//static const char * CONNECTION;
@@ -49,9 +49,15 @@ class Message
 		//static const char * CONTENT_LOCATION;
 		//static const char * CONTENT_MD5;
 		//static const char * CONTENT_RANGE;
-		static const char * CONTENT_TYPE;
+		static const char* CONTENT_TYPE;
 		//static const char * EXPIRES;
 		//static const char * LAST_MODIFIED;
+
+		//MIME types
+		/*static const char* APPLICATION_XHTML_XML;
+		static const char* APPLICATION_OCTET_STREAM;
+		static const char* APPLICATION_JSON;*/
+
 
 		typedef const char* mime;
 
