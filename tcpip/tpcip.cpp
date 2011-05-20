@@ -312,10 +312,9 @@ void TCPIPStack::appcall(void)
 					return;
 				}
 
-				if(response->body_file)
+				if(response->get_body())
 				{
-					s->body = response->body_file;
-					response->body_file = NULL;
+					 s->body = response->unset_body();
 				}
 				size_t sent = 0;
 				sent += s->header->read((char*)uip_appdata, uip_mss());

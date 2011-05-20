@@ -123,7 +123,7 @@ void ESerial::run(void)
 
 Response::status_code ESerial::process(Response* response, Message** return_message)
 {
-	File* body = response->body_file;
+	File* body = response->get_body();
 	print_transaction(response);
 
 	char buffer[10];

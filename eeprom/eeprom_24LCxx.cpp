@@ -489,9 +489,9 @@ Response* EEPROM_24LCXX::get_stats(Request* request)
 		val[1] = '\0';
 		t->add_arg(val, strlen(val));
 	}
-	response->body_file = t;
-	response->content_length = t->size;
-	response->content_type = MIME::APPLICATION_JSON;
+
+	response->set_body(t, MIME::APPLICATION_JSON);
+
 	return response;
 }
 
@@ -557,8 +557,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 					delete response;
 					sc = INTERNAL_SERVER_ERROR_500;
 				}
-				response->content_length = file->size;
-				response->body_file = file;
+				response->set_body( file, NULL );
 				//response->content_type = "application/xhtml+xml";
 				*return_message = response;
 				sc = OK_200;
@@ -581,7 +580,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 				}
 				if(request->content_length > 0)
 				{
-					append_to_file(addr, request->body_file);
+					append_to_file(addr, request->get_body());
 				}
 				goto get_file;
 			}
