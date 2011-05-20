@@ -144,7 +144,7 @@ Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 {
 
-	if(!body_file)
+	if(!body)
 	{
 		return 0;
 	}
@@ -154,11 +154,11 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 	char buffer;
 	uint8_t index = 0;
 
-	body_file->cursor(0);
+	body->cursor(0);
 
 	do
 	{
-		read = body_file->read(&buffer, 1);
+		read = body->read(&buffer, 1);
 
 		switch(state)
 		{

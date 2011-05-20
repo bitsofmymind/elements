@@ -255,14 +255,13 @@ Response* Resource::http_get(Request* request)
 	{
 		return NULL;
 	}
-	response->body_file = render( request );
-	if(response->body_file)
+	File* f = render( request );
+	if(f)
 	{
-		response->content_length = response->body_file->size;
+		response->set_body(f, MIME::TEXT_HTML);
 	}
 	else
 	{
-		response->content_length = 0;
 		ERROR_PRINTLN("Fail to render body");
 	}
 	return response;
@@ -410,8 +409,7 @@ Response* Resource::error(uint16_t error, Message* message)
 		switch(error)
 		{
 			case NOT_FOUND_404:
-				response->body_file = new ConstFile("?");
-				response->content_length = response->body_file->size;
+				response->set_body(new ConstFile("?"), NULL);
 				break;
 			default:
 				break;

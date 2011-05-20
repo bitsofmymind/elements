@@ -32,7 +32,7 @@ Message::Message():
 		parsing_body(false),
 		content_type(NULL)
 {
-	body_file = NULL;
+	body = NULL;
 	header_length = 0;
 	header = NULL;
 	current_line_length = 0;
@@ -51,9 +51,9 @@ Message::~Message()
 	{
 		ts_free(header);
 	}
-	if(body_file)
+	if(body)
 	{
-		delete body_file;
+		delete body;
 	}
 	if(current_line_length)
 	{
@@ -238,6 +238,27 @@ Message::PARSER_RESULT Message::parse( const char* buffer )
 	return PARSING_COMPLETE;
 }
 
+void Message::set_body(File* f, const char* mime)
+{
+	body = f;
+	content_type = mime;
+	content_length = f->size;
+}
+
+File* Message::get_body(void) const
+{
+	return body;
+}
+
+File* Message::unset_body(void)
+{
+	File* f = body;
+	body = NULL;
+	content_length = 0;
+	content_type = NULL;
+	return f;
+}
+
 Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 {
 	//Overrides of this method should have checked if the line was correcly formed
@@ -284,9 +305,9 @@ Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
 
 	if(current_line_length >= content_length)
 	{
-		body_file = new MemFile(current_line, current_line_length);
+		body = new MemFile(current_line, current_line_length);
 		current_line_length = 0;
-		if(!body_file)
+		if(!body)
 		{
 			ts_free(current_line);
 			return OUT_OF_MEMORY;

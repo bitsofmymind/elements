@@ -59,30 +59,27 @@ class Message
 		static const char* APPLICATION_JSON;*/
 
 
-		typedef const char* mime;
-
-		//Elements header fields
-		static const char* FROM_URL;
-
 		URL* to_url;
 		URL* from_url;
 
 		TYPE object_type;
 
-		File* body_file;
 		size_t content_length;
-		mime content_type;
+		const char* content_type;
 
+#if MESSAGE_AGE
+		uptime_t age;
+
+protected:
 		char*  header;
 		size_t header_length;
+
+		bool parsing_body;
 
 		char* current_line;
 		size_t current_line_length;
 
-		bool parsing_body;
-
-#if MESSAGE_AGE
-		uptime_t age;
+		File* body;
 #endif
 
 	public:
@@ -93,6 +90,10 @@ class Message
 		virtual size_t serialize( char* buffer, bool write);
 		Message::PARSER_RESULT parse(const char* buffer);
 		Message::PARSER_RESULT parse(const char* buffer, size_t size);
+
+		void set_body(File* f, const char* mime);
+		File* get_body(void) const;
+		File* unset_body(void);
 
 	protected:
 		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
