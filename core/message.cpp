@@ -344,11 +344,11 @@ Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
 
 //const char* Message::CONTENT_ENCODING = {"content-encoding", 10 };
 //const char* Message::CONTENT_LANGUAGE = {"content-language", 11 };
-const char *Message::CONTENT_LENGTH = "Content-Length";
+const char Message::CONTENT_LENGTH[] = "Content-Length";
 //const char* Message::CONTENT_LOCATION = {"content-location", 13 };
 //const char* Message::CONTENT_MD5 = {"content-md5", 14 };
 //const char* Message::CONTENT_RANGE = {"content-range", 15 };
-const char *Message::CONTENT_TYPE = "Content-Type";
+const char Message::CONTENT_TYPE[] = "Content-Type";
 //const char* Message::EXPIRES = {"expires", 17 };
 //const char* Message::LAST_MODIFIED = "Last-Modified";
 //const char* Message::FROM_URL = {"from-url", 48 };

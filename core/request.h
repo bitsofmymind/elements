@@ -20,29 +20,29 @@ class Request: public Message
 	public:
 
 		//Request header fields
-		//static const char* ACCEPT;
-		//static const char* ACCEPT_CHARSET;
-		//static const char* ACCEPT_ENCODING;
-		//static const char* ACCEPT_LANGUAGE;
-		//static const char* AUTHORIZATION;
-		//static const char* EXPECT;
-		//static const char* FROM;
-		//static const char* HOST;
-		//static const char* IF_MATCH;
-		//static const char* IF_MODIFIED_SINCE;
-		//static const char* IF_NONE_MATCH;
-		//static const char* IF_UNMODIFIED_SINCE;
-		//static const char* MAX_FORWARDS;
-		//static const char* PROXY_AUTHORIZATION;
-		//static const char* RANGE;
-		//static const char* REFERER;
-		//static const char* TE;
-		//static const char* USER_AGENT;
+		//static const char ACCEPT[];
+		//static const char ACCEPT_CHARSET[];
+		//static const char ACCEPT_ENCODING[];
+		//static const char ACCEPT_LANGUAGE[];
+		//static const char AUTHORIZATION[];
+		//static const char EXPECT[];
+		//static const char FROM[];
+		//static const char HOST[];
+		//static const char IF_MATCH[];
+		//static const char IF_MODIFIED_SINCE[];
+		//static const char IF_NONE_MATCH[];
+		//static const char IF_UNMODIFIED_SINCE[];
+		//static const char MAX_FORWARDS[];
+		//static const char PROXY_AUTHORIZATION[];
+		//static const char RANGE[];
+		//static const char REFERER[];
+		//static const char TE[];
+		//static const char USER_AGENT[];
 
 
-		static const char* GET;
-		static const char* POST;
-		static const char* DELETE;
+		static const char GET[];
+		static const char POST[];
+		static const char DELETE[];
 
 	public:
 		Request();

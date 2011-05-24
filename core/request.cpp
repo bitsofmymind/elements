@@ -219,6 +219,6 @@ bool Request::is_method(const char* m)
 //const string< uint8_t > Request::TE = {"te", 35};
 //const string< uint8_t > Request::USER_AGENT = {"user-agent", 36};
 
-const char* Request::GET = "get";
-const char* Request::POST = "post";
-const char* Request::DELETE = "delete";
+const char Request::GET[] = "get";
+const char Request::POST[] = "post";
+const char Request::DELETE[] = "delete";

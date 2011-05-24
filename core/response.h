@@ -72,16 +72,16 @@ class Response: public Message
 		#define HTTP_VERSION_NOT_SUPPORTED_503 ((5 << 5) + 5)
 
 		//Response header fields
-		//static const char* ACCEPT_RANGES;
-		//static const char* AGE;
-		//static const char* ALLOW;
-		//static const char* ETAG;
-		//static const char* LOCATION;
-		//static const char* PROXY_AUTHENTICATE;
-		//static const char* RETRY_AFTER;
-		//static const char* SERVER;
-		//static const char* VARY;
-		//static const char* WWW_AUTHENTICATE;
+		//static const char ACCEPT_RANGES[];
+		//static const char AGE[];
+		//static const char ALLOW[];
+		//static const char ETAG[];
+		//static const char LOCATION[];
+		//static const char PROXY_AUTHENTICATE[];
+		//static const char RETRY_AFTER[];
+		//static const char SERVER[];
+		//static const char VARY[];
+		//static const char WWW_AUTHENTICATE[];
 
 		status_code response_code_int;
 		Request* original_request;

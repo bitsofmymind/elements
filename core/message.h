@@ -32,32 +32,26 @@ class Message
 			HEADER_MALFORMED,
 			OUT_OF_MEMORY };
 		//General header fields
-		//static const char * CACHE_CONTROL;
-		//static const char * CONNECTION;
-		//static const char * DATE;
-		//static const char * PRAGMA;
-		//static const char * TRAILER;
-		//static const char * TRANSFER_ENCODING;
-		//static const char * UPGRADE;
-		//static const char * VIA;
-		//static const char * WARNING;
+		//static const char CACHE_CONTROL[];
+		//static const char CONNECTION[];
+		//static const char DATE[];
+		//static const char PRAGMA[];
+		//static const char TRAILER[];
+		//static const char TRANSFER_ENCODING[];
+		//static const char UPGRADE[];
+		//static const char VIA[];
+		//static const char WARNING[];
 
 		//Entity header fields
-		//static const char * CONTENT_ENCODING;
-		//static const char * CONTENT_LANGUAGE;
-		static const char* CONTENT_LENGTH;
-		//static const char * CONTENT_LOCATION;
-		//static const char * CONTENT_MD5;
-		//static const char * CONTENT_RANGE;
-		static const char* CONTENT_TYPE;
-		//static const char * EXPIRES;
-		//static const char * LAST_MODIFIED;
-
-		//MIME types
-		/*static const char* APPLICATION_XHTML_XML;
-		static const char* APPLICATION_OCTET_STREAM;
-		static const char* APPLICATION_JSON;*/
-
+		//static const char CONTENT_ENCODING[];
+		//static const char CONTENT_LANGUAGE[];
+		static const char CONTENT_LENGTH[];
+		//static const char CONTENT_LOCATION[];
+		//static const char CONTENT_MD5[];
+		//static const char CONTENT_RANGE[];
+		static const char CONTENT_TYPE[];
+		//static const char EXPIRES[];
+		//static const char LAST_MODIFIED[];
 
 		URL* to_url;
 		URL* from_url;
