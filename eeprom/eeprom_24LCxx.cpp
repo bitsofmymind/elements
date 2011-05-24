@@ -505,7 +505,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 
 	if(url->cursor == url->resources.items)
 	{
-		if(!strcmp(request->method, "get"))
+		if(request->is_method(Request::GET))
 		{
 			get:
 			*return_message = http_get(request);
@@ -515,7 +515,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 			}
 			else { sc = OK_200;	}
 		}
-		else if(!strcmp(request->method, "delete"))
+		else if(request->is_method(Request::DELETE))
 		{
 			format_file_system();
 			goto get;
@@ -526,7 +526,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 	{
 		uint16_t addr;
 
-		if(!strcmp(request->method, "get"))
+		if(request->is_method(Request::GET))
 		{
 			if(!strcmp(url->resources[url->cursor], "stats"))
 			{
@@ -564,7 +564,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 			}
 
 		}
-		else if(!strcmp(request->method, "post"))
+		else if(request->is_method(Request::POST))
 		{
 
 			find_file(url->resources[url->cursor], &addr);
@@ -578,14 +578,14 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 				{
 					find_file(url->resources[url->cursor], &addr);
 				}
-				if(request->content_length > 0)
+				if(request->get_body())
 				{
 					append_to_file(addr, request->get_body());
 				}
 				goto get_file;
 			}
 		}
-		else if(!strcmp(request->method, "delete"))
+		else if(request->is_method(Request::DELETE))
 		{
 			find_file(url->resources[url->cursor], &addr);
 			if(addr)

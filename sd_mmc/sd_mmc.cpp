@@ -424,7 +424,7 @@ Response::status_code SDMMC::process( Request* request, Message** return_message
 		uint8_t len  = 0;
 		URL* url = request->to_url;
 
-		if(strcmp(request->method, "get"))
+		if(!request->is_method(Request::GET))
 		{
 			return NOT_IMPLEMENTED_501;
 		}

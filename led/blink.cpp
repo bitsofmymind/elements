@@ -101,7 +101,7 @@ Response::status_code Blinker::process( Request* request, Message** return_messa
 
 	if(sc == NOT_IMPLEMENTED_501)
 	{
-		if(!strcmp(request->method, "post"))
+		if(request->is_method(Request::POST))
 		{
 			char buffer[8];
 			uint8_t len = request->find_arg("i", buffer, 7);
