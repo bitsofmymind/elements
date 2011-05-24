@@ -283,7 +283,7 @@ Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 	if(!strncmp(CONTENT_LENGTH, line, 14)) //Could use memcmp
 	{
 		size_t content_length = atoi(line + 14 +/*strlen(CONTENT_LENGTH)*/ + 2);
-		body = new MemFile(NULL, content_length);
+		body = new MemFile(NULL, content_length, false);
 		if(!body)
 		{
 			ts_free(current_line);

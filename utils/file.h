@@ -39,27 +39,17 @@ class File
 		virtual void cursor(size_t val);
 };
 
-class ConstFile: public File
+class MemFile: public File
 {
 
 	protected:
-		const char* data;
-	public:
-		ConstFile(const char* data);
-		ConstFile(const char* data, size_t length);
-
-		virtual size_t read(char* buffer, size_t length);
-		virtual size_t write(const char* buffer, size_t length);
-};
-
-class MemFile: public File
-{
+		bool is_const;
 
 	public:
 		char* data;
 	public:
-		MemFile(char* data);
-		MemFile(char* data, size_t length);
+		MemFile(char* data, bool is_const);
+		MemFile(char* data, size_t length, bool is_const);
 
 		virtual ~MemFile();
 

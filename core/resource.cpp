@@ -356,7 +356,7 @@ void Resource::schedule(uptime_t time)
 
 File* Resource::render( Request* request )
 {
-	return new ConstFile("o");
+	return new MemFile("o", true);
 }
 Resource* Resource::get_next_child_to_visit(void)
 {
@@ -409,7 +409,7 @@ Response* Resource::error(uint16_t error, Message* message)
 		switch(error)
 		{
 			case NOT_FOUND_404:
-				response->set_body(new ConstFile("?"), NULL);
+				response->set_body(new MemFile("?", true), NULL);
 				break;
 			default:
 				break;

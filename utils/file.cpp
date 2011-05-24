@@ -42,43 +42,18 @@ void File::cursor(size_t val)
 	_cursor = val;
 }
 
-ConstFile::ConstFile(const char* data):
-	data(data)
+
+MemFile::MemFile(char* data, bool is_const):
+	data(data),
+	is_const(is_const)
 {
 	File::size = strlen(data);
 	File::_cursor = 0;
+
 }
-
-ConstFile::ConstFile(const char* data, size_t length):
-	data(data)
-{
-	File::size = length;
-	File::_cursor = 0;
-}
-
-
-size_t ConstFile::read(char* buffer, size_t length)
-{
-	size_t i = 0;
-	for(; i < length && File::_cursor < File::size; File::_cursor++, i++)
-	{
-		buffer[i] = data[File::_cursor];
-	}
-	return i;
-}
- size_t ConstFile::write(const char* buffer, size_t length) { return 0; }
-
-
-MemFile::MemFile(char* data):
-	data(data)
-{
-	File::size = strlen(data);
-	File::_cursor = 0;
-}
-
-
-MemFile::MemFile(char* data, size_t length):
-	data(data)
+MemFile::MemFile(char* data, size_t length, bool is_const ):
+	data(data),
+	is_const(is_const)
 {
 	File::size = length;
 	File::_cursor = 0;
@@ -86,9 +61,8 @@ MemFile::MemFile(char* data, size_t length):
 
 MemFile::~MemFile(void)
 {
-	ts_free(data);
+	if(!is_const){ ts_free(data); }
 }
-
 
 size_t MemFile::read(char* buffer, size_t length)
 {
@@ -101,6 +75,8 @@ size_t MemFile::read(char* buffer, size_t length)
 }
  size_t MemFile::write(const char* buffer, size_t length)
 {
+	if(is_const){ return 0; }
+
 	size_t i = 0;
 	for(; i < length && File::_cursor < File::size; File::_cursor++, i++)
 	{
