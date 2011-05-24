@@ -25,7 +25,8 @@ void Response::print(void)
 	DEBUG_PRINT("% Response: ");
 	DEBUG_PRINT(" HTTP/1.0");
 	DEBUG_TPRINT(' ', BYTE);
-	DEBUG_TPRINTLN(response_code_int, DEC);
+	DEBUG_TPRINT(response_code_int >> 5, DEC);
+	DEBUG_TPRINTLN(response_code_int & 0b00011111, DEC);
 	if(content_type)
 	{
 		DEBUG_PRINT("Content-Type: ");
@@ -36,7 +37,7 @@ void Response::print(void)
 
 
 Response::Response(
-		const uint16_t _response_code,
+		const status_code _response_code,
 		Request* _original_request = NULL ):
 			Message(),
 			response_code_int(_response_code),
@@ -96,7 +97,8 @@ Response::~Response()
 			{
 				if( *index == ' ' )
 				{
-					response_code_int = atoi(++index);
+					response_code_int = (*(++index) - 48) << 5;
+					response_code_int += atoi(index);
 					break;
 				}
 				else if (index > (header + header_length))
@@ -128,15 +130,17 @@ size_t Response::serialize( char* buffer, bool write)
 		*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
 		*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '0';
 		*buffer++ = ' ';
+		uint16_t rc = ( response_code_int >> 5 ) * 100 + ( response_code_int & 0b00011111 );
 #if ITOA
-		itoa(response_code_int, buffer, 10);
+		itoa(rc, buffer, 10);
+
 #else
-		sprintf(buffer, "%d", response_code_int);
+		sprintf(buffer, "%d", rc);
 #endif
 	}
 	else { buffer += 9; }
 
-	buffer += 3; //Moved the pointer after the response code
+	buffer += 3; //Moved the pointer after the last part of the response code
 
 	if( write )
 	{
