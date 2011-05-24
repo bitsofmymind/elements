@@ -16,6 +16,7 @@
 GenericList::GenericList( void )
 {
 	items = 0;
+	memset(list, 0, sizeof(list));
 }
 
 int8_t GenericList::append(void* item)
@@ -182,41 +183,6 @@ void GenericDictionary::compact()
 	}
 }
 
-GenericQueue::GenericQueue( void )
-{
-	start = 0;
-	items = 0;
-}
-
-int8_t GenericQueue::queue(void* object)
-{
-	if(items == CAPACITY){ return 1; }
-
-	if(start + items >= CAPACITY){ list[start + items - CAPACITY] = object;}
-	else { list[start + items] = object; }
-	//list[(start + items) % CAPACITY ] = object;
-	items++;
-	return 0;
-}
-
-void* GenericQueue::dequeue(void)
-{
-	if(items == 0) { return NULL; }
-	items--;
-	if(start == CAPACITY - 1)
-	{
-		start = 0;
-		return list[CAPACITY - 1];
-	}
-	start++;
-	return list[start - 1];
-}
-
-void* GenericQueue::peek(void)
-{
-	if(items == 0) { return NULL; }
-	return list[start];
-}
 
 GenericLinkedList::GenericLinkedList():
 		start(NULL)

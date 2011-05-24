@@ -88,23 +88,7 @@ template< class T> class Dictionary: public GenericDictionary
 		//virtual T* operator[]( char* key );
 };
 
-class GenericQueue
-{
-	protected:
-		void* list[CAPACITY];
-		uint8_t start;
-	public:
-		uint8_t items;
-
-		GenericQueue();
-
-		int8_t queue( void* object );
-		void* dequeue( void );
-		void* peek( void );
-
-};
-
-template< class T > class Queue: public GenericQueue
+template< class T > class Queue: public List<T>
 {
 	public:
 		int8_t queue( T object );
@@ -200,20 +184,20 @@ key_value_pair<T>* Dictionary<T>::operator[](uint8_t i)
 template< class T>
 int8_t Queue<T>::queue(T object)
 {
-	return this->GenericQueue::queue( (void*)object );
+	return List<T>::insert( object, List<T>::items );
 }
 
 
 template< class T>
 T Queue<T>::dequeue(void)
 {
-	return (T)this->GenericQueue::dequeue( );
+	return List<T>::remove(0);
 }
 
 template< class T>
 T Queue<T>::peek(void)
 {
-	return (T)this->GenericQueue::peek( );
+	return (T)List<T>::list[0];
 }
 
 
