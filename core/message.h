@@ -64,7 +64,6 @@ class Message
 
 		TYPE object_type;
 
-		size_t content_length;
 		const char* content_type;
 
 #if MESSAGE_AGE

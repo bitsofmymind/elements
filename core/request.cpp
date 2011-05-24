@@ -21,10 +21,7 @@ Request::Request():
 	to_url = new URL();
 	from_url = new URL();
 	object_type = REQUEST;
-
 	method = NULL;
-	method_length = 0;
-
 }
 
 Request::~Request()
@@ -107,7 +104,6 @@ Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 			if( *index == ' ' )
 			{
 				method = header;
-				method_length = index - header;
 				*index = '\0';
 				break;
 			}
@@ -199,6 +195,11 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 	return 0;
 }
 #endif
+
+bool Request::is_method(const char* m)
+{
+	return !strcmp(method, m);
+}
 //const string< uint8_t > Request::ACCEPT = {"accept", 19};
 //const string< uint8_t > Request::ACCEPT_CHARSET = {"accept-string< uint8_t >set", 20};
 //const string< uint8_t > Request::ACCEPT_ENCODING = {"accept-encoding", 21};
@@ -217,3 +218,7 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 //const string< uint8_t > Request::REFERER = {"referer", 34};
 //const string< uint8_t > Request::TE = {"te", 35};
 //const string< uint8_t > Request::USER_AGENT = {"user-agent", 36};
+
+const char* Request::GET = "get";
+const char* Request::POST = "post";
+const char* Request::DELETE = "delete";

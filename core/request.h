@@ -16,6 +16,7 @@ class Request: public Message
 {
 	protected:
 		static const Message::TYPE type = REQUEST;
+		const char* method;
 	public:
 
 		//Request header fields
@@ -38,8 +39,10 @@ class Request: public Message
 		//static const char* TE;
 		//static const char* USER_AGENT;
 
-		const char* method;
-		uint8_t method_length;
+
+		static const char* GET;
+		static const char* POST;
+		static const char* DELETE;
 
 	public:
 		Request();
@@ -50,8 +53,9 @@ class Request: public Message
 		virtual size_t serialize( char* buffer, bool write );
 #endif
 #if BODY_ARGS_PARSING
-			uint8_t find_arg(const char* key, char* value, uint8_t max_size);
+		uint8_t find_arg(const char* key, char* value, uint8_t max_size);
 #endif
+		bool is_method(const char* m);
 
 	protected:
 		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);

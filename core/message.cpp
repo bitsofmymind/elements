@@ -21,14 +21,19 @@ void Message::print()
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
 	 * this method should be optimizes away by the compiler.*/
-
 	DEBUG_PRINT("Content-Length: ");
-	DEBUG_TPRINTLN(content_length, DEC);
+	if(body)
+	{
+		DEBUG_TPRINTLN(body->size, DEC);
+	}
+	else
+	{
+		DEBUG_PRINTLN('0');
+	}
 }
 
 
 Message::Message():
-		content_length(0),
 		parsing_body(false),
 		content_type(NULL)
 {
@@ -66,7 +71,6 @@ size_t Message::serialize( char* buffer, bool write )
 {
 	char* start = buffer;
 
-
 	if( write ){ strcpy( buffer, CONTENT_LENGTH ); }
 	buffer += 14; //strlen(CONTENT_LENGTH);
 	if( write )
@@ -76,16 +80,26 @@ size_t Message::serialize( char* buffer, bool write )
 	}
 	buffer += 2;
 
+	size_t cl;
+	if(body)
+	{
+		cl = body->size;
+	}
+	else
+	{
+		cl = 0;
+	}
+
 	if( write )
 	{
 #if ITOA
-		itoa(content_length, buffer, 10);
+		itoa(cl, buffer, 10);
 #else
-		sprintf(buffer, "%d", content_length);
+		sprintf(buffer, "%d", cl);
 #endif
 	}
 
-	size_t cl = content_length;
+
 	do
 	{
 		buffer++;
@@ -100,7 +114,6 @@ size_t Message::serialize( char* buffer, bool write )
 	buffer += 2;
 
 
-
 	//Serialize other fields here
 
 	if( write )
@@ -108,7 +121,7 @@ size_t Message::serialize( char* buffer, bool write )
 		*buffer = '\r';
 		*(buffer + 1) = '\n';
 	}
-	buffer+=2;
+	buffer += 2;
 
 	return buffer - start;
 }
@@ -242,7 +255,6 @@ void Message::set_body(File* f, const char* mime)
 {
 	body = f;
 	content_type = mime;
-	content_length = f->size;
 }
 
 File* Message::get_body(void) const
@@ -254,7 +266,6 @@ File* Message::unset_body(void)
 {
 	File* f = body;
 	body = NULL;
-	content_length = 0;
 	content_type = NULL;
 	return f;
 }
@@ -271,7 +282,13 @@ Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 	 * and store them in a buffer.*/
 	if(!strncmp(CONTENT_LENGTH, line, 14)) //Could use memcmp
 	{
-		content_length = atoi(line + 14 +/*strlen(CONTENT_LENGTH)*/ + 2);
+		size_t content_length = atoi(line + 14 +/*strlen(CONTENT_LENGTH)*/ + 2);
+		body = new MemFile(NULL, content_length);
+		if(!body)
+		{
+			ts_free(current_line);
+			return OUT_OF_MEMORY;
+		}
 	}
 
 	//Store fields in buffers
@@ -281,37 +298,32 @@ Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 
 Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
 {
+	if(!body){	return PARSING_COMPLETE; }
 
-	if(!content_length)
-	{
-		return PARSING_COMPLETE;
-	}
+	size_t cl = body->size;
+
 	if(!current_line_length)
 	{
-		current_line = (char*)ts_malloc(content_length);
+		current_line = (char*)ts_malloc(cl);
 		if(!current_line)
 		{
 			return OUT_OF_MEMORY;
 		}
 	}
 
-	if(size > content_length - current_line_length)
+	if(size > cl - current_line_length)
 	{
-		size = content_length - current_line_length;
+		size = cl - current_line_length;
 	}
 
 	memcpy(current_line + current_line_length, buffer, size);
 	current_line_length += size;
 
-	if(current_line_length >= content_length)
+	if(current_line_length >= cl)
 	{
-		body = new MemFile(current_line, current_line_length);
+		((MemFile*)body)->data = current_line;
+
 		current_line_length = 0;
-		if(!body)
-		{
-			ts_free(current_line);
-			return OUT_OF_MEMORY;
-		}
 
 		return PARSING_COMPLETE;
 	}

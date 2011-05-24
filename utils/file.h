@@ -55,7 +55,7 @@ class ConstFile: public File
 class MemFile: public File
 {
 
-	protected:
+	public:
 		char* data;
 	public:
 		MemFile(char* data);

@@ -218,20 +218,20 @@ Response::status_code Resource::process( Request* request, Message** return_mess
 	if(request->to_url->cursor >=  request->to_url->resources.items)
 	{
 #if HTTP_GET
-		if(!strcmp("get", request->method))
+		if(request->is_method(Request::GET))
 		{
 			 *return_message = http_get( request );
 			 (*return_message)->content_type = MIME::TEXT_HTML;
 		}
 #endif
 #if HTTP_HEAD
-		else if(!strcmp("head" request->method))
+		else if(request->is_method(Request::HEAD))
 		{
 			*return_message = http_head( request );
 		}
 #endif
 #if HTTP_TRACE
-		else if(!strcmp("trace" request->method))
+		else if(request->is_method(Request::TRACE))
 		{
 			*return_message = http_trace( request );
 		}

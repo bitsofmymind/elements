@@ -86,9 +86,6 @@ class Response: public Message
 		uint16_t response_code_int;
 		Request* original_request;
 
-	private:
-		static const Message::TYPE type = RESPONSE;
-
 	public:
 		Response( const uint16_t response_code,	Request* request );
 		~Response();
