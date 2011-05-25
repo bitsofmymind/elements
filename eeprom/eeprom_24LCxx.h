@@ -64,10 +64,10 @@ class EEPROM_24LCXX: public Resource
 		uint8_t write(uint16_t addr, uint8_t len);
 		uint8_t read(uint16_t addr, uint8_t len);
 #if UPLOAD_FROM_WEB
-		Response* http_get(Request* request);
+		File* http_get(void);
 #endif
-		Response* get_stats(Request* request);
-		virtual Response::status_code process( Request* request, Message** return_message );
+		File* get_stats(void);
+		virtual Response::status_code process( Request* request, File** return_body, const char** mime );
 
 };
 

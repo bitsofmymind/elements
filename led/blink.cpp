@@ -55,7 +55,7 @@ void Blinker::run(void)
 
 static char content_P[] PROGMEM = CONTENT;
 
-File* Blinker::render( Request* request )
+File* Blinker::http_get( void )
 {
 	File* f = new PGMSpaceFile(content_P, CONTENT_SIZE);
 	if(!f)
@@ -95,42 +95,47 @@ File* Blinker::render( Request* request )
 
 }
 
-Response::status_code Blinker::process( Request* request, Message** return_message )
+Response::status_code Blinker::process( Request* request, File** return_body, const char** mime )
 {
-	Response::status_code sc = Resource::process(request, return_message);
-
-	if(sc == NOT_IMPLEMENTED_501)
+	if(request->is_method(Request::POST))
 	{
-		if(request->is_method(Request::POST))
+		char buffer[8];
+		uint8_t len = request->find_arg("i", buffer, 7);
+		if(len)
 		{
-			char buffer[8];
-			uint8_t len = request->find_arg("i", buffer, 7);
-			if(len)
-			{
-				buffer[len] = '\0';
-				_interval = atoi(buffer);
-			}
-
-			len = request->find_arg("st", buffer, 1);
-
-			if(len)
-			{
-				if(buffer[0] == '1')
-				{
-					state = true;
-				}
-				else if(buffer[0] == '0')
-				{
-					state = false;
-				}
-			}
-
-			*return_message = http_get( request );
-			(*return_message)->content_type = "text/html";
+			buffer[len] = '\0';
+			_interval = atoi(buffer);
 		}
+
+		len = request->find_arg("st", buffer, 1);
+
+		if(len)
+		{
+			if(buffer[0] == '1')
+			{
+				state = true;
+			}
+			else if(buffer[0] == '0')
+			{
+				state = false;
+			}
+		}
+		goto get;
+	}
+	else if(request->is_method(Request::GET))
+	{
+		get:
+		File* f = http_get();
+		if(!f)
+		{
+			return INTERNAL_SERVER_ERROR_500;
+		}
+		*return_body = f;
+		*mime = MIME::TEXT_HTML;
+		return OK_200;
 	}
 
-	return sc;
+	return NOT_IMPLEMENTED_501;
 }
 
 

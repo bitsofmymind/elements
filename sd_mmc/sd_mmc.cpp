@@ -415,86 +415,74 @@ SDMMC::SDMMC(void):
 	initialization so calling it will take care of booting our disk.*/
 }
 
-Response::status_code SDMMC::process( Request* request, Message** return_message )
+Response::status_code SDMMC::process( Request* request, File** return_body, const char** mime )
 {
-	Response::status_code sc = Resource::process(request, return_message);
+	Response::status_code sc;
+	uint8_t len  = 0;
+	URL* url = request->to_url;
 
-	if(sc == PASS_308)
+	if(!request->is_method(Request::GET))
 	{
-		uint8_t len  = 0;
-		URL* url = request->to_url;
+		return NOT_IMPLEMENTED_501;
+	}
+	//possible optimization: pass the url object to FILE_FAT object directly.
+	for( uint8_t i = url->cursor; i < url->resources.items; i++)
+	{
+		len += strlen(url->resources[i]) + 1; // for '/'
+	}
 
-		if(!request->is_method(Request::GET))
-		{
-			return NOT_IMPLEMENTED_501;
-		}
-		//possible optimization: pass the url object to FILE_FAT object directly.
-		for( uint8_t i = url->cursor; i < url->resources.items; i++)
-		{
-			len += strlen(url->resources[i]) + 1; // for '/'
-		}
+	char* path = (char*)ts_malloc(len + 1);
 
-		char* path = (char*)ts_malloc(len + 1);
+	if(!path)
+	{
+		//Critical error, there is no memory left.
+	}
+	for(uint8_t i = url->cursor, pos = 0; i < url->resources.items; i++)
+	{
+		path[pos++] = '/';
+		memcpy((void*)(path  + pos), url->resources[i], strlen(url->resources[i]));
+		pos += strlen(url->resources[i]);
+	}
 
-		if(!path)
-		{
-			//Critical error, there is no memory left.
-		}
-		for(uint8_t i = url->cursor, pos = 0; i < url->resources.items; i++)
-		{
-			path[pos++] = '/';
-			memcpy((void*)(path  + pos), url->resources[i], strlen(url->resources[i]));
-			pos += strlen(url->resources[i]);
-		}
+	path[len] = '\0';
 
-		path[len] = '\0';
-
-		if(Stat)
+	if(Stat)
+	{
+		//No disk present, disk not initialized of failed to initialize
+		ts_free(path);
+		sc = INTERNAL_SERVER_ERROR_500;
+	}
+	else
+	{
+		//Response* response;
+		FATFile* file = new FATFile(path);
+		VERBOSE_PRINT_P("Fetching ");
+		VERBOSE_PRINTLN(path);
+		if(!file)
 		{
-			//No disk present, disk not initialized of failed to initialize
-			ts_free(path);
 			sc = INTERNAL_SERVER_ERROR_500;
+		}
+		else if(file->last_op_result == FR_OK)
+		{
+			*mime = MIME::TEXT_HTML;
+			*return_body = file;
+			sc = OK_200;
 		}
 		else
 		{
-			//Response* response;
-			FATFile* file = new FATFile(path);
-			VERBOSE_PRINT_P("Fetching ");
-			VERBOSE_PRINTLN(path);
-			if(!file)
+
+			if(file->last_op_result == FR_NO_FILE || file->last_op_result == FR_NO_PATH)
 			{
-				//Critical error
-				//Debug::println("Alloc failed");
-			}
-			if(file->last_op_result == FR_OK)
-			{
-				Response* response =  new Response(OK_200, request );
-				if(!response)
-				{
-					return NULL;
-				}
-				//response->body = render( request );
-				response->set_body(file, MIME::TEXT_HTML);
-				*return_message = response;
-				sc = OK_200;
+				sc = NOT_FOUND_404;
 			}
 			else
 			{
+				ERROR_PRINT_P("error opening file ");
+				ERROR_NPRINTLN(file->last_op_result, DEC);
 
-				if(file->last_op_result == FR_NO_FILE || file->last_op_result == FR_NO_PATH)
-				{
-					sc = NOT_FOUND_404;
-				}
-				else
-				{
-					ERROR_PRINT_P("error opening file ");
-					ERROR_NPRINTLN(file->last_op_result, DEC);
-
-					sc = INTERNAL_SERVER_ERROR_500;
-				}
-				delete file;
+				sc = INTERNAL_SERVER_ERROR_500;
 			}
-
+			delete file;
 		}
 
 	}

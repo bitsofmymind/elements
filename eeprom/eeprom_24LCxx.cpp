@@ -372,22 +372,9 @@ uint8_t EEPROM_24LCXX::delete_file(uint16_t addr)
 
 static char content_P[] PROGMEM = CONTENT;
 
-Response* EEPROM_24LCXX::http_get(Request* request)
+File* EEPROM_24LCXX::http_get(void)
 {
-	Response* response = new Response(OK_200, request);
-	if(!response) {	return NULL; }
-
-	File* f = new PGMSpaceFile(content_P, CONTENT_SIZE);
-	if(!f)
-	{
-		response->original_request = NULL;
-		delete response;
-		return NULL;
-	}
-	response->body_file = f;
-	response->content_length = f->size;
-	response->content_type = Message::APPLICATION_XHTML_XML;
-	return response;
+	return new PGMSpaceFile(content_P, CONTENT_SIZE);
 }
 #endif
 
@@ -397,25 +384,18 @@ Response* EEPROM_24LCXX::http_get(Request* request)
 
 static char stats_P[] PROGMEM = STATS;
 
-Response* EEPROM_24LCXX::get_stats(Request* request)
+File* EEPROM_24LCXX::get_stats(void)
 {
-	Response* response = new Response(OK_200, request);
-	if(!response) {	return NULL; }
-
 	File* f = new PGMSpaceFile(stats_P, STATS_SIZE);
 	if(!f)
 	{
-		response->original_request = NULL;
-		delete response;
 		return NULL;
 	}
 
 	Template* t = new Template(f);
 	if(!t)
 	{
-		response->original_request = NULL;
 		delete f;
-		delete response;
 		return NULL;
 	}
 
@@ -425,10 +405,8 @@ Response* EEPROM_24LCXX::get_stats(Request* request)
 	val = (char*)ts_malloc(6);
 	if(!val)
 	{
-		response->original_request = NULL;
 		delete f;
 		delete t;
-		delete response;
 		return NULL;
 	}
 	itoa(fs->space_used, val, 10);
@@ -450,10 +428,8 @@ Response* EEPROM_24LCXX::get_stats(Request* request)
 			val = (char*)ts_malloc(2);
 			if(!val)
 			{
-				response->original_request = NULL;
 				delete f;
 				delete t;
-				delete response;
 				return NULL;
 			}
 			val[0] = ' ';
@@ -479,10 +455,8 @@ Response* EEPROM_24LCXX::get_stats(Request* request)
 		val = (char*)ts_malloc(2);
 		if(!val)
 		{
-			response->original_request = NULL;
 			delete f;
 			delete t;
-			delete response;
 			return NULL;
 		}
 		val[0] = ' ';
@@ -490,12 +464,10 @@ Response* EEPROM_24LCXX::get_stats(Request* request)
 		t->add_arg(val, strlen(val));
 	}
 
-	response->set_body(t, MIME::APPLICATION_JSON);
-
-	return response;
+	return t;
 }
 
-Response::status_code EEPROM_24LCXX::process( Request* request, Message** return_message )
+Response::status_code EEPROM_24LCXX::process( Request* request, File** return_body, const char** mime )
 {
 
 	print_transaction(request);
@@ -511,25 +483,20 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 #if UPLOAD_FROM_WEB
 			goto get;
 #else
-			Response* r = new Response(OK_200, request);
-			if(!r)
-			{
-				sc = INTERNAL_SERVER_ERROR_500;
-			}
-			else { sc = OK_200;	}
-			*return_message = r;
+			sc = OK_200;
 #endif
 		}
 #if UPLOAD_FROM_WEB
 		if(request->is_method(Request::GET))
 		{
 			get:
-			*return_message = http_get(request);
-			if(!*return_message)
+			*return_body = http_get(request);
+			if(!*return_body)
 			{
 				sc = INTERNAL_SERVER_ERROR_500;
 			}
 			else { sc = OK_200;	}
+			*mime = MIME::TEXT/HTML;
 		}
 #endif
 		else { sc = NOT_IMPLEMENTED_501; }
@@ -542,12 +509,14 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 		{
 			if(!strcmp(url->resources[url->cursor], "stats"))
 			{
-				*return_message = get_stats(request);
-				if(!*return_message)
+				File* f = get_stats();
+				if(!f)
 				{
 					sc = INTERNAL_SERVER_ERROR_500;
 				}
 				else { sc = OK_200;	}
+				*mime = MIME::APPLICATION_JSON;
+				*return_body = f;
 				return sc;
 			}
 
@@ -559,22 +528,14 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 			}
 			else
 			{
-				Response* response = new Response(OK_200, request);
-				if(!response) {	return INTERNAL_SERVER_ERROR_500; }
-
 				File* file = new EEPROMFile(this, addr + FILE_ENTRY_SIZE, ((file_entry*)page_buffer)->size);
 				if(!file)
 				{
-					response->original_request = NULL;
-					delete response;
 					sc = INTERNAL_SERVER_ERROR_500;
 				}
-				response->set_body( file, NULL );
-				//response->content_type = "application/xhtml+xml";
-				*return_message = response;
-				sc = OK_200;
+				else { sc = OK_200; }
+				*return_body = file;
 			}
-
 		}
 		else if(request->is_method(Request::POST))
 		{
