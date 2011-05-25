@@ -57,7 +57,6 @@ class Resource
 #endif
 		void schedule(volatile uptime_t* timer, uptime_t time );
         void schedule(uptime_t time);
-		virtual File* render( Request* request );
         Response* error(uint16_t error, Message* message);
         void print_transaction(Message* message);
 

@@ -207,89 +207,13 @@ void Resource::print_transaction(Message* message)
 
 Response::status_code Resource::process( Request* request, Message** return_message )
 {
-
-#if VERBOSITY
-	if(request->to_url->cursor < request->to_url->resources.items)
-	{
-		print_transaction(request);
-	}
-#endif
-
 	if(request->to_url->cursor >=  request->to_url->resources.items)
 	{
-#if HTTP_GET
-		if(request->is_method(Request::GET))
-		{
-			 *return_message = http_get( request );
-			 (*return_message)->content_type = MIME::TEXT_HTML;
-		}
-#endif
-#if HTTP_HEAD
-		else if(request->is_method(Request::HEAD))
-		{
-			*return_message = http_head( request );
-		}
-#endif
-#if HTTP_TRACE
-		else if(request->is_method(Request::TRACE))
-		{
-			*return_message = http_trace( request );
-		}
-#endif
-		else
-		{
-			return NOT_IMPLEMENTED_501;
-		}
-
-		return ((Response*)(*return_message))->response_code_int;
+		print_transaction(request);
+		return NOT_IMPLEMENTED_501;
 	}
-
 	return PASS_308;
-
 }
-#if HTTP_GET
-Response* Resource::http_get(Request* request)
-{
-	Response* response =  new Response(OK_200, request );
-	if(!response)
-	{
-		return NULL;
-	}
-	File* f = render( request );
-	if(f)
-	{
-		response->set_body(f, MIME::TEXT_HTML);
-	}
-	else
-	{
-		ERROR_PRINTLN("Fail to render body");
-	}
-	return response;
-}
-#endif
-#if HTTP_HEAD
-Response* Resource::http_head(Request* request)
-{
-	Response* response =  new Response(OK_200, request );
-	if(!response)
-	{
-		return NULL;
-	}
-	//response->body = render( request );
-	response->content_type = &Message::TEXT_HTML;
-	return response;
-}
-#endif
-#if HTTP_TRACE
-Response* Resource::http_trace( Request* request )
-{
-	Response* response = new Response(OK_200, request );
-	//request->Message::serialize();
-	//response->body = request->message;
-	response->content_type = "message/http";
-	return response;
-}
-#endif
 
 Response::status_code Resource::process(Response* response, Message** return_message)
 {
@@ -354,10 +278,6 @@ void Resource::schedule(uptime_t time)
 	schedule(&own_sleep_clock, time);
 }
 
-File* Resource::render( Request* request )
-{
-	return new MemFile("o", true);
-}
 Resource* Resource::get_next_child_to_visit(void)
 {
 	if(children && children_sleep_clock <= get_uptime() )
