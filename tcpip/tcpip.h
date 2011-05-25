@@ -27,7 +27,7 @@ class TCPIPStack: public Resource
 		virtual void run(void);
 		void appcall(void);
 
-		virtual Response::status_code process(Response* response, Message** return_message);
+		virtual Response::status_code process(Response* response);
 	protected:
 		void printip(uip_ipaddr_t addr);
 		void printip(uip_ipaddr_t addr, uint16_t port);

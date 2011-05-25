@@ -342,7 +342,7 @@ void elements_appcall(void)
 	stack->appcall();
 }
 
-Response::status_code TCPIPStack::process(Response* response, Message** return_message)
+Response::status_code TCPIPStack::process(Response* response)
 {
 
 	if(response->to_url->cursor >=  response->to_url->resources.items)
