@@ -410,7 +410,7 @@ File* EEPROM_24LCXX::get_stats(void)
 		return NULL;
 	}
 	itoa(fs->space_used, val, 10);
-	t->add_arg(val, strlen(val));
+	t->add_arg(val);
 
 	if(fs->number_of_files)
 	{
@@ -448,7 +448,7 @@ File* EEPROM_24LCXX::get_stats(void)
 			}
 			val[size - 1] = '\0';
 		}
-		t->add_arg(val, strlen(val));
+		t->add_arg(val);
 	}
 	else
 	{
@@ -461,7 +461,7 @@ File* EEPROM_24LCXX::get_stats(void)
 		}
 		val[0] = ' ';
 		val[1] = '\0';
-		t->add_arg(val, strlen(val));
+		t->add_arg(val);
 	}
 
 	return t;
