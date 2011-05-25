@@ -63,7 +63,6 @@ Message* Resource::dispatch( Message* message )
 				{
 					return parent->dispatch(message);
 				}
-				return error(404, message);
 			}
 			if(name[1] == '\0')
 			{
@@ -77,12 +76,12 @@ Message* Resource::dispatch( Message* message )
 
 
 	Response::status_code sc;
-	Message* return_message = NULL;
+	File* return_body = NULL;
+	const char * mime = NULL;
 
 	if(message->object_type == Message::REQUEST)
 	{
-
-		sc = process((Request*)message, &return_message);
+		sc = process((Request*)message, &return_body, &mime);
 	}
 	else
 	{
@@ -92,8 +91,7 @@ Message* Resource::dispatch( Message* message )
 
 	switch(sc)
 	{
-		case OK_200:
-			break;
+		case RESPONSE_DELAYED_102: break;
 		case PASS_308:
 			if(children)
 			{
@@ -107,16 +105,31 @@ Message* Resource::dispatch( Message* message )
 				}
 			}
 			sc = NOT_FOUND_404;
-			return_message = NULL;
 			//No break here
 		default:
-			if(!return_message)
+			if(message->object_type == Message::REQUEST)
 			{
-				//PROBLEM! = Message is not necessarily a Request
-				return_message = error(sc, (Request*)message);
+				Response* response = new Response(sc, (Request*)message);
+				if(!response)
+				{
+					delete return_body;
+					break;
+				}
+				if(return_body)
+				{
+					response->set_body(return_body, mime);
+				}
+				return response;
+			}
+			else
+			{
+				delete message;
+				/*Responses are not forwarded unless the response code was PASS_308. In case
+				 * Resource::process(Response*) returned a pass and the next resource is not found,
+				 * the response is also deleted.*/
 			}
 	}
-	return return_message;
+	return NULL;
 }
 
 uint8_t Resource::send(Message* message)
@@ -205,7 +218,7 @@ void Resource::print_transaction(Message* message)
 #endif
 }
 
-Response::status_code Resource::process( Request* request, Message** return_message )
+Response::status_code Resource::process( Request* request, File** return_body, const char** mime )
 {
 	if(request->to_url->cursor >=  request->to_url->resources.items)
 	{
@@ -217,12 +230,11 @@ Response::status_code Resource::process( Request* request, Message** return_mess
 
 Response::status_code Resource::process(Response* response)
 {
-#if VERBOSITY
 	if(response->to_url->cursor >=  response->to_url->resources.items)
 	{
 		print_transaction(response);
+		return OK_200;
 	}
-#endif
 	return PASS_308;
 }
 
@@ -311,30 +323,5 @@ Resource* Resource::get_next_child_to_visit(void)
 		}
 	}
 
-	return NULL;
-}
-
-Response* Resource::error(uint16_t error, Message* message)
-{
-
-	if( message->object_type == Message::REQUEST )
-	{
-
-		Response* response = new Response(error, (Request*)message);
-		if(!response)
-		{
-			//Memory could not be allocated for the response
-			return NULL;
-		}
-		switch(error)
-		{
-			case NOT_FOUND_404:
-				response->set_body(new MemFile("?", true), NULL);
-				break;
-			default:
-				break;
-		}
-		return response;
-	}
 	return NULL;
 }

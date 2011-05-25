@@ -44,7 +44,7 @@ class Resource
 		virtual void run( void );
 		virtual uptime_t get_sleep_clock( void );
         const char* get_name(Resource* resource);
-        virtual Response::status_code process( Request* request, Message** return_message );
+        virtual Response::status_code process( Request* request, File** return_body, const char** mime );
         virtual Response::status_code process( Response* response );
 #if HTTP_GET
         Response* http_get(Request* request);
@@ -57,7 +57,6 @@ class Resource
 #endif
 		void schedule(volatile uptime_t* timer, uptime_t time );
         void schedule(uptime_t time);
-        Response* error(uint16_t error, Message* message);
         void print_transaction(Message* message);
 
 	private:

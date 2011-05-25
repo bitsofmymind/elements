@@ -22,6 +22,7 @@ class Response: public Message
 		//Informational: 1xx
 		#define CONTINUE_100 ((1 << 5) + 0)
 		#define SWITCHING_PROTOCOLS_101 ((1 << 5) + 1)
+		#define RESPONSE_DELAYED_102 ((1 << 5) + 2) //Elements framework specific
 
 		//Successful: 2xx
 		#define OK_200 ((2 << 5) + 0)
