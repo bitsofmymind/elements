@@ -34,7 +34,9 @@ class File
 		#endif
 		virtual size_t read(char* buffer, size_t length) = 0;
 		size_t extract(char* buffer);
+#if !READ_ONLY
 		virtual size_t write(const char* buffer, size_t length) = 0;
+#endif
 		size_t cursor(void);
 		virtual void cursor(size_t val);
 };
@@ -54,7 +56,9 @@ class MemFile: public File
 		virtual ~MemFile();
 
 		virtual size_t read(char* buffer, size_t length);
+#if !READ_ONLY
 		virtual size_t write(const char* buffer, size_t length);
+#endif
 };
 
 

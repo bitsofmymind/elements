@@ -100,7 +100,7 @@ void Template::cursor(size_t val)
 		read(&bit_bucket, 1);
 	}
 }
-
-size_t Template::write(const char* buffer, size_t length) {}
-
+#if !READ_ONLY
+size_t Template::write(const char* buffer, size_t length) { return 0;}
+#endif
 

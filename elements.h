@@ -53,5 +53,6 @@ typedef uint64_t uptime_t;
 
 /*File class controls*/
 #define REVERSIBLE 1
+#define READ_ONLY 1
 
 #endif /* ELEMENTS_H_ */

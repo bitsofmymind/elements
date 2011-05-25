@@ -73,6 +73,7 @@ size_t MemFile::read(char* buffer, size_t length)
 	}
 	return i;
 }
+#if !READ_ONLY
  size_t MemFile::write(const char* buffer, size_t length)
 {
 	if(is_const){ return 0; }
@@ -84,4 +85,5 @@ size_t MemFile::read(char* buffer, size_t length)
 	}
 	return i;
 }
+#endif
 

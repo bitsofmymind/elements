@@ -27,7 +27,9 @@ class Template: public File
 
 	public:
 		virtual size_t read(char* buffer, size_t length);
+#if !READ_ONLY
 		virtual size_t write(const char* buffer, size_t length);
+#endif
 		virtual void cursor(size_t val);
 		void add_arg(char* arg, size_t arglen);
 
