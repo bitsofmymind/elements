@@ -16,7 +16,7 @@
 GenericList::GenericList( void )
 {
 	items = 0;
-	memset(list, 0, sizeof(list));
+	memset(list, NULL, CAPACITY * sizeof(void*));
 }
 
 int8_t GenericList::append(void* item)
@@ -66,7 +66,7 @@ void* GenericList::remove_item( void* item )
 
 void* GenericList::remove( uint8_t index )
 {
-	if(index > CAPACITY) { return NULL; }
+	if(index >= items ) { return NULL; }
 	void* item = list[index];
 	list[index] = NULL;
 	compact();
@@ -182,7 +182,6 @@ void GenericDictionary::compact()
 		list[i + 1].value = NULL;
 	}
 }
-
 
 GenericLinkedList::GenericLinkedList():
 		start(NULL)

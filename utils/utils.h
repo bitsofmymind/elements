@@ -42,16 +42,6 @@ template< class T> class List: public GenericList
 		T operator[](uint8_t i);
 };
 
-template< class T > class Queue: public List<T>
-{
-	public:
-		int8_t queue( T object );
-		T dequeue( void );
-		T peek( void );
-
-};
-
-
 template< class U > struct key_value_pair
 {
 	const char* key;
@@ -98,6 +88,15 @@ template< class T> class Dictionary: public GenericDictionary
 		//virtual T* operator[]( char* key );
 };
 
+template< class T > class Queue: public List<T>
+{
+	public:
+		int8_t queue( T object );
+		T dequeue( void );
+		T peek( void );
+
+};
+
 class GenericLinkedList
 {
 	private:
@@ -126,7 +125,7 @@ template<class T> class LinkedList: public GenericLinkedList
 template< class T>
 int8_t List<T>::append(T item)
 {
-	return GenericList::append( (void*)item);
+	return GenericList::append((void*)item);
 }
 
 template<class T>
@@ -149,6 +148,25 @@ template< class T >
 T List<T>::operator[](uint8_t i)
 {
 	return (T)GenericList::operator[](i);
+}
+
+template< class T>
+int8_t Queue<T>::queue(T object)
+{
+	return List<T>::append(object);
+}
+
+
+template< class T>
+T Queue<T>::dequeue(void)
+{
+	return (T)List<T>::remove(0);
+}
+
+template< class T>
+T Queue<T>::peek(void)
+{
+	return (T)List<T>::operator[](0);
 }
 
 template< class T>
@@ -180,27 +198,6 @@ key_value_pair<T>* Dictionary<T>::operator[](uint8_t i)
 {
 	return (key_value_pair<T>*)GenericDictionary::operator[](i);
 }
-
-
-template< class T>
-int8_t Queue<T>::queue(T object)
-{
-	return List<T>::append(object);
-}
-
-
-template< class T>
-T Queue<T>::dequeue(void)
-{
-	return List<T>::remove(0);
-}
-
-template< class T>
-T Queue<T>::peek(void)
-{
-	return (T)List<T>::list[0];
-}
-
 
 template<class T> int8_t LinkedList<T>::append(T item)
 {
