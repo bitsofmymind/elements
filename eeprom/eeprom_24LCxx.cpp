@@ -401,17 +401,8 @@ File* EEPROM_24LCXX::get_stats(void)
 
 	read(FILE_SYSTEM, sizeof(file_system));
 	file_system* fs = (file_system*)page_buffer;
-	char* val;
-	val = (char*)ts_malloc(6);
-	if(!val)
-	{
-		delete f;
-		delete t;
-		return NULL;
-	}
-	itoa(fs->space_used, val, 10);
-	t->add_arg(val);
-
+	t->add_narg(fs->space_used);
+	char* val = NULL;
 	if(fs->number_of_files)
 	{
 		uint8_t size = 0; //The last \0 will be accounted for by the last ","
@@ -448,21 +439,8 @@ File* EEPROM_24LCXX::get_stats(void)
 			}
 			val[size - 1] = '\0';
 		}
-		t->add_arg(val);
 	}
-	else
-	{
-		val = (char*)ts_malloc(2);
-		if(!val)
-		{
-			delete f;
-			delete t;
-			return NULL;
-		}
-		val[0] = ' ';
-		val[1] = '\0';
-		t->add_arg(val);
-	}
+	t->add_arg(val);
 
 	return t;
 }

@@ -69,14 +69,7 @@ File* Blinker::http_get( void )
 		return NULL;
 	}
 
-	char* val = (char*)ts_malloc(10);
-	if(!val)
-	{
-		delete t;
-		return NULL;
-	}
-	itoa(_interval, val , 10);
-	t->add_arg(val);
+	t->add_narg(_interval);
 
 	char* c = (char*)ts_malloc(strlen("checked=\"checked\"") + 1);
 	memcpy(c, "checked=\"checked\"", strlen("checked=\"checked\""));
