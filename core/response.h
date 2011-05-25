@@ -67,7 +67,7 @@ class Response: public Message
 		#define INTERNAL_SERVER_ERROR_500 ((5 << 5) + 0)
 		#define NOT_IMPLEMENTED_501 ((5 << 5) + 1)
 		#define BAD_GATEWAY_502 ((5 << 5) + 2)
-		#define SERVICE_UNAVAILABE_503 ((5 << 5) + 3)
+		#define SERVICE_UNAVAILABLE_503 ((5 << 5) + 3)
 		#define GATEWAY_TIMEOUT_504 ((5 << 5) + 4)
 		#define HTTP_VERSION_NOT_SUPPORTED_503 ((5 << 5) + 5)
 
