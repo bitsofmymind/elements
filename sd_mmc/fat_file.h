@@ -23,7 +23,9 @@ class FATFile: public File
 	~FATFile();
 
 	virtual size_t read(char* buffer, size_t length);
+#if !READ_ONLY
 	virtual size_t write(const char* buffer, size_t length);
+#endif
 };
 
 #endif /* FAT_FILE_H_ */

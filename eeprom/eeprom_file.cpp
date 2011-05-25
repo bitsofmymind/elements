@@ -43,7 +43,9 @@ size_t EEPROMFile::read(char* buffer, size_t length)
 
 	return i;
 }
+#if !READ_ONLY
 size_t EEPROMFile::write(const char* buffer, size_t length)
 {
 	return 0;
 }
+#endif

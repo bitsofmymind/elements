@@ -20,7 +20,9 @@ class EEPROMFile: public File
 		EEPROMFile(EEPROM_24LCXX* eeprom, uint16_t addr, uint16_t length);
 
 		virtual size_t read(char* buffer, size_t length);
+#if !READ_ONLY
 		virtual size_t write(const char* buffer, size_t length);
+#endif
 
 		//implemente cursor
 };

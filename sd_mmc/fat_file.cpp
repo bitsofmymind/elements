@@ -28,7 +28,9 @@ uint16_t FATFile::read(char* buffer, size_t length)
 	_cursor += bytes_read;
 	return bytes_read;
 }
+#if !READ_ONLY
 uint16_t FATFile::write(const char* buffer, size_t length)
 {
 	return 0;
 }
+#endif
