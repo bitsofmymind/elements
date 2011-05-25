@@ -45,7 +45,7 @@ class Resource
 		virtual uptime_t get_sleep_clock( void );
         const char* get_name(Resource* resource);
         virtual Response::status_code process( Request* request, Message** return_message );
-        virtual Response::status_code process( Response* response, Message** return_message );
+        virtual Response::status_code process( Response* response );
 #if HTTP_GET
         Response* http_get(Request* request);
 #endif

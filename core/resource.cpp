@@ -86,7 +86,7 @@ Message* Resource::dispatch( Message* message )
 	}
 	else
 	{
-		sc = process((Response*)message, &return_message);
+		sc = process((Response*)message);
 	}
 
 
@@ -215,7 +215,7 @@ Response::status_code Resource::process( Request* request, Message** return_mess
 	return PASS_308;
 }
 
-Response::status_code Resource::process(Response* response, Message** return_message)
+Response::status_code Resource::process(Response* response)
 {
 #if VERBOSITY
 	if(response->to_url->cursor >=  response->to_url->resources.items)
