@@ -31,6 +31,9 @@ class Template: public File
 #endif
 		virtual void cursor(size_t val);
 		void add_arg(char* arg);
+		void add_narg(uint8_t arg);
+		void add_narg(uint16_t arg);
+		void add_narg(uint32_t arg);
 
 };
 

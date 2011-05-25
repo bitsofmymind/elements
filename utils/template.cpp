@@ -8,6 +8,7 @@
 #include "template.h"
 #include <pal/pal.h>
 #include <string.h>
+#include <stdlib.h>
 
 Template::Template(File* file):
 		file(file),
@@ -35,6 +36,35 @@ void Template::add_arg(char* arg)
 	args.append(arg);
 	if(arg != NULL ){ size += strlen(arg); }
 	size--; //The ~ marker is removed
+}
+
+void Template::add_narg(uint8_t arg)
+{
+	char* buf = (char*)ts_malloc(4);
+	if(buf)
+	{
+		itoa(arg, buf, 10);
+	}
+	add_arg(buf);
+}
+void Template::add_narg(uint16_t arg)
+{
+	char* buf = (char*)ts_malloc(6);
+	if(buf)
+	{
+		itoa(arg, buf, 10);
+	}
+	add_arg(buf);
+}
+
+void Template::add_narg(uint32_t arg)
+{
+	char* buf = (char*)ts_malloc(11);
+	if(buf)
+	{
+		itoa(arg, buf, 10);
+	}
+	add_arg(buf);
 }
 
 size_t Template::read(char* buffer, size_t length)
