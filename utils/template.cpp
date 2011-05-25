@@ -7,6 +7,7 @@
 
 #include "template.h"
 #include <pal/pal.h>
+#include <string.h>
 
 Template::Template(File* file):
 		file(file),
@@ -29,11 +30,10 @@ Template::~Template()
 	delete file;
 }
 
-void Template::add_arg(char* arg, size_t len)
+void Template::add_arg(char* arg)
 {
 	args.append(arg);
-	lens.append(arg + len );
-	size += len;
+	if(arg != NULL ){ size += strlen(arg); }
 	size--; //The ~ marker is removed
 }
 
@@ -46,7 +46,7 @@ size_t Template::read(char* buffer, size_t length)
 
 		if(state == ARG)
 		{
-			if(current < lens[arg_index])
+			if(args[arg_index] != NULL && *current != '\0')
 			{
 				*buffer = *current++;
 				continue;

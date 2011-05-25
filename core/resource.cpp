@@ -121,13 +121,9 @@ Message* Resource::dispatch( Message* message )
 				}
 				return response;
 			}
-			else
-			{
-				delete message;
-				/*Responses are not forwarded unless the response code was PASS_308. In case
-				 * Resource::process(Response*) returned a pass and the next resource is not found,
-				 * the response is also deleted.*/
-			}
+
+			/*I should propably replace RESPONSE_DELAYED_102 with KEEP_102 to indicate the
+			 * framework a resource is keeping the message wthing its control.*/
 	}
 	return NULL;
 }
@@ -233,6 +229,7 @@ Response::status_code Resource::process(Response* response)
 	if(response->to_url->cursor >=  response->to_url->resources.items)
 	{
 		print_transaction(response);
+		delete response;
 		return OK_200;
 	}
 	return PASS_308;
