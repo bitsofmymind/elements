@@ -303,7 +303,7 @@ void TCPIPStack::appcall(void)
 				}
 				response->serialize(buffer, true);
 
-				s->header = new MemFile(buffer, size);
+				s->header = new MemFile(buffer, size, false);
 				if(!s->header)
 				{
 					ts_free(buffer);

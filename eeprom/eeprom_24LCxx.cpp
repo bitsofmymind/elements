@@ -505,6 +505,22 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 
 	if(url->cursor == url->resources.items)
 	{
+		if(request->is_method(Request::DELETE))
+		{
+			format_file_system();
+#if UPLOAD_FROM_WEB
+			goto get;
+#else
+			Response* r = new Response(OK_200, request);
+			if(!r)
+			{
+				sc = INTERNAL_SERVER_ERROR_500;
+			}
+			else { sc = OK_200;	}
+			*return_message = r;
+#endif
+		}
+#if UPLOAD_FROM_WEB
 		if(request->is_method(Request::GET))
 		{
 			get:
@@ -515,11 +531,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Message** return
 			}
 			else { sc = OK_200;	}
 		}
-		else if(request->is_method(Request::DELETE))
-		{
-			format_file_system();
-			goto get;
-		}
+#endif
 		else { sc = NOT_IMPLEMENTED_501; }
 	}
 	else if(url->cursor + 1 == url->resources.items)
@@ -991,7 +1003,7 @@ void EEPROM_24LCXX::receive_from_uart(char c)
 			{
 				uart_pos = 0;
 
-				MemFile f(uart_buffer, UART_BUFFER_SIZE);
+				MemFile f(uart_buffer, UART_BUFFER_SIZE, false);
 				append_to_file(working_addr, &f);
 				ack();
 			}

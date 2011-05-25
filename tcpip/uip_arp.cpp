@@ -108,7 +108,6 @@ static const u16_t broadcast_ipaddr[2] = {0xffff,0xffff};
 
 static struct arp_entry arp_table[UIP_ARPTAB_SIZE];
 static u16_t ipaddr[2];
-static u8_t i, c;
 
 static u8_t arptime;
 static u8_t tmpage;
@@ -124,7 +123,7 @@ static u8_t tmpage;
 void
 uip_arp_init(void)
 {
-  for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
+  for(uint8_t i = 0; i < UIP_ARPTAB_SIZE; ++i) {
     memset(arp_table[i].ipaddr, 0, 4);
   }
 }
@@ -144,7 +143,7 @@ uip_arp_timer(void)
   struct arp_entry *tabptr;
   
   ++arptime;
-  for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
+  for(uint8_t i = 0; i < UIP_ARPTAB_SIZE; ++i) {
     tabptr = &arp_table[i];
     if((tabptr->ipaddr[0] | tabptr->ipaddr[1]) != 0 &&
        arptime - tabptr->time >= UIP_ARP_MAXAGE) {
@@ -161,7 +160,7 @@ uip_arp_update(u16_t *ipaddr, struct uip_eth_addr *ethaddr)
   /* Walk through the ARP mapping table and try to find an entry to
      update. If none is found, the IP -> MAC address mapping is
      inserted in the ARP table. */
-  for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
+  for(uint8_t i = 0; i < UIP_ARPTAB_SIZE; ++i) {
 
     tabptr = &arp_table[i];
     /* Only check those entries that are actually in use. */
@@ -186,6 +185,7 @@ uip_arp_update(u16_t *ipaddr, struct uip_eth_addr *ethaddr)
      create one. */
 
   /* First, we try to find an unused entry in the ARP table. */
+  uint8_t i;
   for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
     tabptr = &arp_table[i];
     if(tabptr->ipaddr[0] == 0 &&
@@ -198,7 +198,7 @@ uip_arp_update(u16_t *ipaddr, struct uip_eth_addr *ethaddr)
      throw it away. */
   if(i == UIP_ARPTAB_SIZE) {
     tmpage = 0;
-    c = 0;
+    uint8_t c = 0;
     for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
       tabptr = &arp_table[i];
       if(arptime - tabptr->time > tmpage) {
@@ -376,7 +376,7 @@ uip_arp_out(void)
       /* Else, we use the destination IP address. */
       uip_ipaddr_copy(ipaddr, IPBUF->destipaddr);
     }
-      
+    uint8_t i;
     for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
       tabptr = &arp_table[i];
       if(uip_ipaddr_cmp(ipaddr, tabptr->ipaddr)) {
