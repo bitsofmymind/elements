@@ -1,8 +1,18 @@
-/*
- * blink.cpp
+/* blink.cpp - Implements a resource for blinking leds
+ * Copyright (C) 2011 Antoine Mercier-Linteau
  *
- *  Created on: 2010-11-05
- *      Author: antoine
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "blink.h"
@@ -152,39 +162,3 @@ void BusyBlinker::run(void)
 		PINB = _pin;
 	}
 }
-
-/*SweepPWM::SweepPWM(float interval, uint8_t pin):
-	Resource(),
-	_interval(interval),
-	_pin(_BV(pin))
-{
-	DDRB |= _BV(pin);
-	position = 0;
-	counter = 0;
-	period = 1;
-	off = false;
-}
-
-void SweepPWM::run(void)
-{
-	if(off)
-	{
-		PORTB &= ~_pin;
-		schedule(20 - period);
-		off = false;
-	}
-	else
-	{
-		PORTB |= _pin;
-		schedule(period);
-		off = true;
-	}
-	position += period;
-	period = (uint8_t)((position / _interval) * 20.0 ) + 1;
-
-	if(period >= 20)
-	{
-		period = 1;
-		position = 0;
-	}
-}*/
