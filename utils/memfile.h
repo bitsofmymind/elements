@@ -1,4 +1,4 @@
-/* file.cpp - Implements an abstract file type
+/* memfile.h - Implements a simple RAM file type
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,38 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef MEMFILE_H_
+#define MEMFILE_H_
+
 #include "file.h"
-#include <pal/pal.h>
 
-File::~File(){ }
-
-#if VERBOSITY
-
-void File::print(void)
+class MemFile: public File
 {
-	size_t prev_cursor = _cursor;
-	char c;
-	while(read(&c, 1))
-	{
-		DEBUG_TPRINT(c, BYTE);
-	}
-	_cursor = prev_cursor;
-}
+
+	protected:
+		bool is_const;
+
+	public:
+		char* data;
+	public:
+		MemFile(char* data, bool is_const);
+		MemFile(char* data, size_t length, bool is_const);
+
+		virtual ~MemFile();
+
+		virtual size_t read(char* buffer, size_t length);
+#if !READ_ONLY
+		virtual size_t write(const char* buffer, size_t length);
 #endif
+};
 
-
-size_t File::extract(char* buffer)
-{
-	_cursor = 0;
-	return read(buffer, size);
-}
-
-size_t File::cursor(void)
-{
-	return _cursor;
-}
-
-void File::cursor(size_t val)
-{
-	_cursor = val;
-}
+#endif //MEMFILE_H_

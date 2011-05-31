@@ -1,14 +1,29 @@
-/*
- * template.cpp
+/* template.cpp - Implements a simple template file type
+ * Copyright (C) 2011 Antoine Mercier-Linteau
  *
- *  Created on: 2011-03-09
- *      Author: antoine
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "template.h"
 #include <pal/pal.h>
 #include <string.h>
+#if ITOA
 #include <stdlib.h>
+#else
+#include <cstdio>
+#endif
 
 Template::Template(File* file):
 		file(file),
@@ -43,7 +58,11 @@ void Template::add_narg(uint8_t arg)
 	char* buf = (char*)ts_malloc(4);
 	if(buf)
 	{
+#if ITOA
 		itoa(arg, buf, 10);
+#else
+		sprintf(buf, "%d", arg);
+#endif
 	}
 	add_arg(buf);
 }
@@ -52,7 +71,11 @@ void Template::add_narg(uint16_t arg)
 	char* buf = (char*)ts_malloc(6);
 	if(buf)
 	{
+#if ITOA
 		itoa(arg, buf, 10);
+#else
+		sprintf(buf, "%d", arg);
+#endif
 	}
 	add_arg(buf);
 }
@@ -62,7 +85,11 @@ void Template::add_narg(uint32_t arg)
 	char* buf = (char*)ts_malloc(11);
 	if(buf)
 	{
+#if ITOA
 		itoa(arg, buf, 10);
+#else
+		sprintf(buf, "%d", arg);
+#endif
 	}
 	add_arg(buf);
 }
