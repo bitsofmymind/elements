@@ -10,7 +10,8 @@
 #include "diskio.h"
 #include <pal/pal.h>
 #include <avr_pal.h>
-#include "ffconf.h""
+#include "ffconf.h"
+#include "sd_mmc_io.h"
 
 /*--------------------------------------------------------------------------
 
@@ -61,7 +62,7 @@
 #define CT_SDC		(CT_SD1|CT_SD2)	/* SD */
 #define CT_BLOCK	0x08		/* Block addressing */
 
-static volatile
+volatile
 DSTATUS Stat = STA_NOINIT | STA_NODISK;	/* Disk status */
 
 static
@@ -176,8 +177,6 @@ void power_on (void)
 	SPSR &= ~(_BV(SPI2X));			/* SPI 2x mode */
 }
 
-
-static
 void power_off (void)
 {
 	//SPCR = 0;				/* Disable SPI function */

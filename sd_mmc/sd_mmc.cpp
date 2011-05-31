@@ -19,6 +19,9 @@
 #include "fat_file.h"
 #include <stdlib.h>
 #include <string.h>
+#include <avr_pal.h>
+#include "diskio.h"
+#include "sd_mmc_io.h"
 
 SDMMC::SDMMC(void):
 		Resource()

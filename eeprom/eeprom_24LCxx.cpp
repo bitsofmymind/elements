@@ -24,6 +24,7 @@
 #include <util/twi.h>
 #include <string.h>
 #include <utils/pgmspace_file.h>
+#include <utils/memfile.h>
 #include <utils/template.h>
 #include <stdlib.h>
 

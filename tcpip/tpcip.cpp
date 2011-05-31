@@ -28,6 +28,7 @@
 
 #include <core/request.h>
 #include <avr_pal.h>
+#include <utils/memfile.h>
 
 #include <string.h>
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])

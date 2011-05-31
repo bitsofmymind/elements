@@ -16,6 +16,7 @@
  */
 
 #include "fat_file.h"
+#include <avr_pal.h>
 
 FATFile::FATFile(char* name):
 	name(name)

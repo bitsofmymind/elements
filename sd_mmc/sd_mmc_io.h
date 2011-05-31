@@ -1,4 +1,4 @@
-/* app.h - Defines application hooks for uip
+/* sd_mmc.cpp - Defines IO controls for an SD/MMC card
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,25 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __APP_H__
-#define __APP_H__
+#ifndef SD_MMC_IO_H_
+#define SD_MMC_IO_H_
 
-#include <stdint.h>
-#include <elements.h>
-#include <utils/file.h>
-#include <core/request.h>
+#include "diskio.h"
+extern volatile DSTATUS Stat;
+void power_off();
 
-typedef struct elements_app_state
-{
-	Request* request;
-	File* header;
-	File* body;
-	size_t last_sent;
-} uip_tcp_appstate_t;
-
-void elements_appcall(void);
-#ifndef UIP_APPCALL
-#define UIP_APPCALL elements_appcall
-#endif /* UIP_APPCALL */
-
-#endif /* __APP_H__ */
+#endif /* SD_MMC_IO_H_ */
