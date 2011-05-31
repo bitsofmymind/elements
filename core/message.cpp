@@ -21,6 +21,7 @@
 #include "../utils/utils.h"
 #include <pal/pal.h>
 #include <string.h>
+#include <utils/memfile.h>
 #if !ITOA
 #include <cstdio>
 #endif
