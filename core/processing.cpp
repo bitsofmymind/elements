@@ -66,10 +66,10 @@ void Processing::start(void)
 			}
 		}
 		#if HEARTBEAT
-			if(heartbeat < get_uptime())
+			if(is_expired(heartbeat))
 			{
 				heart_beat();
-				heartbeat = get_uptime() + 1000;
+				expire(heartbeat, 1000);
 			}
 		#endif
 	}

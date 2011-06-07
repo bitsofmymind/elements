@@ -51,7 +51,7 @@ extern void init(void);
 #endif
 
 #define expire(var, time) var += get_uptime() + time
-#define is_expired(var) var >= get_uptime()
+#define is_expired(var) var <= get_uptime()
 
 uptime_t get_uptime(void);
 void increase_uptime(uptime_t time);

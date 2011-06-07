@@ -50,7 +50,7 @@ void Resource::visit(void)
 {
 	if(is_expired(own_sleep_clock))
 	{
-		own_sleep_clock = MAX_UPTIME;
+		own_sleep_clock = NEVER;
 		run();
 	}
 }
@@ -299,7 +299,7 @@ void Resource::schedule(uptime_t time)
 
 Resource* Resource::get_next_child_to_visit(void)
 {
-	if(children && children_sleep_clock <= get_uptime() )
+	if(children && is_expired(children_sleep_clock) )
 	{
 
 		while(true)
