@@ -49,6 +49,10 @@ extern void init(void);
 	extern void set_time(uint64_t time);
 	inline void initialize_time( void );
 #endif
+
+#define expire(var, time) var += get_uptime() + time
+#define is_expired(var) var >= get_uptime()
+
 uptime_t get_uptime(void);
 void increase_uptime(uptime_t time);
 

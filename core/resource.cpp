@@ -48,7 +48,7 @@ Resource::Resource(void):
 
 void Resource::visit(void)
 {
-	if(own_sleep_clock <= get_uptime() )
+	if(is_expired(own_sleep_clock))
 	{
 		own_sleep_clock = MAX_UPTIME;
 		run();
