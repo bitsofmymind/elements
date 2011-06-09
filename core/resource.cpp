@@ -60,15 +60,15 @@ Message* Resource::dispatch( Message* message )
 
 	const char* name;
 
-	while(message->to_url->cursor < message->to_url->resources.items)
+	while(message->to_destination())
 	{
-		name = message->to_url->resources[message->to_url->cursor];
+		name = message->current();
 
 		if(name[0] == '.')
 		{
 			if(name[1] == '.' && name[2] == '\0' )
 			{
-				message->to_url->cursor++;
+				message->next();
 				if(parent)
 				{
 					return parent->dispatch(message);
@@ -76,7 +76,7 @@ Message* Resource::dispatch( Message* message )
 			}
 			if(name[1] == '\0')
 			{
-				message->to_url->cursor++;
+				message->next();
 				continue;
 			}
 		}
@@ -105,11 +105,12 @@ Message* Resource::dispatch( Message* message )
 		case PASS_308:
 			if(children)
 			{
-				if(message->to_url->cursor < message->to_url->resources.items)
+				if(message->to_destination())
 				{
-					Resource* next = children->find( message->to_url->resources[message->to_url->cursor++] );
+					Resource* next = children->find( message->current() );
 					if(next)
 					{
+						message->next();
 						return next->dispatch(message);
 					}
 				}
@@ -226,7 +227,7 @@ void Resource::print_transaction(Message* message)
 
 Response::status_code Resource::process( Request* request, File** return_body, const char** mime )
 {
-	if(request->to_url->cursor >=  request->to_url->resources.items)
+	if(!request->to_destination())
 	{
 		print_transaction(request);
 		return NOT_IMPLEMENTED_501;
@@ -236,7 +237,7 @@ Response::status_code Resource::process( Request* request, File** return_body, c
 
 Response::status_code Resource::process(Response* response)
 {
-	if(response->to_url->cursor >=  response->to_url->resources.items)
+	if(!response->to_destination())
 	{
 		print_transaction(response);
 		delete response;

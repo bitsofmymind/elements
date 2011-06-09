@@ -45,7 +45,9 @@ void Message::print()
 
 Message::Message():
 		parsing_body(false),
-		content_type(NULL)
+		content_type(NULL),
+		to_url_cursor(0),
+		from_url_cursor(0)
 {
 	body = NULL;
 	header_length = 0;
@@ -267,10 +269,10 @@ void Message::set_body(File* f, const char* mime)
 	content_type = mime;
 }
 
-File* Message::get_body(void) const
+/*File* Message::get_body(void) const
 {
 	return body;
-}
+}*/
 
 File* Message::unset_body(void)
 {
@@ -278,6 +280,27 @@ File* Message::unset_body(void)
 	body = NULL;
 	content_type = NULL;
 	return f;
+}
+
+/*uint8_t Message::to_destination(void)
+{
+	return to_url->resources.items - to_url_cursor;
+}*/
+
+void Message::next(void)
+{
+	if(to_url_cursor < to_url->resources.items - 1)
+	{
+		to_url_cursor++;
+	}
+}
+
+void Message::previous(void)
+{
+	if(to_url_cursor > 0)
+	{
+		to_url_cursor--;
+	}
 }
 
 Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)

@@ -51,7 +51,6 @@ class URL
 		const char* fragment;
 #endif
 		bool is_absolute_path;
-		uint8_t cursor;
 
 	public:
 		URL();

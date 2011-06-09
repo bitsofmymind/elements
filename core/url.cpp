@@ -22,8 +22,7 @@
 #include <string.h>
 
 
-URL::URL( ):
-	cursor(0)
+URL::URL( )
 {
 	url_str = NULL;
 	url_length = 0;

@@ -69,11 +69,10 @@ class Message
 		TYPE object_type;
 
 		const char* content_type;
-
 #if MESSAGE_AGE
 		uptime_t age;
 
-protected:
+	protected:
 		char*  header;
 		size_t header_length;
 
@@ -83,6 +82,9 @@ protected:
 		size_t current_line_length;
 
 		File* body;
+
+		uint8_t to_url_cursor;
+		uint8_t from_url_cursor;
 #endif
 
 	public:
@@ -95,8 +97,13 @@ protected:
 		Message::PARSER_RESULT parse(const char* buffer, size_t size);
 
 		void set_body(File* f, const char* mime);
-		File* get_body(void) const;
+		inline File* get_body(void) const { return body; }
 		File* unset_body(void);
+
+		inline uint8_t to_destination(void){ return to_url->resources.items - to_url_cursor; }
+		void next(void);
+		void previous(void);
+		inline const char* current(void) { return to_url->resources[to_url_cursor];	}
 
 	protected:
 		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
