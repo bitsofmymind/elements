@@ -18,7 +18,7 @@
 #ifndef MESSAGE_H_
 #define MESSAGE_H_
 
-#include <elements.h>
+#include <configuration.h>
 #include "url.h"
 #include <utils/utils.h>
 #include <utils/file.h>

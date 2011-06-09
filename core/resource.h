@@ -21,7 +21,7 @@
 #include "message.h"
 #include "response.h"
 #include "request.h"
-#include "../elements.h"
+#include <configuration.h>
 #include "../utils/utils.h"
 #include <stdint.h>
 

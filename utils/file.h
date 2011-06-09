@@ -19,7 +19,7 @@
 #ifndef FILE_H_
 #define FILE_H_
 
-#include "../elements.h"
+#include <configuration.h>
 
 class File
 {

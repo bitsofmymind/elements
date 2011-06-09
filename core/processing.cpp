@@ -16,7 +16,6 @@
  */
 
 #include "processing.h"
-//#include "../elements.h"
 #include "../utils/utils.h"
 #include "resource.h"
 #include "../pal/pal.h"

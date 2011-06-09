@@ -17,7 +17,6 @@
 
 #include "message.h"
 #include "request.h"
-//#include "../elements.h"
 #include "url.h"
 #include <stdint.h>
 #include <pal/pal.h>

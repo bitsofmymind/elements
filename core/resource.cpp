@@ -19,7 +19,7 @@
 #include "response.h"
 #include "request.h"
 #include "resource.h"
-#include "../elements.h"
+#include <configuration.h>
 #include "url.h"
 #include "../utils/utils.h"
 #include "../pal/pal.h"

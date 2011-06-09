@@ -19,7 +19,7 @@
 #define PAL_H_
 
 #include <stdint.h>
-#include <elements.h>
+#include <configuration.h>
 
 /*typedef struct
 {

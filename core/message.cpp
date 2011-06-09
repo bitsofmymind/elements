@@ -17,7 +17,7 @@
 
 #include <stdlib.h>
 #include "message.h"
-#include "../elements.h"
+#include <configuration.h>
 #include "../utils/utils.h"
 #include <pal/pal.h>
 #include <string.h>
