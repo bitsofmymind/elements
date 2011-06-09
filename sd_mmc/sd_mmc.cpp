@@ -36,16 +36,22 @@ Response::status_code SDMMC::process( Request* request, File** return_body, cons
 {
 	Response::status_code sc;
 	uint8_t len  = 0;
-	URL* url = request->to_url;
 
 	if(!request->is_method(Request::GET))
 	{
 		return NOT_IMPLEMENTED_501;
 	}
 	//possible optimization: pass the url object to FILE_FAT object directly.
-	for( uint8_t i = url->cursor; i < url->resources.items; i++)
+	uint8_t dst = request->to_destination();
+	while(request->to_destination())
 	{
-		len += strlen(url->resources[i]) + 1; // for '/'
+		len += strlen(request->current()) + 1; // for '/'
+		request->next();
+	}
+
+	while(request->to_destination() != dst)
+	{
+		request->previous();
 	}
 
 	char* path = (char*)ts_malloc(len + 1);
@@ -54,11 +60,12 @@ Response::status_code SDMMC::process( Request* request, File** return_body, cons
 	{
 		//Critical error, there is no memory left.
 	}
-	for(uint8_t i = url->cursor, pos = 0; i < url->resources.items; i++)
+	for(uint8_t pos = 0; request->to_destination(); request->next())
 	{
 		path[pos++] = '/';
-		memcpy((void*)(path  + pos), url->resources[i], strlen(url->resources[i]));
-		pos += strlen(url->resources[i]);
+		const char* res = request->current();
+		memcpy((void*)(path  + pos), res, strlen(res));
+		pos += strlen(res);
 	}
 
 	path[len] = '\0';

@@ -355,7 +355,7 @@ void elements_appcall(void)
 Response::status_code TCPIPStack::process(Response* response)
 {
 
-	if(response->to_url->cursor >=  response->to_url->resources.items)
+	if(!response->to_destination())
 	{
 		to_send.append(response);
 		print_transaction(response);

@@ -461,10 +461,9 @@ Response::status_code EEPROM_24LCXX::process( Request* request, File** return_bo
 
 	print_transaction(request);
 
-	URL* url = request->to_url;
 	Response::status_code sc = NOT_FOUND_404;
 
-	if(url->cursor == url->resources.items)
+	if(!request->to_destination())
 	{
 		if(request->is_method(Request::DELETE))
 		{
@@ -490,13 +489,15 @@ Response::status_code EEPROM_24LCXX::process( Request* request, File** return_bo
 #endif
 		else { sc = NOT_IMPLEMENTED_501; }
 	}
-	else if(url->cursor + 1 == url->resources.items)
+	else if(request->to_destination() == 1)
 	{
 		uint16_t addr;
 
+		request->next();
+
 		if(request->is_method(Request::GET))
 		{
-			if(!strcmp(url->resources[url->cursor], "stats"))
+			if(!strcmp(request->current(), "stats"))
 			{
 				File* f = get_stats();
 				if(!f)
@@ -510,7 +511,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, File** return_bo
 			}
 
 			get_file:
-			find_file(url->resources[url->cursor], &addr);
+			find_file(request->current(), &addr);
 			if(!addr)
 			{
 				return NOT_FOUND_404;
@@ -529,8 +530,8 @@ Response::status_code EEPROM_24LCXX::process( Request* request, File** return_bo
 		else if(request->is_method(Request::POST))
 		{
 
-			find_file(url->resources[url->cursor], &addr);
-			if(!addr && create_file(url->resources[url->cursor]))
+			find_file(request->current(), &addr);
+			if(!addr && create_file(request->current()))
 			{
 				sc = INTERNAL_SERVER_ERROR_500;
 			}
@@ -538,7 +539,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, File** return_bo
 			{
 				if(!addr)
 				{
-					find_file(url->resources[url->cursor], &addr);
+					find_file(request->current(), &addr);
 				}
 				if(request->get_body())
 				{
@@ -549,7 +550,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, File** return_bo
 		}
 		else if(request->is_method(Request::DELETE))
 		{
-			find_file(url->resources[url->cursor], &addr);
+			find_file(request->current(), &addr);
 			if(addr)
 			{
 				delete_file(addr);
