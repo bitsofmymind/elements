@@ -41,11 +41,6 @@ size_t File::extract(char* buffer)
 	return read(buffer, size);
 }
 
-size_t File::cursor(void)
-{
-	return _cursor;
-}
-
 void File::cursor(size_t val)
 {
 	_cursor = val;

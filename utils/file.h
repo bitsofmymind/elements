@@ -39,7 +39,7 @@ class File
 #if !READ_ONLY
 		virtual size_t write(const char* buffer, size_t length) = 0;
 #endif
-		size_t cursor(void);
+		inline size_t cursor(void) { return _cursor; }
 		virtual void cursor(size_t val);
 };
 

@@ -19,7 +19,6 @@
 #define REQUEST_H_
 
 #include "message.h"
-//#include <elements.h>
 #include <stdint.h>
 
 class Request: public Message

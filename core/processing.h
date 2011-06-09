@@ -43,7 +43,7 @@ class Processing: public Resource
 	public:
 		Processing(Resource* bound);
 
-		virtual void start(void);
+		void start(void);
 		void step(void);
 
 };

@@ -46,36 +46,20 @@ void Response::print(void)
 
 Response::Response(
 		const status_code _response_code,
-		Request* _original_request = NULL ):
+		Request* _original_request):
 			Message(),
 			response_code_int(_response_code),
 			original_request(_original_request)
 {
 	object_type = RESPONSE;
 
-	if(_original_request != NULL)
-	{
-		to_url = _original_request->from_url;
-		from_url = _original_request->to_url;
-	}
-	else
-	{
-		to_url = new URL();
-		from_url = new URL();
-	}
+	to_url = _original_request->from_url;
+	from_url = _original_request->to_url;
 }
 
 Response::~Response()
 {
-	if(original_request)
-	{
-		delete original_request;
-	}
-	else
-	{
-		delete to_url;
-		delete from_url;
-	}
+	delete original_request;
 }
 
 #if RESPONSE_DESERIALIZATION
