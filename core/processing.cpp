@@ -37,7 +37,11 @@ Processing::Processing(Resource* bound): Resource(),
 
 void Processing::step(void)
 {
-	current->visit();
+	if(is_expired(current->own_sleep_clock))
+	{
+		current->own_sleep_clock = NEVER;
+		current->run();
+	}
 
 	Resource* to_run = current->get_next_child_to_visit();
 	if(to_run)

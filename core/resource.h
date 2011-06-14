@@ -48,7 +48,6 @@ class Resource
 		uint8_t get_number_of_children(void);
 
 	protected:
-		void visit(void);
 		void dispatch(Message* message);
 
 		virtual void run( void );

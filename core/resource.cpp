@@ -46,19 +46,8 @@ Resource::Resource(void):
 	}
 #endif
 
-void Resource::visit(void)
-{
-	if(is_expired(own_sleep_clock))
-	{
-		own_sleep_clock = NEVER;
-		run();
-	}
-}
-
 void Resource::dispatch( Message* message )
 {
-
-
 	Response::status_code sc;
 	Response* response = NULL;
 
