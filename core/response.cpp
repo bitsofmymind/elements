@@ -52,9 +52,15 @@ Response::Response(
 			original_request(_original_request)
 {
 	object_type = RESPONSE;
+	if(_original_request)
+	{
+		to_url = _original_request->from_url;
+		from_url = _original_request->to_url;
+	}
 
-	to_url = _original_request->from_url;
-	from_url = _original_request->to_url;
+#if LOCATION
+	location = NULL;
+#endif
 }
 
 Response::~Response()
@@ -140,19 +146,19 @@ size_t Response::serialize( char* buffer, bool write)
 		*( buffer + 1 ) = '\n';
 	}
 	buffer += 2;
-
-	if(content_type)
+#if LOCATION
+	if(location)
 	{
-		if( write ) { strcpy(buffer, CONTENT_TYPE); }
-		buffer += 12; //strlen(CONTENT_TYPE); //Moves the pointer after "Content-Type"
+		if( write ) { strcpy(buffer, LOCATION_STR); }
+		buffer += 8; //strlen(LOCATION); //Moves the pointer after "Content-Type"
 		if( write )
 		{
 			*buffer = ':';
 			*( buffer + 1 ) = ' ';
 		}
 		buffer += 2;
-		if( write ) { strcpy(buffer, content_type); }
-		buffer += strlen(content_type); //Moves the pointer after the content type
+		if( write ) { strcpy(buffer, location); }
+		buffer += strlen(location); //Moves the pointer after the content type
 		if( write )
 		{
 			*buffer = '\r';
@@ -160,7 +166,7 @@ size_t Response::serialize( char* buffer, bool write)
 		}
 		buffer += 2;
 	}
-
+#endif
 	buffer += Message::serialize(buffer, write);
 
 	return buffer - start;
@@ -260,13 +266,15 @@ size_t Response::serialize( char* buffer, bool write)
 
 
 //Response header fields
-//const string<uint8_t> Response::ACCEPT_RANGES = {"accept-ranges", 38 };
-//const string<uint8_t> Response::AGE = {"age", 39 };
-//const string<uint8_t> Response::ALLOW = {"allow", 40 };
-//const string<uint8_t> Response::ETAG = {"etag", 41 };
-//const string<uint8_t> Response::LOCATION = {"location", 42 };
-//const string<uint8_t> Response::PROXY_AUTHENTICATE = {"proxy-authenticate", 43 };
-//const string<uint8_t> Response::RETRY_AFTER = {"retry-after", 44 };
-//const string<uint8_t> Response::SERVER = {"server", 45 };
-//const string<uint8_t> Response::VARY = {"vary", 46 };
-//const string<uint8_t> Response::WWW_AUTHENTICATE = {"www-authenticate", 47 };
+//static const char ACCEPT_RANGES[];
+//static const char AGE[];
+//static const char ALLOW[];
+//static const char ETAG[];
+#if LOCATION
+	const char Response::LOCATION_STR[] = "Location";
+#endif
+//static const char PROXY_AUTHENTICATE[];
+//static const char RETRY_AFTER[];
+//static const char SERVER[];
+//static const char VARY[];
+//static const char WWW_AUTHENTICATE[];

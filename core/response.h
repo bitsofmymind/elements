@@ -50,7 +50,7 @@ class Response: public Message
 		#define SEE_OTHER_303 ((3 << 5) + 3)
 		#define NOT_MODIFIED_304 ((3 << 5) + 4)
 		#define USE_PROXY_305 ((3 << 5) + 5)
-		//306 is no longer unused
+		//306 is no longer used and thus reserved
 		#define TEMPORARY_REDIRECT_307 ((3 << 5) + 7)
 		#define PASS_308 ((3 << 5) + 8) //Elements framework specific
 
@@ -87,7 +87,10 @@ class Response: public Message
 		//static const char AGE[];
 		//static const char ALLOW[];
 		//static const char ETAG[];
-		//static const char LOCATION[];
+#if LOCATION
+		static const char LOCATION_STR[];
+		const char* location;
+#endif
 		//static const char PROXY_AUTHENTICATE[];
 		//static const char RETRY_AFTER[];
 		//static const char SERVER[];

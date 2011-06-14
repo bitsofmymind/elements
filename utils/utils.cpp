@@ -97,7 +97,7 @@ void GenericList::compact()
 
 void* GenericList::operator[](uint8_t i)
 {
-	if(i >= items){ return NULL; }
+	if(!items || i >= items){ return NULL; }
 	return list[i];
 }
 
@@ -124,7 +124,6 @@ int8_t GenericDictionary::add( const char* key, void* value )
 		kv->value = value;}
 	return 0;
 }
-
 
 void* GenericDictionary::remove( const char* key )
 {

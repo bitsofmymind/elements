@@ -92,6 +92,26 @@ size_t Message::serialize( char* buffer, bool write )
 	}
 	buffer += 2;
 
+	if(content_type)
+	{
+		if( write ) { strcpy(buffer, CONTENT_TYPE); }
+		buffer += 12; //strlen(CONTENT_TYPE); //Moves the pointer after "Content-Type"
+		if( write )
+		{
+			*buffer = ':';
+			*( buffer + 1 ) = ' ';
+		}
+		buffer += 2;
+		if( write ) { strcpy(buffer, content_type); }
+		buffer += strlen(content_type); //Moves the pointer after the content type
+		if( write )
+		{
+			*buffer = '\r';
+			*( buffer + 1 ) = '\n';
+		}
+		buffer += 2;
+	}
+
 	size_t cl;
 	if(body)
 	{

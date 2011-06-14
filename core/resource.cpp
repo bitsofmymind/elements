@@ -55,112 +55,81 @@ void Resource::visit(void)
 	}
 }
 
-Message* Resource::dispatch( Message* message )
+void Resource::dispatch( Message* message )
 {
-
-	const char* name;
-
-	while(message->to_destination())
-	{
-		name = message->current();
-
-		if(name[0] == '.')
-		{
-			if(name[1] == '.' && name[2] == '\0' )
-			{
-				message->next();
-				if(parent)
-				{
-					return parent->dispatch(message);
-				}
-			}
-			if(name[1] == '\0')
-			{
-				message->next();
-				continue;
-			}
-		}
-		break;
-
-	}
 
 
 	Response::status_code sc;
-	File* return_body = NULL;
-	const char * mime = NULL;
+	Response* response = NULL;
 
 	if(message->object_type == Message::REQUEST)
 	{
-		sc = process((Request*)message, &return_body, &mime);
+		response = new Response(OK_200, NULL);
+		if(!response)
+		{
+			delete message;
+			return;
+		}
+		sc = process((Request*)message, response);
 	}
 	else
 	{
 		sc = process((Response*)message);
 	}
-
-
+	Resource* next = NULL;
 	switch(sc)
 	{
-		case RESPONSE_DELAYED_102: break;
+		case RESPONSE_DELAYED_102: delete response; break;
 		case PASS_308:
-			if(children)
+
+			if(!parent)//we are at root! dispatch message the other way!
 			{
-				if(message->to_destination())
+				message->to_url->is_absolute_path = false;
+			}
+
+			if(parent && message->to_url->is_absolute_path)
+			{
+				next = parent;
+				message->from_url->resources.insert(parent->get_name(this), 0);
+				//this gets done with responses as well, which is not necessary
+			}
+			else if(message->to_destination())
+			{
+				const char* name = message->current();
+				message->next();
+				if(name[0] == '.')
 				{
-					Resource* next = children->find( message->current() );
-					if(next)
-					{
-						message->next();
-						return next->dispatch(message);
-					}
+					if(name[1] == '.' && name[2] == '\0' ){	next = parent; }
+					else if(name[1] == '\0') { next = this; }
 				}
+				else if(!next && children)
+				{
+					next = children->find( name );
+				}
+			}
+			if(next)
+			{
+				delete response;
+				next->dispatch(message);
+				return;
 			}
 			sc = NOT_FOUND_404;
 			//No break here
 		default:
 			if(message->object_type == Message::REQUEST)
 			{
-				Response* response = new Response(sc, (Request*)message);
-				if(!response)
-				{
-					delete return_body;
-					break;
-				}
-				if(return_body)
-				{
-					response->set_body(return_body, mime);
-				}
-				return response;
+				response->response_code_int = sc;
+				response->original_request = (Request*)message;
+				response->to_url = message->from_url;
+				response->from_url = message->to_url;
+				dispatch(response);
+				return;
 			}
 
 			/*I should propably replace RESPONSE_DELAYED_102 with KEEP_102 to indicate the
-			 * framework a resource is keeping the message wthing its control.*/
+			 * framework a resource is keeping the message wthin its control.*/
 	}
-	return NULL;
 }
-
-uint8_t Resource::send(Message* message)
-{
-    if(parent)
-    {
-        /*PROBLEM: In a case where a child's name string was allocated on the heap and it is removed
-         * while a message is in flight, that name, since it was not copied, could be modified
-         * and become something different.*/
-    	if(message->object_type == Message::REQUEST)
-    	{
-			const char* name = parent->get_name(this);
-
-			if(!message->to_url->is_absolute_path)
-			{
-				message->to_url->resources.insert(name,0);
-			}
-			message->from_url->resources.insert(name,0);
-    	}
-        return parent->send(message);
-    }
-    return 1;
-}
-
 
 const char* Resource::get_name(Resource* resource)
 {
@@ -204,9 +173,13 @@ uint8_t Resource::get_number_of_children()
 
 Resource* Resource::remove_child(const char* name)
 {
-	Resource* orphan = !children ? NULL: (Resource*)children->remove(name);
-	orphan->parent = NULL;
-	return orphan;
+	if(children)
+	{
+		Resource* orphan = children->remove(name);
+		orphan->parent = NULL;
+		return orphan;
+	}
+	return NULL;
 }
 
 void Resource::print_transaction(Message* message)
@@ -225,7 +198,7 @@ void Resource::print_transaction(Message* message)
 #endif
 }
 
-Response::status_code Resource::process( Request* request, File** return_body, const char** mime )
+Response::status_code Resource::process( Request* request, Response* response )
 {
 	if(!request->to_destination())
 	{

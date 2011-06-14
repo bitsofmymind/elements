@@ -60,4 +60,13 @@ typedef uint64_t uptime_t;
 #define REVERSIBLE 1
 #define READ_ONLY 1
 
+/*Response headers*/
+#define LOCATION 1
+
+#define AUTHORITY_REDIRECT 1
+#if AUTHORITY_REDIRECT
+#undef LOCATION
+#define LOCATION 1
+#endif
+
 #endif /* ELEMENTS_H_ */

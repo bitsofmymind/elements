@@ -46,15 +46,15 @@ class Resource
 		int8_t add_child(const char* name, Resource* child);
 		Resource* remove_child(const char* name);
 		uint8_t get_number_of_children(void);
-		virtual uint8_t send(Message* message);
 
 	protected:
-		virtual void visit(void);
-		virtual Message* dispatch(Message* message);
+		void visit(void);
+		void dispatch(Message* message);
+
 		virtual void run( void );
-		virtual uptime_t get_sleep_clock( void );
+		uptime_t get_sleep_clock( void );
         const char* get_name(Resource* resource);
-        virtual Response::status_code process( Request* request, File** return_body, const char** mime );
+        virtual Response::status_code process( Request* request, Response* response );
         virtual Response::status_code process( Response* response );
 #if HTTP_GET
         Response* http_get(Request* request);

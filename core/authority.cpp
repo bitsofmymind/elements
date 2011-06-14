@@ -27,7 +27,11 @@
 #define OUT_QUEUE_LENGTH 10
 #define IN_QUEUE_LENGTH 10
 
-Authority::Authority(void):Resource()
+Authority::Authority(void):
+	Resource()
+#if AUTHORITY_REDIRECT
+	,redirect_url(NULL)
+#endif
 {
 }
 
@@ -36,68 +40,57 @@ Authority::Authority(void):Resource()
 	{}
 #endif
 
-void Authority::visit(void)
+Response::status_code Authority::process( Request* request, Response* response )
 {
-        process_queue();
-        Resource::visit();
+	if(request != message_queue.peek())
+	{
+		message_queue.queue(request);
+		schedule(ASAP);
+		return RESPONSE_DELAYED_102;
+	}
+
+	if(!request->to_destination())
+	{
+#if AUTHORITY_REDIRECT
+		if(redirect_url)
+		{
+			response->location = redirect_url;
+			return TEMPORARY_REDIRECT_307;
+		}
+#endif
+		return NOT_IMPLEMENTED_501;
+	}
+	return PASS_308;
 }
 
-Message* Authority::dispatch(Message* message)
+Response::status_code Authority::process( Response* response )
 {
-	message_queue.queue(message);
-	schedule(NULL, 0);
-	return NULL;
+	if(response != message_queue.peek())
+	{
+		message_queue.queue(response);
+		schedule(ASAP);
+		return RESPONSE_DELAYED_102;
+	}
+	if(!response->to_destination())
+	{
+		return NOT_IMPLEMENTED_501;
+	}
+	return PASS_308;
 }
 
-/*This is the processing task. If a resource is multithreaded, this method will
-constitutes the entry point of a thread.*/
-void Authority::process_queue(void)
+void Authority::run(void)
 {
-	Message* message; //Danger here, if the queue becomes full, it will no longer run
 	while(message_queue.items && message_queue.items < CAPACITY)
 	{
-		message = message_queue.dequeue();
-		if(!message->to_url->is_absolute_path)
-		{
-			message = Resource::dispatch(message);
-			if(message){ message_queue.queue( message ); }
-		}
-		else
-		{
-			if(Resource::send(message))
-			{
-				message = Resource::dispatch(message);
-				if(message){ message_queue.queue( message ); }
-			}
-		}
+		dispatch(message_queue.peek()); /*We do not care about what comes out of dispatch since it will have
+		been queued during dispatch's call to Authority::process.*/
+		message_queue.dequeue(); //message has been dispatched so it can be dequeued.
 		/*CONCURENCY PROBLEM: there will most likely be a significant delay between the time that its dertemined there is
 		enough space on the messages_out queue and the actual queuing of the message. For exampe, collect() might be called in between
 		and load the queue with messages, in which case there might no longer be enough space for the message returned by dispatch(). Also,
 	 	the check cannot happen after the message has been produced, because is the message cannot be queued, it will be lost. A possible
 		workaround could be to reserve a spot on the a multithreaded queue and free it if is not needed. */
 
-		
+
 	}
 }
-
-uint8_t Authority::send(Message* message)
-{
-    uint8_t result = message_queue.queue(message);
-    if(!result)
-    {
-        schedule(NULL, 0);
-    }
-    return result;
-}
-
-uptime_t Authority::get_sleep_clock(void)
-{
-    if(message_queue.items)
-    {
-        return 0;
-    }
-    return Resource::get_sleep_clock();
-
-}
-
-

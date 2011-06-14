@@ -29,22 +29,21 @@
 
 class Authority: public Resource
 {
-
 	private:
 		Queue<Message*> message_queue;
-
 	public:
+#if AUTHORITY_REDIRECT
+		const char* redirect_url;
+#endif
+
 		Authority(void);
 #if RESOURCE_DESTRUCTION
 		virtual ~Authority(void);
 #endif
-        virtual uint8_t send(Message* message);
-
 	protected:
-		virtual void visit(void);
-		virtual Message* dispatch(Message* message);
-        virtual uptime_t get_sleep_clock( void );
-		void process_queue(void);
+		virtual Response::status_code process( Request* request, Response* response );
+		virtual Response::status_code process( Response* response );
+		virtual void run(void);
 };
 
 
