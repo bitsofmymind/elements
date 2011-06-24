@@ -32,7 +32,7 @@ void Response::print(void)
 
 	DEBUG_PRINT("% Response: ");
 	DEBUG_PRINT(" HTTP/1.0");
-	DEBUG_TPRINT(' ', BYTE);
+	DEBUG_PRINT(' ');
 	uint16_t rc = ( response_code_int >> 5 ) * 100 + ( response_code_int & 0b00011111 );
 	DEBUG_TPRINTLN(rc, DEC);
 	if(content_type)

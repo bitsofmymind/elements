@@ -24,7 +24,7 @@
 
 #include "../utils/utils.h"
 #include <stdint.h>
-#include <configuration.h>
+#include "../configuration.h"
 
 
 class URL

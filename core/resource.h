@@ -22,7 +22,7 @@
 #include "response.h"
 #include "request.h"
 #include <configuration.h>
-#include "../utils/utils.h"
+#include <utils/utils.h>
 #include <stdint.h>
 
 class Resource

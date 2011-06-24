@@ -23,7 +23,7 @@
 #include "response.h"
 #include "request.h"
 #include "resource.h"
-#include "../utils/utils.h"
+#include <utils/utils.h>
 #if PROCESSING_AS_AUTHORITY
 #include "authority.h"
 #endif

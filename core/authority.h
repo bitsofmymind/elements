@@ -23,7 +23,7 @@
 #include "response.h"
 #include "request.h"
 #include "resource.h"
-#include "../utils/utils.h"
+#include <utils/utils.h>
 
 #define MAX_NUMBER_OF_CHILD_AUTHORITIES 10
 

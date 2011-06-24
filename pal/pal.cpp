@@ -153,22 +153,27 @@ void Debug::print(const char* str)
 	}
 }
 
-void Debug::print(const char* str, uint16_t length)
+void Debug::print(char c)
+{
+	Debug::print((int8_t)c, BYTE);
+}
+
+void Debug::nprint(const char* str, uint16_t length)
 {
 	while(length--)
 	{
-		Debug::print(*str++);
+		Debug::print((int8_t)(*str++), BYTE);
 	}
 }
 
-void Debug::print(char c, uint8_t base)
+void Debug::print(int8_t n, uint8_t base)
 {
-	Debug::print((int32_t) c, base);
+	Debug::print((int32_t) n, base);
 }
 
-void Debug::print(uint8_t b, uint8_t base)
+void Debug::print(uint8_t n, uint8_t base)
 {
-	Debug::print((uint32_t) b, base);
+	Debug::print((uint32_t) n, base);
 }
 
 void Debug::print(int16_t n, uint8_t base)
@@ -207,27 +212,33 @@ void Debug::print(uint32_t n, uint8_t base)
   printFloat(n, digits);
 }*/
 
+void Debug::println(char c)
+{
+	Debug::print(c);
+	Debug::println();
+}
+
 void Debug::println(const char* str)
 {
 	Debug::print(str);
 	Debug::println();
 }
 
-void Debug::println(const char* str, uint16_t length)
+void Debug::nprintln(const char* str, uint16_t length)
 {
-	Debug::print(str, length);
+	Debug::nprint(str, length);
 	Debug::println();
 }
 
-void Debug::println(char c, uint8_t base)
+void Debug::println(int8_t n, uint8_t base)
 {
-	Debug::print(c, base);
+	Debug::print(n, base);
 	Debug::println();
 }
 
-void Debug::println(unsigned char b, uint8_t base)
+void Debug::println(uint8_t n, uint8_t base)
 {
-  print(b, base);
+  print(n, base);
   println();
 }
 

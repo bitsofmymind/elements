@@ -114,7 +114,8 @@ URL::PARSING_RESULT URL::parse(char* str)
 		if( next_part == '/' )
 		{
 			is_absolute_path = true;
-			str++;
+			resources.append( str );
+			*str++ = '\0';
 		}
 		else
 		{
@@ -326,7 +327,7 @@ void URL::print(void)
 #endif
 	if(is_absolute_path)
 	{
-		DEBUG_TPRINT('/', BYTE);
+		DEBUG_PRINT('/');
 	}
 	for(uint8_t i = 0; i < resources.items; i++)
 	{

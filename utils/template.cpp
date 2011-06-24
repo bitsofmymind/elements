@@ -19,7 +19,6 @@
 #include "template.h"
 #include <pal/pal.h>
 #include <string.h>
-#include <configuration.h>
 #if ITOA
 #include <stdlib.h>
 #else

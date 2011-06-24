@@ -145,18 +145,18 @@ void* ts_realloc(void* ptr, size_t size);
 
 #if OUTPUT_ERRORS || OUTPUT_WARNINGS || VERBOSITY || OUTPUT_DEBUG
 
-#define DEC 10
-#define HEX 16
-#define OCT 8
-#define BIN 2
-#define BYTE 0
+#define DEC (uint8_t)10
+#define HEX (uint8_t)16
+#define OCT (uint8_t)8
+#define BIN (uint8_t)2
+#define BYTE (uint8_t)0
 
 #define DEBUG_PRINT(a) Debug::print(a);
-#define DEBUG_NPRINT(a, l) Debug::print(a, l);
+#define DEBUG_NPRINT(a, l) Debug::nprint(a, l);
 #define DEBUG_TPRINT(a, t) Debug::print(a, t);
 
 #define DEBUG_PRINTLN(a) Debug::println(a);
-#define DEBUG_NPRINTLN(a, l) Debug::println(a, l);
+#define DEBUG_NPRINTLN(a, l) Debug::nprintln(a, l);
 #define DEBUG_TPRINTLN(a, t) Debug::println(a, t);
 
 
@@ -166,23 +166,25 @@ namespace Debug
 	extern void println(void);
 
 	void print(const char*);
-	void print(const char* str, uint16_t length);
-	void print(char, uint8_t = BYTE);
-	void print(uint8_t, uint8_t = BYTE);
-	void print(int16_t, uint8_t = DEC);
-	void print(uint16_t, uint8_t = DEC);
-	void print(int32_t, uint8_t= DEC);
-	void print(uint32_t, uint8_t = DEC);
+	void print(char);
+	void nprint(const char* str, uint16_t length);
+	void print(int8_t, uint8_t);
+	void print(uint8_t, uint8_t);
+	void print(int16_t, uint8_t);
+	void print(uint16_t, uint8_t);
+	void print(int32_t, uint8_t);
+	void print(uint32_t, uint8_t);
 	//void print(double, int = 2);
 
 	void println(const char*);
-	void println(const char* str, uint16_t length);
-	void println(char, uint8_t = BYTE);
-	void println(uint8_t, uint8_t = BYTE);
-	void println(int16_t, uint8_t = DEC);
-	void println(uint16_t, uint8_t = DEC);
-	void println(int32_t, uint8_t= DEC);
-	void println(uint32_t, uint8_t = DEC);
+	void println(char);
+	void nprintln(const char* str, uint16_t length);
+	void println(int8_t, uint8_t);
+	void println(uint8_t, uint8_t);
+	void println(int16_t, uint8_t);
+	void println(uint16_t, uint8_t);
+	void println(int32_t, uint8_t);
+	void println(uint32_t, uint8_t);
 	//void println(double, int = 2);
 }
 #else

@@ -16,9 +16,9 @@
  */
 
 #include "processing.h"
-#include "../utils/utils.h"
+#include <utils/utils.h>
 #include "resource.h"
-#include "../pal/pal.h"
+#include <pal/pal.h>
 #include <stdint.h>
 #if PROCESSING_AS_AUTHORITY
 Processing::Processing(Resource* bound): Authority(),

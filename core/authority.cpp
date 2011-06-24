@@ -19,9 +19,9 @@
 #include "response.h"
 #include "request.h"
 #include "authority.h"
-#include "../utils/utils.h"
+#include <utils/utils.h>
 #include "resource.h"
-#include "../pal/pal.h"
+#include <pal/pal.h>
 #include <stdint.h>
 
 #define OUT_QUEUE_LENGTH 10

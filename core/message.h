@@ -100,7 +100,7 @@ class Message
 		inline File* get_body(void) const { return body; }
 		File* unset_body(void);
 
-		inline uint8_t to_destination(void){ return to_url->resources.items - to_url_cursor; }
+		uint8_t to_destination(void);
 		void next(void);
 		void previous(void);
 		inline const char* current(void) { return to_url->resources[to_url_cursor];	}

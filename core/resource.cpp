@@ -21,8 +21,8 @@
 #include "resource.h"
 #include <configuration.h>
 #include "url.h"
-#include "../utils/utils.h"
-#include "../pal/pal.h"
+#include <utils/utils.h>
+#include <pal/pal.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -74,18 +74,23 @@ void Resource::dispatch( Message* message )
 			if(!parent)//we are at root! dispatch message the other way!
 			{
 				message->to_url->is_absolute_path = false;
+				message->from_url->resources.insert('\0', 0);
 			}
 
 			if(parent && message->to_url->is_absolute_path)
 			{
 				next = parent;
-				message->from_url->resources.insert(parent->get_name(this), 0);
-				//this gets done with responses as well, which is not necessary
+				if(message->object_type == Message::REQUEST)
+				{
+					message->from_url->resources.insert(parent->get_name(this), 0);
+
+				}
+				//useless if message is a response
 			}
 			else if(message->to_destination())
 			{
-				const char* name = message->current();
 				message->next();
+				const char* name = message->current();
 				if(name[0] == '.')
 				{
 					if(name[1] == '.' && name[2] == '\0' ){	next = parent; }

@@ -28,7 +28,7 @@ void File::print(void)
 	char c;
 	while(read(&c, 1))
 	{
-		DEBUG_TPRINT(c, BYTE);
+		DEBUG_TPRINT((int8_t)c, BYTE);
 	}
 	_cursor = prev_cursor;
 }

@@ -20,7 +20,7 @@
 
 #include "message.h"
 #include "request.h"
-#include "../utils/utils.h"
+#include <utils/utils.h>
 
 
 class Response: public Message

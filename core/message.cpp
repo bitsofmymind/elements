@@ -17,8 +17,7 @@
 
 #include <stdlib.h>
 #include "message.h"
-#include <configuration.h>
-#include "../utils/utils.h"
+#include <utils/utils.h>
 #include <pal/pal.h>
 #include <string.h>
 #include <utils/memfile.h>
@@ -34,7 +33,7 @@ void Message::print()
 	DEBUG_PRINT("Content-Length: ");
 	if(body)
 	{
-		DEBUG_TPRINTLN(body->size, DEC);
+		DEBUG_TPRINTLN((uint32_t)body->size, DEC);
 	}
 	else
 	{
@@ -302,10 +301,10 @@ File* Message::unset_body(void)
 	return f;
 }
 
-/*uint8_t Message::to_destination(void)
+uint8_t Message::to_destination(void)
 {
-	return to_url->resources.items - to_url_cursor;
-}*/
+	return to_url->resources.items - to_url_cursor - 1;
+}
 
 void Message::next(void)
 {
