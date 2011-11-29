@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr_pal.h>
+#include "../avr_pal.h"
 #include <string.h>
 
 static ESerial* instance;
@@ -109,7 +109,7 @@ void ESerial::run(void)
 	{
 		case Message::PARSING_COMPLETE:
 			VERBOSE_PRINTLN_P("Parsing complete, sending");
-			send(request);
+			dispatch(request);
 			break;
 		case Message::PARSING_SUCESSFUL:
 			VERBOSE_PRINTLN_P("Parsing incomplete");
@@ -143,7 +143,7 @@ Response::status_code ESerial::process(Response* response, Message** return_mess
 		do
 		{
 			read = body->read(buffer, 10);
-			DEBUG_TPRINT(buffer, read);
+			DEBUG_NPRINT(buffer, read);
 		} while(read == 10);
 
 		DEBUG_PRINTLN();

@@ -9,7 +9,7 @@
 #include <avr/io.h>
 #include "diskio.h"
 #include <pal/pal.h>
-#include <avr_pal.h>
+#include "../avr_pal.h"
 #include "ffconf.h"
 #include "sd_mmc_io.h"
 

@@ -19,11 +19,11 @@
 
 #include "eeprom_24LCxx.h"
 #include "eeprom_file.h"
-#include <avr_pal.h>
+#include "../avr_pal.h"
 #include <avr/io.h>
 #include <util/twi.h>
 #include <string.h>
-#include <utils/pgmspace_file.h>
+#include "../utils/pgmspace_file.h"
 #include <utils/memfile.h>
 #include <utils/template.h>
 #include <stdlib.h>
@@ -120,7 +120,7 @@ uint8_t EEPROM_24LCXX::format_file_system(void)
 	return 0;
 }
 
-uint8_t EEPROM_24LCXX::create_file( const char* name)
+uint8_t EEPROM_24LCXX::create_file(const char* name)
 {
 	VERBOSE_PRINT_P("Creating file \"");
 	VERBOSE_PRINTLN(name);
@@ -153,7 +153,7 @@ uint8_t EEPROM_24LCXX::create_file( const char* name)
 	file_entry* fe = (file_entry*)page_buffer;
 	fe->size = 0;
 	fe->end  = '\0';
-	strncpy(fe->name, name, 13);
+	strncpy(fe->name, name, FILE_NAME_MAX_SIZE);
 	write(addr, FILE_ENTRY_SIZE);
 
 	VERBOSE_PRINTLN_P("File created");
@@ -230,7 +230,7 @@ uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 	VERBOSE_PRINT_P("Appending to file at 0x");
 	VERBOSE_TPRINT(addr, HEX);
 	VERBOSE_PRINT_P(" with ");
-	VERBOSE_TPRINT(content->size, DEC);
+	VERBOSE_TPRINT((uint16_t)content->size, DEC);
 	VERBOSE_PRINTLN_P(" bytes");
 
 	read(FILE_SYSTEM, sizeof(file_system));
@@ -393,7 +393,7 @@ File* EEPROM_24LCXX::http_get(void)
 "{\"space_used\":~,\"files\":[~]}"
 #define STATS_SIZE sizeof(STATS) - 1
 
-static char stats_P[] PROGMEM = STATS;
+static const char stats_P[] PROGMEM = STATS;
 
 File* EEPROM_24LCXX::get_stats(void)
 {
@@ -456,7 +456,7 @@ File* EEPROM_24LCXX::get_stats(void)
 	return t;
 }
 
-Response::status_code EEPROM_24LCXX::process( Request* request, File** return_body, const char** mime )
+Response::status_code EEPROM_24LCXX::process( Request* request, Response* response )
 {
 
 	print_transaction(request);
@@ -478,13 +478,14 @@ Response::status_code EEPROM_24LCXX::process( Request* request, File** return_bo
 		if(request->is_method(Request::GET))
 		{
 			get:
-			*return_body = http_get(request);
-			if(!*return_body)
+			File* body = http_get(request);
+			if(!body)
 			{
 				sc = INTERNAL_SERVER_ERROR_500;
+				return;
 			}
 			else { sc = OK_200;	}
-			*mime = MIME::TEXT/HTML;
+			response->set_body(body, MIME::TEXT/HTML);
 		}
 #endif
 		else { sc = NOT_IMPLEMENTED_501; }
@@ -505,8 +506,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, File** return_bo
 					sc = INTERNAL_SERVER_ERROR_500;
 				}
 				else { sc = OK_200;	}
-				*mime = MIME::APPLICATION_JSON;
-				*return_body = f;
+				response->set_body(f, MIME::APPLICATION_JSON);
 				return sc;
 			}
 
@@ -524,7 +524,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, File** return_bo
 					sc = INTERNAL_SERVER_ERROR_500;
 				}
 				else { sc = OK_200; }
-				*return_body = file;
+				response->set_body(file, NULL);
 			}
 		}
 		else if(request->is_method(Request::POST))
@@ -873,95 +873,135 @@ uint8_t EEPROM_24LCXX::read(uint16_t addr, uint8_t len)
 }
 
 #if UPLOAD_FROM_UART
-void ack(void)
+void reply(uint8_t code)
 {
+	/*Setting UDR0 twice appears to work. This is probably an easy fix for a bug
+	 * somewhere else in the code.*/
+	//UDR0 = code;
+	UCSR0A |= _BV(TXC0);
+	/*Sets the code to send in the transmit buffer. This is done before the USART
+	 * transmitter is enables so as to overwrite anything that might have been put
+	 * there by PRINT statements.*/
+	UDR0 = code;
 	UCSR0B |= _BV(TXEN0);
-	loop_until_bit_is_set(UCSR0A, UDRE0);
-	UDR0 = '1';
-	loop_until_bit_is_set(UCSR0A, UDRE0);
+	loop_until_bit_is_set(UCSR0A, TXC0);
 	UCSR0B &= ~(_BV(TXEN0));
 }
-void nack(void)
-{
-	UCSR0B |= _BV(TXEN0);
-	loop_until_bit_is_set(UCSR0A, UDRE0);
-	UDR0 = '0';
-	loop_until_bit_is_set(UCSR0A, UDRE0);
-	UCSR0B &= ~(_BV(TXEN0));
-}
+
 void EEPROM_24LCXX::receive_from_uart(char c)
 {
-
-
 	UCSR0B &= ~(_BV(TXEN0)); /* This disables the UART, effectively preventing PRINT functions
 	from operating. The reason for that is to prevent synchronous UART usage during an
-	interrupt and to allow us to send control data.*/
-	if(last_rx + 10000 < get_uptime())
-	{
-		uart_state = CMD;
-		uart_pos = 0;
-	}
+	interrupt and to allow us to send control data unobstructed by debug messages.*/
 
+	/*If it has been 2 seconds since we last received data.*/
+	if(is_expired(last_rx + SECONDS(2)))
+	{
+		uart_state = CMD; //Resets the protocol state.
+		uart_pos = 0; //Resets the protocol packet position counter.
+	}
+	/*If there is no buffer allocated for the protocol.*/
 	if(!uart_buffer)
 	{
+		/*Allocates a buffer for the protocol.*/
 		uart_buffer = (char*)ts_malloc(UART_BUFFER_SIZE);
+		/*If the allocation failed, return.*/
 		if(!uart_buffer){ return; }
 	}
-	uart_buffer[uart_pos++] = c;
-	last_rx = get_uptime();
+	uart_buffer[uart_pos++] = c; //Saves the received char in the buffer.
+	last_rx = get_uptime(); //Update the last received data counter.
 
-	switch(uart_state)
+	if(uart_pos == UART_BUFFER_SIZE) //If the buffer is full.
 	{
-		case CMD:
-			if(uart_pos == UART_BUFFER_SIZE)
-			{
-				uart_pos = 0;
-				if(!strcmp(uart_buffer, "fmt"))
+		uart_pos = 0; //Resets the protocol packet position counter.
+		/*This means that we have received a complete packet.The state we are at in
+		 * the protocol defines what will happen next.*/
+		switch(uart_state)
+		{
+			case CMD: //A command packet was received
+				if(!strcmp(uart_buffer, "fmt")) //If the command is a format.
 				{
-					format_file_system();
-					ack();
+					format_file_system(); //Format the file system.
+					reply(ACK); //Send an acnowledgment.
 				}
 				else
 				{
+					//Else the command is either a delete or an append (dat).
+					/*Finds the file we will be working with, its name is stored
+					 * within the protocol buffer after the command and save
+					 * its address in working_addr.*/
 					find_file(uart_buffer + 4, &working_addr);
 
-					if(!strcmp(uart_buffer, "dat"))
+					if(!strcmp(uart_buffer, "dat")) //If the command is an append.
 					{
-						if(!working_addr)
+						if(!working_addr) //If the file was not found.
 						{
-							create_file(uart_buffer + 4);
+							 /*This means it does not exist, so create it and
+							 * check if there is enough space for it.*/
+							if(create_file(uart_buffer + 4))
+							{
+								reply(FILE_TOO_BIG); //Not enough space on the eeprom.
+								break;
+							}
+
+							/*Finds the file so we can get its address, if
+							 * create file did return the address the file was created
+							 * at, we would not need to call this.*/
 							find_file(uart_buffer + 4, &working_addr);
 						}
 
-						uart_state = DATA;
-						ack();
+						uart_state = DATA; //Change the protocol state to DATA.
+						reply(ACK); //Send an acnowledgment.
 						break;
 					}
-					else if(!strcmp(uart_buffer, "del") && working_addr)
+					else if(!working_addr) //If the file was not found.
 					{
-						delete_file(working_addr);
-						ack();
+						reply(FILE_NOT_FOUND); //File not found.
 					}
-					else { nack(); }
+					else if(!strcmp(uart_buffer, "del")) //If the command is a delete
+					{
+						delete_file(working_addr); //Delete the file we found.
+						reply(ACK); //Send an acnowledgment.
+					}
+					else
+					{
+						reply(UNKNOWN_CMD); //Unknown command.
+					}
 				}
+				break;
+			case DATA: //A data packet was received.
+				if(working_addr) //If there is a file to receive the data.
+				{
+					//Create a memfile from the protocol buffer.
+					MemFile f(uart_buffer, UART_BUFFER_SIZE, false);
+					/*Pass that memfile along with the working address (set during the CMD state)
+					 * so that data can get append to the file. If this function returns 1,
+					 * this means there is no longer enough space on the eeprom.*/
+					if(append_to_file(working_addr, &f))
+					{
+						reply(FILE_TOO_BIG); //Not enough space on the eeprom.
+					}
+					else
+					{
+						reply(ACK); //Send an acnowledgment.
+					}
+				}
+				else
+				{
+					reply(PROTOCOL_ERROR); //We are in the wrong state.
+				}
+				break;
 
-				ts_free(uart_buffer);
-				uart_buffer = NULL;
-			}
-			break;
-		case DATA:
-			if(uart_pos ==  UART_BUFFER_SIZE)
-			{
-				uart_pos = 0;
+			default: break;
+		}
 
-				MemFile f(uart_buffer, UART_BUFFER_SIZE, false);
-				append_to_file(working_addr, &f);
-				ack();
-			}
-			break;
-		default: break;
+		/*Something failed or the command completed. In either cases, the buffer
+		 * is no longer needed so it is freed and its pointer is reset.*/
+		ts_free(uart_buffer);
+		uart_buffer = NULL;
 	}
-	UCSR0B |= _BV(TXEN0);
+
+	UCSR0B |= _BV(TXEN0); //Enables the UART for general use again.
 }
 
 #include "avr/interrupt.h"

@@ -20,7 +20,7 @@
 
 #include <core/resource.h>
 
-#define FILE_NAME_MAX_SIZE 21
+#define FILE_NAME_MAX_SIZE 32 - 1 - sizeof(uint16_t)
 #define PAGE_SIZE 64
 
 #define EEPROM_SIZE 32768
@@ -28,7 +28,7 @@
 #define UPLOAD_FROM_WEB 0
 
 #define UPLOAD_FROM_UART 1
-#define UART_BUFFER_SIZE sizeof(file_entry)
+#define UART_BUFFER_SIZE 24
 
 class EEPROM_24LCXX: public Resource
 {
@@ -36,6 +36,15 @@ class EEPROM_24LCXX: public Resource
 		friend class EEPROMFile;
 		char page_buffer[PAGE_SIZE];
 #if UPLOAD_FROM_UART
+
+		static const uint8_t ACK = '0';
+		static const uint8_t UNKNOWN_CMD = '1';
+		static const uint8_t FILE_TOO_BIG = '2';
+		static const uint8_t IO_ERROR = '3';
+		static const uint8_t FILE_NOT_FOUND = '4';
+		static const uint8_t PROTOCOL_ERROR = '5';
+		static const uint8_t DEBUG = '6';
+
 		char* uart_buffer;
 		enum uart_state_tp { CMD, DATA} uart_state;
 		volatile uint8_t uart_pos;
@@ -77,7 +86,7 @@ class EEPROM_24LCXX: public Resource
 		File* http_get(void);
 #endif
 		File* get_stats(void);
-		virtual Response::status_code process( Request* request, File** return_body, const char** mime );
+		virtual Response::status_code process( Request* request, Response* response );
 
 };
 

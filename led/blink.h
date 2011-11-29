@@ -30,7 +30,7 @@ class Blinker: public Resource
 		Blinker(uint32_t interval, uint8_t pin, volatile uint8_t* ddr, volatile uint8_t* port);
 		virtual void run(void);
 		File* http_get( void );
-		virtual Response::status_code process( Request* request, File** return_body, const char** mime );
+		virtual Response::status_code process( Request* request, Response* response );
 
 };
 

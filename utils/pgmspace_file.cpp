@@ -17,7 +17,7 @@
 
 #include "pgmspace_file.h"
 
-PGMSpaceFile::PGMSpaceFile(PGM_P text, uint16_t size):
+PGMSpaceFile::PGMSpaceFile(PGM_P text, size_t size):
 	text(text)
 {
 	File::size = size;
@@ -25,7 +25,7 @@ PGMSpaceFile::PGMSpaceFile(PGM_P text, uint16_t size):
 
 }
 
-uint16_t PGMSpaceFile::read(char* buffer, uint16_t length)
+size_t PGMSpaceFile::read(char* buffer, size_t length)
 {
 	uint16_t i = 0;
 	for(; i < length && _cursor < size; _cursor++, i++)
@@ -34,7 +34,9 @@ uint16_t PGMSpaceFile::read(char* buffer, uint16_t length)
 	}
 	return i;
 }
-uint16_t PGMSpaceFile::write(const char* buffer, uint16_t length)
+#if !READ_ONLY
+uint16_t PGMSpaceFile::write(const char* buffer, size_t length)
 {
 	return 0;
 }
+#endif

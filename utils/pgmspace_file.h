@@ -20,6 +20,7 @@
 
 #include <utils/file.h>
 #include <avr/pgmspace.h>
+#include <configuration.h>
 
 class PGMSpaceFile: public File
 {
@@ -28,10 +29,12 @@ class PGMSpaceFile: public File
 
 	public:
 
-		PGMSpaceFile(PGM_P text, uint16_t size);
+		PGMSpaceFile(PGM_P text, size_t size);
 
-		virtual uint16_t read(char* buffer, uint16_t length);
+		virtual size_t read(char* buffer, size_t length);
+#if !READ_ONLY
 		virtual uint16_t write(const char* buffer, uint16_t length);
+#endif
 };
 
 #endif /* PGMSPACE_FILE_H_ */

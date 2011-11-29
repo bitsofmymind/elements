@@ -19,7 +19,6 @@
 #define __APP_H__
 
 #include <stdint.h>
-#include <elements.h>
 #include <utils/file.h>
 #include <core/request.h>
 

@@ -27,7 +27,7 @@
 #include "drivers/enc28j60/enc28j60.h"
 
 #include <core/request.h>
-#include <avr_pal.h>
+#include "../avr_pal.h"
 #include <utils/memfile.h>
 
 #include <string.h>
@@ -105,7 +105,7 @@ void TCPIPStack::run(void)
 	}
 	else if(periodic_timer <= get_uptime() )
 	{
-		periodic_timer = get_uptime() + 20;
+		expire(periodic_timer, 15);
 		for(uint8_t i = 0; i < UIP_CONNS; i++)
 		{
 			uip_periodic(i);
@@ -232,7 +232,7 @@ void TCPIPStack::appcall(void)
 		{
 			case Message::PARSING_COMPLETE:
 				VERBOSE_PRINTLN_P("Parsing complete, sending");
-				send(s->request);
+				dispatch(s->request);
 				break;
 			case Message::PARSING_SUCESSFUL:
 				break;

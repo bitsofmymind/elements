@@ -18,7 +18,7 @@
 #include "blink.h"
 #include <avr/io.h>
 #include <pal/pal.h>
-#include <utils/pgmspace_file.h>
+#include "../utils/pgmspace_file.h"
 #include <stdlib.h>
 #include <utils/template.h>
 #include <string.h>
@@ -63,7 +63,7 @@ void Blinker::run(void)
 </html>"
 #define CONTENT_SIZE sizeof(CONTENT)
 
-static char content_P[] PROGMEM = CONTENT;
+static const char content_P[] PROGMEM = CONTENT;
 
 File* Blinker::http_get( void )
 {
@@ -98,7 +98,7 @@ File* Blinker::http_get( void )
 
 }
 
-Response::status_code Blinker::process( Request* request, File** return_body, const char** mime )
+Response::status_code Blinker::process( Request* request, Response* response )
 {
 	if(request->is_method(Request::POST))
 	{
@@ -133,8 +133,7 @@ Response::status_code Blinker::process( Request* request, File** return_body, co
 		{
 			return INTERNAL_SERVER_ERROR_500;
 		}
-		*return_body = f;
-		*mime = MIME::TEXT_HTML;
+		response->set_body(f, MIME::TEXT_HTML);
 		return OK_200;
 	}
 

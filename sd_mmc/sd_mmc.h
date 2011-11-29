@@ -36,7 +36,7 @@ class SDMMC: public Resource
 		SDMMC();
 
 	protected:
-		virtual Response::status_code process( Request* request, File** return_body, const char** mime );
+		virtual Response::status_code process( Request* request, Response* response );
 		virtual void run(void);
 
 };

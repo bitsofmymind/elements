@@ -16,7 +16,7 @@
  */
 
 #include "fat_file.h"
-#include <avr_pal.h>
+#include "../avr_pal.h"
 
 FATFile::FATFile(char* name):
 	name(name)
@@ -32,7 +32,7 @@ FATFile::~FATFile()
 	ts_free(name);
 }
 
-uint16_t FATFile::read(char* buffer, size_t length)
+size_t FATFile::read(char* buffer, size_t length)
 {
 	uint16_t bytes_read;
 	last_op_result = f_read(&file, buffer, length, &bytes_read);

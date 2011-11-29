@@ -19,7 +19,7 @@
 #include "fat_file.h"
 #include <stdlib.h>
 #include <string.h>
-#include <avr_pal.h>
+#include "../avr_pal.h"
 #include "diskio.h"
 #include "sd_mmc_io.h"
 
@@ -32,7 +32,7 @@ SDMMC::SDMMC(void):
 	initialization so calling it will take care of booting our disk.*/
 }
 
-Response::status_code SDMMC::process( Request* request, File** return_body, const char** mime )
+Response::status_code SDMMC::process( Request* request, Response* response )
 {
 	Response::status_code sc;
 	uint8_t len  = 0;
@@ -88,8 +88,7 @@ Response::status_code SDMMC::process( Request* request, File** return_body, cons
 		}
 		else if(file->last_op_result == FR_OK)
 		{
-			*mime = MIME::TEXT_HTML;
-			*return_body = file;
+			response->set_body(file, NULL);
 			sc = OK_200;
 		}
 		else
@@ -102,7 +101,7 @@ Response::status_code SDMMC::process( Request* request, File** return_body, cons
 			else
 			{
 				ERROR_PRINT_P("error opening file ");
-				ERROR_NPRINTLN(file->last_op_result, DEC);
+				ERROR_TPRINTLN((uint8_t)file->last_op_result, DEC);
 
 				sc = INTERNAL_SERVER_ERROR_500;
 			}

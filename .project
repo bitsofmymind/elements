@@ -3,6 +3,7 @@
 	<name>avr_utils</name>
 	<comment></comment>
 	<projects>
+		<project>elements_avr</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
