@@ -69,6 +69,7 @@ class Message
 		TYPE object_type;
 
 		const char* content_type;
+		enum dispatching { ABSOLUTE, RELATIVE, UNDETERMINED } dispatching;
 #if MESSAGE_AGE
 		uptime_t age;
 

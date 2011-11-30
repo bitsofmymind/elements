@@ -50,7 +50,6 @@ class URL
 #if URL_FRAGMENT
 		const char* fragment;
 #endif
-		bool is_absolute_path;
 
 	public:
 		URL();
@@ -61,6 +60,7 @@ class URL
 		size_t serialize( char* buffer , bool write);
 #endif
 		void print(void);
+		bool is_absolute(void);
 };
 
 

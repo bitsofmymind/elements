@@ -129,7 +129,6 @@ Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 
 		to_url->parse( ++index );
 		//Should checl is url parsing was sucessful
-		from_url->is_absolute_path = to_url->is_absolute_path;
 
 		/*We do not really care about the HTTP version here, in fact, we could avoir saving it entirely*/
 		if(res != PARSING_SUCESSFUL)

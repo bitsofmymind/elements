@@ -42,6 +42,7 @@ class Response: public Message
 		#define NO_CONTENT_204 ((2 << 5) + 4)
 		#define RESET_CONTENT_205 ((2 << 5) + 5)
 		#define PARTIAL_CONTENT_206 ((2 << 5) + 6)
+		#define DONE_207 ((2 << 5) + 7)
 
 		//Redirection: 3xx
 		#define MULTIPLE_CHOICES_300 ((3 << 5) + 0)

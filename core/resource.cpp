@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+static const char null_chr = '\0';
 
 Resource::Resource(void):
   children_sleep_clock(MAX_UPTIME),
@@ -51,6 +52,18 @@ void Resource::dispatch( Message* message )
 	Response::status_code sc;
 	Response* response = NULL;
 
+	if(message->dispatching == Message::UNDETERMINED) //should be done in a constructor.
+	{
+		if(message->to_url->is_absolute())
+		{
+			message->dispatching = Message::ABSOLUTE;
+		}
+		else
+		{
+			message->dispatching = Message::RELATIVE;
+		}
+	}
+
 	if(message->object_type == Message::REQUEST)
 	{
 		response = new Response(OK_200, NULL);
@@ -65,42 +78,52 @@ void Resource::dispatch( Message* message )
 	{
 		sc = process((Response*)message);
 	}
+
 	Resource* next = NULL;
 	switch(sc)
 	{
-		case RESPONSE_DELAYED_102: delete response; break;
+		case DONE_207:
+			delete message;
+		case RESPONSE_DELAYED_102:
+			delete response;
+			break;
 		case PASS_308:
-
-			if(!parent)//we are at root! dispatch message the other way!
+			if(message->dispatching == Message::ABSOLUTE)
 			{
-				message->to_url->is_absolute_path = false;
-				message->from_url->resources.insert('\0', 0);
-			}
-
-			if(parent && message->to_url->is_absolute_path)
-			{
-				next = parent;
-				if(message->object_type == Message::REQUEST)
+				if(!parent)//we are at root! dispatch message the other way!
 				{
-					message->from_url->resources.insert(parent->get_name(this), 0);
-
+					next = this; //Message will go twice trough root!
+					message->dispatching = Message::RELATIVE;
+					message->from_url->resources.insert(&null_chr, 0);
 				}
-				//useless if message is a response
+				else
+				{
+					next = parent;
+					if(message->object_type == Message::REQUEST)
+					{
+						message->from_url->resources.insert(parent->get_name(this), 0);
+					}
+					//useless if message is a response
+				}
 			}
 			else if(message->to_destination())
 			{
 				message->next();
 				const char* name = message->current();
-				if(name[0] == '.')
+				if(name[0] == '.') //Should be going inside find()
 				{
-					if(name[1] == '.' && name[2] == '\0' ){	next = parent; }
+					if(name[1] == '.' && name[2] == '\0' )
+					{
+						next = parent;
+					}
 					else if(name[1] == '\0') { next = this; }
 				}
-				else if(!next && children)
+				if(!next && children)
 				{
 					next = children->find( name );
 				}
 			}
+
 			if(next)
 			{
 				delete response;

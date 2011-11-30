@@ -46,7 +46,8 @@ Message::Message():
 		parsing_body(false),
 		content_type(NULL),
 		to_url_cursor(0),
-		from_url_cursor(0)
+		from_url_cursor(0),
+		dispatching(UNDETERMINED)
 {
 	body = NULL;
 	header_length = 0;
@@ -91,26 +92,6 @@ size_t Message::serialize( char* buffer, bool write )
 	}
 	buffer += 2;
 
-	if(content_type)
-	{
-		if( write ) { strcpy(buffer, CONTENT_TYPE); }
-		buffer += 12; //strlen(CONTENT_TYPE); //Moves the pointer after "Content-Type"
-		if( write )
-		{
-			*buffer = ':';
-			*( buffer + 1 ) = ' ';
-		}
-		buffer += 2;
-		if( write ) { strcpy(buffer, content_type); }
-		buffer += strlen(content_type); //Moves the pointer after the content type
-		if( write )
-		{
-			*buffer = '\r';
-			*( buffer + 1 ) = '\n';
-		}
-		buffer += 2;
-	}
-
 	size_t cl;
 	if(body)
 	{
@@ -146,6 +127,26 @@ size_t Message::serialize( char* buffer, bool write )
 
 
 	//Serialize other fields here
+
+	if(content_type)
+	{
+		if( write ) { strcpy(buffer, CONTENT_TYPE); }
+		buffer += 12; //strlen(CONTENT_TYPE); //Moves the pointer after "Content-Type"
+		if( write )
+		{
+			*buffer = ':';
+			*( buffer + 1 ) = ' ';
+		}
+		buffer += 2;
+		if( write ) { strcpy(buffer, content_type); }
+		buffer += strlen(content_type); //Moves the pointer after the content type
+		if( write )
+		{
+			*buffer = '\r';
+			*( buffer + 1 ) = '\n';
+		}
+		buffer += 2;
+	}
 
 	if( write )
 	{
@@ -303,6 +304,10 @@ File* Message::unset_body(void)
 
 uint8_t Message::to_destination(void)
 {
+	if(dispatching != RELATIVE)
+	{
+		return 255;
+	}
 	return to_url->resources.items - to_url_cursor - 1;
 }
 

@@ -113,13 +113,8 @@ URL::PARSING_RESULT URL::parse(char* str)
 	{
 		if( next_part == '/' )
 		{
-			is_absolute_path = true;
 			resources.append( str );
 			*str++ = '\0';
-		}
-		else
-		{
-			is_absolute_path = false;
 		}
 
 		start = str;
@@ -156,10 +151,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 		}
 
 	}
-	else
-	{
-		is_absolute_path = false;
-	}
+
 #if URL_ARGUMENT
 	//ARGUMENT PART
 	if( next_part == '?')
@@ -251,11 +243,6 @@ size_t URL::serialize(char* buffer, bool write)
 		buffer += strlen(port);
 	}
 #endif
-	if(is_absolute_path)
-	{
-		if(write){ *buffer = '/'; }
-		buffer++;
-	}
 
 	for(uint8_t i = 0; i< resources.items; i++)
 	{
@@ -325,10 +312,6 @@ void URL::print(void)
 		DEBUG_PRINT(port);
 	}
 #endif
-	if(is_absolute_path)
-	{
-		DEBUG_PRINT('/');
-	}
 	for(uint8_t i = 0; i < resources.items; i++)
 	{
 		DEBUG_PRINT(resources[i]);
@@ -357,4 +340,13 @@ void URL::print(void)
 		DEBUG_PRINT(fragment);
 	}
 #endif
+}
+
+bool URL::is_absolute(void)
+{
+	if(resources.items && *(resources[0]) == '\0')
+	{
+		return true;
+	}
+	return false;
 }
