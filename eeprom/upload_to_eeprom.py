@@ -117,11 +117,16 @@ try:
     os.write(tty, cmd_data) #Write the data to the tty.
     
     #Define a function to receive acknowledgments from the device.
-    def rec_ack():        
+    def rec_ack():   
+        #Uncomment the following to inspect replies using another data sink
+        #such as cat /dev/ttyUSBx.    
+        #time.sleep(0.1)
+        #return;
+        
         rec = '' #The received code.
         timeout = 0 #The timeout counter.     
         while not len(rec): #While the rec variable is empty.
-            if timeout > 100: #If it has been more than 100ms since the packet was sent.
+            if timeout > 1000: #If it has been more than 1000ms since the packet was sent.
                 print '[TIMEOUT]'
                 raise ScriptException() #An Exception is raised so the finally block gets executed.
             try:
@@ -177,9 +182,6 @@ try:
             if progress >= total: #If we are done sending the file.
                 print '[DONE]' #Prints done and a line break.
                 break #Ends the loop.
-            else:
-                #Prints a return to line character so the next line gets printed over.
-                sys.stdout.write('\r')
             #Attempts to read 24 characters from the file. 
             to_send = file.read(24)
             #Less than 24 characters mean we have exhausted the file.
@@ -187,6 +189,8 @@ try:
                 for i in range(24 - len(to_send)): to_send += ' ' #Pad with spaces, null chars get parsed by the XML parser
             os.write(tty, to_send) #Write the packet to the TTY.
             rec_ack() #Wait for the acknowledgment.
+            #Prints a return to line character so the next line gets printed over.
+            sys.stdout.write('\r')
             progress += 24 #Some characters were transfered si increase the counter.   
 except ScriptException:
     #Catches ScriptException so stack dumping is avoided. 

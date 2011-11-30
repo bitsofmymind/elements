@@ -227,29 +227,40 @@ uint8_t EEPROM_24LCXX::find_file(uint8_t index, uint16_t* entry_addr)
 
 uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 {
+	//VERBOSITY PRITING
 	VERBOSE_PRINT_P("Appending to file at 0x");
 	VERBOSE_TPRINT(addr, HEX);
 	VERBOSE_PRINT_P(" with ");
 	VERBOSE_TPRINT((uint16_t)content->size, DEC);
 	VERBOSE_PRINTLN_P(" bytes");
 
+	//Reads the file system record to the page buffer.
 	read(FILE_SYSTEM, sizeof(file_system));
-	file_system* fs = (file_system*)page_buffer;
+	file_system* fs = (file_system*)page_buffer; //Cast it.
 
-	uint16_t end = fs->space_used;
+	uint16_t end = fs->space_used; //The end of the files.
 
+	/*If the data we are about to write does not fit in the remaining space
+	 * of the eeprom.*/
 	if(EEPROM_SIZE - end < content->size)
 	{
-		ERROR_PRINTLN_P("Not enough space!");
+		ERROR_PRINTLN_P("Not enough space!"); //Throw and error.
 		return 1;
 	}
 
+	/*If the file we will be appending to is not the last file. */
 	if(addr != fs->last_file_ptr)
 	{
+		/*Increase the last file pointer by the amount of bytes the last file
+		 * will get shifted.*/
 		fs->last_file_ptr += content->size;
 	}
+
+	/*Increase the space_used variable by the amount of content we will be
+	 * adding to the file system.*/
 	fs->space_used += content->size;
 
+	/*Write the file system record to the eeprom.*/
 	write(FILE_SYSTEM, sizeof(file_system));
 
 	read(addr + FILE_SIZE, sizeof(uint16_t));
@@ -564,6 +575,15 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 
 uint8_t EEPROM_24LCXX::write(uint16_t addr, uint8_t len)
 {
+	/*WTF!!!!!!!!!!!!!!!!!!!!*/
+	/*This block is necessary for the file system record to correctly save on
+	 * the eeprom. It could have something to do with timing, where the code is being
+	 * to fast in switchin between read and writes.*/
+	DEBUG_TPRINTLN(len, DEC);
+	file_system* fs = (file_system*)page_buffer;
+	//DEBUG_PRINT('-');
+	DEBUG_TPRINTLN(fs->space_used, DEC);
+
 
 	uint8_t n = 0;
 	uint8_t twst;
