@@ -29,7 +29,7 @@
 // ENC28J60 control port
 #define ENC28J60_CONTROL_PORT	PORTB
 #define ENC28J60_CONTROL_DDR	DDRB
-#define ENC28J60_CONTROL_CS		PB0
+#define ENC28J60_CONTROL_CS		PB2
 
 //Include uip.h gives all the uip configurations in uip-conf.h
 #include "uip.h"

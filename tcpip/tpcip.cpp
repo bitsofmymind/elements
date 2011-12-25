@@ -62,15 +62,15 @@ TCPIPStack::TCPIPStack():
 	printip(ipaddr);
 	VERBOSE_PRINTLN();
 	uip_ipaddr(ipaddr, 10,0,0,1);
+	uip_setdraddr(ipaddr);
 	VERBOSE_PRINT_P("Default router: ");
 	printip(ipaddr);
 	VERBOSE_PRINTLN();
-	uip_setdraddr(ipaddr);
 	uip_ipaddr(ipaddr, 255,255,255,0);
+	uip_setnetmask(ipaddr);
 	VERBOSE_PRINT_P("Netmask: ");
 	printip(ipaddr);
 	VERBOSE_PRINTLN();
-	uip_setnetmask(ipaddr);
 #endif /*__DHCPC_H__*/
 
 	schedule(ASAP);
@@ -103,9 +103,9 @@ void TCPIPStack::run(void)
 		}
 
 	}
-	else if(periodic_timer <= get_uptime() )
+	//else if(is_expired(periodic_timer))
 	{
-		expire(periodic_timer, 15);
+		//expire(periodic_timer, 15);
 		for(uint8_t i = 0; i < UIP_CONNS; i++)
 		{
 			uip_periodic(i);
@@ -116,14 +116,15 @@ void TCPIPStack::run(void)
 			}
 		}
 
-		if( arp_timer <= get_uptime() )
-		{
-			arp_timer = get_uptime() + 100;
-			uip_arp_timer();
-		}
+
+	}
+	if(is_expired(arp_timer))
+	{
+		arp_timer = expire(arp_timer, SECONDS(10));
+		uip_arp_timer();
 	}
 
-	schedule(ASAP);
+	schedule(10);
 }
 
 void TCPIPStack::printip(uip_ipaddr_t addr)
