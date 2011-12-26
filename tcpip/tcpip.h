@@ -20,22 +20,27 @@
 
 #include <core/resource.h>
 #include "uip.h"
+#include "dhcpc.h"
 
 class TCPIPStack: public Resource
 {
 	private:
 		uptime_t periodic_timer;
 		uptime_t arp_timer;
+		uptime_t dhcp_timer;
 
 		uint8_t counter;
 
 		List<Response*> to_send;
+
+		DHCPClient* dhcp_client;
 
 	public:
 		TCPIPStack();
 
 		virtual void run(void);
 		void appcall(void);
+		void udp_appcall(void);
 
 		virtual Response::status_code process(Response* response);
 	protected:

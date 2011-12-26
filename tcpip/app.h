@@ -35,4 +35,9 @@ void elements_appcall(void);
 #define UIP_APPCALL elements_appcall
 #endif /* UIP_APPCALL */
 
+typedef struct dhcpc_state {} uip_udp_appstate_t;
+#define UIP_UDP_APPCALL dhcpc_appcall
+void dhcpc_appcall();
+
+
 #endif /* __APP_H__ */

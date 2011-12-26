@@ -37,6 +37,7 @@ TCPIPStack::TCPIPStack():
 	Resource(),
 	periodic_timer(0),
 	arp_timer(0),
+	dhcp_timer(0),
 	counter(0)
 {
 	stack = this;
@@ -51,10 +52,10 @@ TCPIPStack::TCPIPStack():
 
 	uip_listen(HTONS(80));
 
-#ifdef __DHCPC_H__
-	dhcpc_init(&mac, 6);
-#else
-	uip_ipaddr_t ipaddr;
+	dhcp_client = new DHCPClient(&mac);
+	add_child("dhcp", dhcp_client);
+
+	/*uip_ipaddr_t ipaddr;
 
 	uip_ipaddr(ipaddr, 10,0,0,2);
 	uip_sethostaddr(ipaddr);
@@ -70,8 +71,7 @@ TCPIPStack::TCPIPStack():
 	uip_setnetmask(ipaddr);
 	VERBOSE_PRINT_P("Netmask: ");
 	printip(ipaddr);
-	VERBOSE_PRINTLN();
-#endif /*__DHCPC_H__*/
+	VERBOSE_PRINTLN();*/
 
 	schedule(ASAP);
 }
@@ -90,6 +90,7 @@ void TCPIPStack::run(void)
 			{
 				uip_arp_out();
 				network_send();
+				VERBOSE_PRINTLN_P("IP send");
 			}
 		}
 		else if(BUF->type == htons(UIP_ETHTYPE_ARP))

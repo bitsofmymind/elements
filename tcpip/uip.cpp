@@ -390,7 +390,7 @@ uip_init(void)
 #endif /* UIP_ACTIVE_OPEN */
 
 #if UIP_UDP
-  for(c = 0; c < UIP_UDP_CONNS; ++c) {
+  for(uint8_t c = 0; c < UIP_UDP_CONNS; ++c) {
     uip_udp_conns[c].lport = 0;
   }
 #endif /* UIP_UDP */
@@ -477,13 +477,14 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
   
   /* Find an unused local port. */
  again:
-  ++lastport;
+  /*++lastport;
 
   if(lastport >= 32000) {
     lastport = 4096;
-  }
+  }*/
+  const uint16_t lastport = 4096;
   
-  for(c = 0; c < UIP_UDP_CONNS; ++c) {
+  for(uint8_t c = 0; c < UIP_UDP_CONNS; ++c) {
     if(uip_udp_conns[c].lport == htons(lastport)) {
       goto again;
     }
@@ -491,7 +492,7 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 
 
   conn = 0;
-  for(c = 0; c < UIP_UDP_CONNS; ++c) {
+  for(uint8_t c = 0; c < UIP_UDP_CONNS; ++c) {
     if(uip_udp_conns[c].lport == 0) {
       conn = &uip_udp_conns[c];
       break;
