@@ -37,11 +37,11 @@
 extern void init(void);
 
 #define ASAP 0
-#define SECONDS(s) s*1000
-#define MINUTES(m) m*SECONDS(60)
-#define HOURS(h) h*MINUTES(60)
-#define DAYS(d) d*HOURS(24)
-#define WEEKS(w) w*DAYS(7)
+#define SECONDS(s) (s) * 1000
+#define MINUTES(m) (m) * SECONDS(60)
+#define HOURS(h) (h) * MINUTES(60)
+#define DAYS(d) (d) * HOURS(24)
+#define WEEKS(w) (w) * DAYS(7)
 #define NEVER MAX_UPTIME
 
 #if TIME_KEEPING

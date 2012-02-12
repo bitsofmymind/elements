@@ -111,12 +111,6 @@ URL::PARSING_RESULT URL::parse(char* str)
 	//RESOURCE PART
 	if( next_part != '?' && next_part != '#' && next_part != ' ' )
 	{
-		if( next_part == '/' )
-		{
-			resources.append( str );
-			*str++ = '\0';
-		}
-
 		start = str;
 
 		while( true )
@@ -131,20 +125,16 @@ URL::PARSING_RESULT URL::parse(char* str)
 			else if( *str == '?' || *str == '#' || *str == ' ' )
 			{
 				next_part = *str;
-				if( *(str - 1) == '/' )
-				{
-					if( resources.items == 0 ){ break; }
-
-					*(str - 1) = '\0';
-					resources.append(str - 1);
-				}
-				else
+				/*If the previous resource did not finish with a "/".*/
+				if( *(str - 1) != '\0' )
 				{
 					/*There is necessarily a resource present because it was verified
 					at the beginning of this part.*/
-					*str++ = '\0';
 					resources.append( start );
 				}
+				/*If the resource did finish with a "/", it has been accounted for
+				 * previously. */
+				*str++ = '\0';
 				break;
 			}
 			str++;
