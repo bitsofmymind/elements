@@ -1,38 +1,54 @@
-/* response.h - Implements an HTTP response
- * Copyright (C) 2011 Antoine Mercier-Linteau
+// SVN FILE: $Id: $
+/**
+ * @lastChangedBy           $lastChangedBy: Mercier $
+ * @revision                $Revision: 397 $
+ * @copyright    			GNU General Public License
+ * 		This program is free software: you can redistribute it and/or modify
+ * 		it under the terms of the GNU General Public License as published by
+ * 		the Free Software Foundation, either version 3 of the License, or
+ * 		(at your option) any later version.
+ * 		This program is distributed in the hope that it will be useful,
+ * 		but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * 		GNU General Public License for more details.
+ * 		You should have received a copy of the GNU General Public License
+ * 		along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Header file for the Response class.
  */
 
 #ifndef RESPONSE_H_
 #define RESPONSE_H_
 
+//INCLUDES
+#include <utils/utils.h>
 #include "message.h"
 #include "request.h"
-#include <utils/utils.h>
-
 
 class Response: public Message
 {
 	public:
-		//STATUS CODES DEFINITIONS
+		///Typedef for the HTTP status code.
 		typedef uint8_t status_code;
+
+		//STATUS CODES DEFINITIONS
+
+		/*To reduce the bit footprint of a status code, the actual number
+		 * value is compress by allocating the first 3 bits of a byte for
+		 * the status type (informational, successful, redirection, client
+		 * error and server error) and the remaining 5 bits for the code.
+		 * This effectively allows 8 differrent types and 32 different
+		 * codes, which is more than enough for HTTP/1.1. */
 
 		//Informational: 1xx
 		#define CONTINUE_100 ((1 << 5) + 0)
 		#define SWITCHING_PROTOCOLS_101 ((1 << 5) + 1)
-		#define RESPONSE_DELAYED_102 ((1 << 5) + 2) //Elements framework specific
+		/**This status code is specific to the Elements framework, it is used
+		 * to inform the framework that a Resource is holding a request and
+		 * will return the response at a later time. This is useful for cases
+		 * where a response requires lengthy processing or when it must wait
+		 * for an external event.*/
+		#define RESPONSE_DELAYED_102 ((1 << 5) + 2)
 
 		//Successful: 2xx
 		#define OK_200 ((2 << 5) + 0)
@@ -53,6 +69,13 @@ class Response: public Message
 		#define USE_PROXY_305 ((3 << 5) + 5)
 		//306 is no longer used and thus reserved
 		#define TEMPORARY_REDIRECT_307 ((3 << 5) + 7)
+		/** This status code is specific to the elements framework. It is
+		 * used by processing to inform it that Resource will not process
+		 * a message due to it not being the destination. Note that is does
+		 * not necessarily mean that no processing was done on the message.
+		 * For cases where the resource is not capable of processing
+		 * the message due to other reasons, 4xx and 5xx status codes should
+		 * be used. */
 		#define PASS_308 ((3 << 5) + 8) //Elements framework specific
 
 		//Client Error: 4xx
@@ -89,7 +112,9 @@ class Response: public Message
 		//static const char ALLOW[];
 		//static const char ETAG[];
 #if LOCATION
+		///Location header field.
 		static const char LOCATION_STR[];
+		///The content of the location header field.
 		const char* location;
 #endif
 		//static const char PROXY_AUTHENTICATE[];
@@ -98,7 +123,11 @@ class Response: public Message
 		//static const char VARY[];
 		//static const char WWW_AUTHENTICATE[];
 
+		///The status code of this response.
 		status_code response_code_int;
+		///The request that triggered this response.
+		/**The request is kept for many reasons but mainly for the framework
+		 * to know which request triggered what response.*/
 		Request* original_request;
 
 	public:

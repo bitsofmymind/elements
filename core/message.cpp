@@ -1,47 +1,43 @@
-/* message.cpp - Implements an abstract HTTP message
- * Copyright (C) 2011 Antoine Mercier-Linteau
+// SVN FILE: $Id: $
+/**
+ * @lastChangedBy           $lastChangedBy: Mercier $
+ * @revision                $Revision: 397 $
+ * @copyright    			GNU General Public License
+ * 		This program is free software: you can redistribute it and/or modify
+ * 		it under the terms of the GNU General Public License as published by
+ * 		the Free Software Foundation, either version 3 of the License, or
+ * 		(at your option) any later version.
+ * 		This program is distributed in the hope that it will be useful,
+ * 		but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * 		GNU General Public License for more details.
+ * 		You should have received a copy of the GNU General Public License
+ * 		along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Source file for the Message class.
  */
 
+//INCLUDES
 #include <stdlib.h>
-#include "message.h"
 #include <utils/utils.h>
 #include <pal/pal.h>
 #include <string.h>
 #include <utils/memfile.h>
-#if !ITOA
+#if !ITOA //If there is no ITOA function, use sprintf (located in cstdio)
 #include <cstdio>
 #endif
+#include "message.h"
 
+/// Message is a base class for HTTP messages.
+/**
+ * @class Message
+ * Message implements common functionality between HTTP request and responses.
+ * It takes care of functions such as header parsing, header field parsing,
+ * body parsing and storage and defines methods that requests and responses
+ * override to adapt to their specificities.
+ */
 
-void Message::print()
-{
-	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
-	 * this method should be optimizes away by the compiler.*/
-	DEBUG_PRINT("Content-Length: ");
-	if(body)
-	{
-		DEBUG_TPRINTLN((uint32_t)body->size, DEC);
-	}
-	else
-	{
-		DEBUG_PRINTLN('0');
-	}
-}
-
-
+///Message class constructor.
 Message::Message():
 		parsing_body(false),
 		content_type(NULL),
@@ -55,36 +51,72 @@ Message::Message():
 	current_line_length = 0;
 	current_line = NULL;
 #if MESSAGE_AGE
-	age = get_uptime();
+	age = get_uptime(); //Set the uptime at which the message was created.
 #endif
 }
+
+///Message class destructor.
 Message::~Message()
 {
 	/*while(fields.items)
 	{
 		ts_free(fields.remove(fields[0]->key));
 	}*/
-	if(header)
+	//TODO free should not free null pointers so condition can be removed.
+	if(header) //If memory for a header was allocated.
 	{
 		ts_free(header);
 	}
-	if(body)
+	if(body) //If a File object for a body was created.
 	{
 		delete body;
 	}
-	if(current_line_length)
+	if(current_line_length) //If memory for parsing was allocated.
 	{
 		ts_free(current_line);
 	}
 }
 
+///Prints the contents of the message to the output.
+/** Prints the contents of the message to the output. Sub-classes of Message
+ * should override this method to print their own data. /*If VERBOSITY,
+ * OUTPUT_WARNINGS or OUTPUT_ERRORS are not defined, this method should be
+ * optimized away by the compiler.*/
+void Message::print()
+{
+	//Content-Length printing.
+	DEBUG_PRINT(Message::CONTENT_LENGTH);
+	DEBUG_PRINT(": ");
+	if(body) //If a message body is set.
+	{
+		DEBUG_TPRINTLN((uint32_t)body->size, DEC); //Print its size.
+	}
+	else
+	{
+		DEBUG_PRINTLN('0'); //Else Content-Length is 0
+	}
+}
 
+///Serialize the message to a buffer.
+/** Serialize the message to a buffer and/or returns the length in bytes of the
+ * serialized message. Simply returning the length is useful for allocating a
+ * buffer to which the message is then serialized to. Sub-classes of Message
+ * should override this method to serialize their own headers and fields,
+ * hence, this method should only be called within a child class.
+ * @param buffer the buffer to serialize the message to.
+ * @param write if the data should be written to the buffer. If set to false,
+ * 		only the length of the serialized message will be returned.
+ * @return if write is true, the number of bytes written to the buffer, if
+ * 		write is false, the length of the serialized message. */
 size_t Message::serialize( char* buffer, bool write )
 {
-	char* start = buffer;
+	//Note: The message header should have been serialized by a child class.
 
+	char* start = buffer; //Keep a pointer to the start of the buffer.
+
+	//CONTENT-LENGTH FIELD SERIALIZING
 	if( write ){ strcpy( buffer, CONTENT_LENGTH ); }
-	buffer += 14; //strlen(CONTENT_LENGTH);
+	buffer += 14; //Equivalent to strlen(CONTENT_LENGTH);
 	if( write )
 	{
 		*buffer = ':';
@@ -92,18 +124,13 @@ size_t Message::serialize( char* buffer, bool write )
 	}
 	buffer += 2;
 
-	size_t cl;
-	if(body)
-	{
-		cl = body->size;
-	}
-	else
-	{
-		cl = 0;
-	}
+	size_t cl; //The size of the body.
+	if(body){ cl = body->size; } //If there is a body, get its length.
+	else { cl = 0; } //Else Content-Length is 0.
 
 	if( write )
 	{
+		//Convert the content-length integer to a string.
 #if ITOA
 		itoa(cl, buffer, 10);
 #else
@@ -111,9 +138,14 @@ size_t Message::serialize( char* buffer, bool write )
 #endif
 	}
 
-
+	/*This loop finds the number of chars in the content-length string.
+	 * itoa and sprintf return the number of bytes written but since a
+	 * buffer is generally not allocated when this method is called with
+	 * write = false, we cannot use either.*/
 	do
 	{
+		/* Finding the number of time cl divides by 10 gives us the length of
+		the string. */
 		buffer++;
 		cl /= 10;
 	}while( cl > 0 );
@@ -125,13 +157,11 @@ size_t Message::serialize( char* buffer, bool write )
 	}
 	buffer += 2;
 
-
-	//Serialize other fields here
-
-	if(content_type)
+	//CONTENT-TYPE FIELD SERIALIZING
+	if(content_type) //If the message has a Content-type.
 	{
 		if( write ) { strcpy(buffer, CONTENT_TYPE); }
-		buffer += 12; //strlen(CONTENT_TYPE); //Moves the pointer after "Content-Type"
+		buffer += 12; //Equivalent to strlen(CONTENT_TYPE);
 		if( write )
 		{
 			*buffer = ':';
@@ -139,7 +169,7 @@ size_t Message::serialize( char* buffer, bool write )
 		}
 		buffer += 2;
 		if( write ) { strcpy(buffer, content_type); }
-		buffer += strlen(content_type); //Moves the pointer after the content type
+		buffer += strlen(content_type);
 		if( write )
 		{
 			*buffer = '\r';
@@ -148,6 +178,7 @@ size_t Message::serialize( char* buffer, bool write )
 		buffer += 2;
 	}
 
+	//CRLF BETWEEN FIELDS AND BODY
 	if( write )
 	{
 		*buffer = '\r';
@@ -155,134 +186,186 @@ size_t Message::serialize( char* buffer, bool write )
 	}
 	buffer += 2;
 
+	/*Since the start of the buffer was saved, the difference between the two
+	 * gives us the length of the serialize message.*/
 	return buffer - start;
 }
 
+///Parse the content of a buffer with a known size into a message.
+/**
+ * Parses the content of a buffer into this message object. This method assumes
+ * that the size of the buffer is known and can be called on multiple
+ * message parts for cases where they are received serially. Parsing is done
+ * by waiting for complete HTTP lines (ended by CRLF) and parsing them at once.
+ * @param data pointer to the buffer to parse.
+ * @param size the size of the message buffer.
+ * @return the result of the parsing.
+ */
 Message::PARSER_RESULT Message::parse(const char* data, size_t size)
 {
-	size_t line_end = 0;
-	size_t line_start = 0;
+	size_t line_start = 0; //Where the current line starts in the buffer.
+	///TODO rename line_end to ptr.
+	size_t line_end = 0; //What we are currently parsing.
 
-	if(parsing_body)
+	if(parsing_body) //If we are done parsing the header.
 	{
-		return store_body(data, size);
+		return store_body(data, size); //Forward the buffer to store_body().
 	}
 
 	while(true)
 	{
-		/*To account for cases where a buffer ends at \r, we only consider the \n to
-		 * detect a new line. If the line is misformed and \r was omitted, it will be detected by
-		 * the line parser.*/
-		if(data[line_end] == '\n')
+		/*To account for cases where a buffer ends at \r, we only look for
+		 * the \n to detect a new line. If the line is misformed and \r was
+		 * omitted, it will be detected by the line parser.*/
+
+		if(data[line_end] == '\n') //If we are at the end of the current line.
 		{
-			PARSER_RESULT res;
+			PARSER_RESULT res; //The result of the parsing.
+			//If part of a line was received in a previous call to this method.
 			if(current_line_length)
 			{
-				//Part of a line was previously saved
+				//Part of a line was previously saved, allocated bigger buffer.
 				char* line = (char*)ts_malloc(line_end + 1 + current_line_length);
-				//Stack allocation coud be used here.
-				if(!line)
+				/**TODO use stack allocation here because we only need line
+				 * within this scope.*/
+				if(!line) //If allocating the new line buffer failed.
 				{
-					return OUT_OF_MEMORY;
+					return OUT_OF_MEMORY; //Return the appropriate error.
 				}
+				//Copy the content of the old line buffer to the new.
 				memcpy(line, current_line, current_line_length);
+				//Copy the content of the received buffer to the line buffer.
 				memcpy(line + current_line_length, data, line_end + 1);
-				ts_free(current_line);
+				ts_free(current_line); //Free the old line buffer.
+				//A complete line is in the buffer so parse it.
 				res = parse_header(line, current_line_length + line_end + 1 );
-				ts_free(line);
-				current_line_length = 0;
+				ts_free(line); //We no longer need line so free it.
+				current_line_length = 0; //Reset the line_buffer length.
 			}
-			else
+			else //A complete is contained within the current buffer.
 			{
+				//Parse it.
 				res = parse_header(data + line_start, line_end - line_start + 1);
 			}
 
-			switch(res)
+			switch(res) //Switch according to the result of the parsing.
 			{
 				case PARSING_COMPLETE:
-					//The remainder of the buffer is part of the the body so we store it.
+					/*The remainder of the buffer is part of the the body so
+					 * we store it next.
+					 */
 					parsing_body = true;
 					return store_body(data + line_end + 1, size - (line_end + 1));
-				case PARSING_SUCESSFUL:
-					line_start = ++line_end;
+				case PARSING_SUCESSFUL: //A line has been parsed successfully.
+					line_start = ++line_end; //Start a new line.
 					break;
 				default:
-					return res;
+					return res; //Something unexpected has occurred.
 			}
 		}
-		if(line_end == size)
+		if(line_end == size) //If we are at the end of the buffer.
 		{
+			//If the current line ended with the buffer.
 			if(line_start == line_end)
 			{
-				//The current line ended on the buffer's bounds, no need to save anything
+				//No need to save anything
 
 			}
 			else
 			{
-				/*The current line ends in the next buffer, we need to save the current line for the next call
-				 * to this method.*/
-				if(current_line_length) //The end of the line was not located within this buffer
+				/*The current line ends in a subsequent buffer, we need to save
+				 * the current line for the next call to this method.*/
+
+				//If the line buffer already contains data.
+				if(current_line_length)
 				{
+					/*Allocate a bigger buffer to contain both this buffer and
+					the line buffer. */
 					char* line = (char*)ts_malloc(line_end + current_line_length);
-					if(!line)
+					if(!line) //If allocating the new line buffer failed.
 					{
-						return OUT_OF_MEMORY;
+						return OUT_OF_MEMORY; //Return the appropriate error.
 					}
+					//Copy the content of the old line buffer to the new.
 					memcpy( line, current_line, current_line_length);
+					//Copy the content of the received buffer to the line buffer.
 					memcpy( line + current_line_length, data, size);
-					ts_free(current_line);
-					current_line = line;
-					current_line_length += size;
+					ts_free(current_line); //Frees the old line buffer.
+					current_line = line; //Save the new line buffer.
+					current_line_length += size; //Increase its size.
 				}
-				else
+				else //No data is within the line buffer.
 				{
+					//Save the current line's length.
 					current_line_length = line_end - line_start;
+					//Allocate a buffer to save it.
 					current_line = (char*)ts_malloc(current_line_length);
+					//If allocating the new line buffer failed.
 					if(!current_line)
 					{
-						return OUT_OF_MEMORY;
+						return OUT_OF_MEMORY; //Return the appropriate error.
 					}
+					//Copy the content of the received buffer to the line buffer.
 					memcpy(current_line, data + line_start, current_line_length);
 				}
 			}
-			return PARSING_SUCESSFUL;
+			return PARSING_SUCESSFUL; //Parsing is doing OK.
 		}
-		line_end++;
+		line_end++; //Parse the next character.
 	}
 }
 
+///Parse a buffer with an unknow length.
+/**
+ * Overloaded version of Message::parse() for parsing a complete message.
+ * Assumes that the buffer ends with a null character.
+ * @param buffer pointer to the buffer to be parsed.
+ * @return the result of the parsing.
+ */
 Message::PARSER_RESULT Message::parse( const char* buffer )
 {
-
+	/*The size of the line being parsed. Initialized to 1 because buffer
+	 * is incremented at the beginning of the loop.*/
 	uint8_t line_size = 1;
-	Message::PARSER_RESULT res;
+	Message::PARSER_RESULT res; //The result of the parsing.
 
+	/*While we have not reached a null character in the buffer. buffer is
+	incremented at the beginning of the loop so we are never checking memory
+	that may be outside the buffer.*/
 	while(*++buffer != '\0')
 	{
-
+		//If an HTTP end of line (CRLF) is detected.
 		if(*(buffer - 1) == '\r' && *buffer == '\n')
 		{
+			/*Parse that line. One is added to line_size because we want it to
+			be a length and not an index.*/
 			res = parse_header(buffer - line_size, line_size + 1);
-			if(res == PARSING_COMPLETE)
+			if(res == PARSING_COMPLETE) //If parsing is done.
 			{
-				break;
+				break; //Exit the loop.
 			}
-			if(res == PARSING_SUCESSFUL)
+			if(res == PARSING_SUCESSFUL) //If parsing the line was sucessful.
 			{
-				line_size = 0;
-				continue;
+				line_size = 0; //Reset line_size (should it not be set to 1?)
+				continue; //Continue with the rest of the buffer.
 			}
-			else
+			else //Else something unexpected has occurred.
 			{
-				return res;
+				return res; //Return the parsing result.
 			}
 		}
-		line_size++;
+		line_size++; //Increase the line_size.
 	}
 
-	return PARSING_COMPLETE;
+	return PARSING_COMPLETE; //Done parsing.
 }
 
+///Set the body of a Message.
+/**
+ * Set the body of a Message.
+ * @param f the File object containing the body.
+ * @param mime the MIME type of the body.
+ */
 void Message::set_body(File* f, const char* mime)
 {
 	body = f;
@@ -294,6 +377,11 @@ void Message::set_body(File* f, const char* mime)
 	return body;
 }*/
 
+///Unsets the body of a Message.
+/**
+ * Unsets the body of a Message.
+ * @return the body that was unset.
+ */
 File* Message::unset_body(void)
 {
 	File* f = body;
@@ -302,92 +390,156 @@ File* Message::unset_body(void)
 	return f;
 }
 
+///Returns the depth of resources to a Message's destination.
+/**
+ * Returns the depth of resources to a Message's destination.
+ * @return the depth.
+ */
 uint8_t Message::to_destination(void)
 {
+	/*If dispatching is not relative, there is no real way to tell where
+	 * the message currently is relative to its destination.*/
 	if(dispatching != RELATIVE)
 	{
-		return 255;
+		///TODO make this a configurable value.
+		return 255; //Return the maximum depth a message may be at.
 	}
+
+	/*Else return the depth. It is computed using the cursor. 1 is substracted
+	 * from the total because a message always has at least one resource
+	 * in its url.*/
 	return to_url->resources.items - to_url_cursor - 1;
 }
 
+///Increments the to_url cursor to the next resource.
 void Message::next(void)
 {
+	//Check if there is a next resource.
 	if(to_url_cursor < to_url->resources.items - 1)
 	{
-		to_url_cursor++;
+		to_url_cursor++; //Increment the cursor.
 	}
 }
 
+///Decrements the to_url cursor to the previous resource.
 void Message::previous(void)
 {
-	if(to_url_cursor > 0)
+	if(to_url_cursor > 0) //Check if there is a previous resource.
 	{
-		to_url_cursor--;
+		to_url_cursor--; //Decrement the cursor.
 	}
 }
 
+///Parses a line from the message header.
+/**
+ * Parses a complete line from an HTTP message header. Subclasses of message
+ * should override this method to parse their specific header lines and hand off
+ * generic parsing to this method. Hence, this method should not be called
+ * directly.
+ * @param line a pointer to a complete line.
+ * @param size the size of the line (including CRLF).
+ * @return the result of the parsing.
+ */
 Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 {
-	//Overrides of this method should have checked if the line was correcly formed
+	/* Note: Overrides of this method should have checked if the line was
+	 * correcly formed. */
+
+	/*Since the body of an HTTP message is separated from the header using an
+	empty line, we can detect it by only checking if size is 2 (CR and LF)*/
 	if(size == 2)
 	{
-		return PARSING_COMPLETE;
+		return PARSING_COMPLETE; //Parsing is done.
 	}
 
-	/*The content length line gets special treatment, for the rest of the fields, we should proceed normally
-	 * and store them in a buffer.*/
+	/*The content length line gets special treatment because it gives the
+	 * size of the body, for the rest of the fields, we should proceed normally
+	 * and store them in their stucture.*/
+	//If the header line is "content-length".
 	if(!strncmp(CONTENT_LENGTH, line, 14)) //Could use memcmp
 	{
-		size_t content_length = atoi(line + 14 +/*strlen(CONTENT_LENGTH)*/ + 2);
+		/*Get the content length by converting from its textual representation.
+		 * 14 is strlen(CONTENT_LENGTH) and 2 is ": ". */
+		size_t content_length = atoi(line + 14 + 2);
+		/*Create a body object the size of content_length. Set its memory
+		 * pointer to NULL because we will be giving a memory area later
+		 * when the body is actually received.*/
 		body = new MemFile(NULL, content_length, false);
-		if(!body)
+		if(!body) //If creating the body failed.
 		{
-			ts_free(current_line);
-			return OUT_OF_MEMORY;
+			ts_free(current_line); //Free the line buffer.
+			return OUT_OF_MEMORY; //Return the appropriate error.
 		}
 	}
 
 	//Store fields in buffers
 
-	return PARSING_SUCESSFUL;
+	return PARSING_SUCESSFUL; //Parsing that line was sucessful.
 }
 
+///Store a message body from a buffer.
+/**
+ * A message body is treated like header lines and can be received in chunks.
+ * This method assumes that the content-length header field was previously
+ * received and parsed and that a File object was created to store the body,
+ * otherwise, the message is assumed to have not body.
+ * @param buffer pointer to the body buffer.
+ * @param size the size of the body.
+ * @return the result of the parsing.
+ */
 Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
 {
-	if(!body){	return PARSING_COMPLETE; }
+	if(!body) //If no body object is set.
+	{
+		return PARSING_COMPLETE; //Parsing is done.
+	}
 
+	//The size of the body, it was set in parse_header().
 	size_t cl = body->size;
 
-	if(!current_line_length)
+	//Note: this method reuses the line buffer to store body chunks.
+
+	/*TODO this method should use the line buffer to store body chunks,
+	 * is should do it used the file already allocated for the body.*/
+
+	if(!current_line_length) //If no buffer was allocated for the body already.
 	{
-		current_line = (char*)ts_malloc(cl);
-		if(!current_line)
+		current_line = (char*)ts_malloc(cl); //Allocate one.
+		if(!current_line) //If allocation failed.
 		{
-			return OUT_OF_MEMORY;
+			return OUT_OF_MEMORY; //Return the appropriate error.
 		}
 	}
 
+	/*If for some reason, size got larger than the size of the remaining body
+	data.*/
 	if(size > cl - current_line_length)
 	{
-		size = cl - current_line_length;
+		size = cl - current_line_length; //Set it back to avoid overflow.
 	}
 
+	//Copy the content of the buffer to the line buffer.
 	memcpy(current_line + current_line_length, buffer, size);
-	current_line_length += size;
+	current_line_length += size; //Increase the size of the line_buffer.
 
+	//If we have received all the body.
 	if(current_line_length >= cl)
 	{
+		//Set the line buffer to be the memfile's data.
 		((MemFile*)body)->data = current_line;
 
+		/*Reset the line buffer length to 0, what used to be the line buffer is
+		now the body and under the responsibility of a File object.*/
 		current_line_length = 0;
 
-		return PARSING_COMPLETE;
+		return PARSING_COMPLETE; //Parsing is done.
 	}
 
+	 //We are still expecting parts of the body but everything is good so far.
 	return PARSING_SUCESSFUL;
 }
 
+//MESSAGE FIELD DEFINITIONS
 
 //const char* Message::CACHE_CONTROL = {"cache-control", 1};
 //const char* Message::CONNECTION = {"connection", 2 };
@@ -401,10 +553,12 @@ Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
 
 //const char* Message::CONTENT_ENCODING = {"content-encoding", 10 };
 //const char* Message::CONTENT_LANGUAGE = {"content-language", 11 };
+/** The Content-Length header field definition.*/
 const char Message::CONTENT_LENGTH[] = "Content-Length";
 //const char* Message::CONTENT_LOCATION = {"content-location", 13 };
 //const char* Message::CONTENT_MD5 = {"content-md5", 14 };
 //const char* Message::CONTENT_RANGE = {"content-range", 15 };
+/** The Content-Type header field definition.*/
 const char Message::CONTENT_TYPE[] = "Content-Type";
 //const char* Message::EXPIRES = {"expires", 17 };
 //const char* Message::LAST_MODIFIED = "Last-Modified";

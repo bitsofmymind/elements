@@ -1,34 +1,38 @@
-/* request.h - Implements an HTTP request
- * Copyright (C) 2011 Antoine Mercier-Linteau
+// SVN FILE: $Id: $
+/**
+ * @lastChangedBy           $lastChangedBy: Mercier $
+ * @revision                $Revision: 397 $
+ * @copyright    			GNU General Public License
+ * 		This program is free software: you can redistribute it and/or modify
+ * 		it under the terms of the GNU General Public License as published by
+ * 		the Free Software Foundation, either version 3 of the License, or
+ * 		(at your option) any later version.
+ * 		This program is distributed in the hope that it will be useful,
+ * 		but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * 		GNU General Public License for more details.
+ * 		You should have received a copy of the GNU General Public License
+ * 		along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Header file for the Request class.
  */
 
 #ifndef REQUEST_H_
 #define REQUEST_H_
 
-#include "message.h"
+//INCLUDES
 #include <stdint.h>
+#include "message.h"
 
 class Request: public Message
 {
 	protected:
-		static const Message::TYPE type = REQUEST;
+		static const Message::TYPE type = REQUEST; //TODO this is probably useless.
+		///The HTTP method of this request.
 		const char* method;
-	public:
 
-		//Request header fields
+	public:
+		//REQUEST HEADER FIELDS
 		//static const char ACCEPT[];
 		//static const char ACCEPT_CHARSET[];
 		//static const char ACCEPT_ENCODING[];
@@ -49,8 +53,12 @@ class Request: public Message
 		//static const char USER_AGENT[];
 
 
+		///HTTP METHODS
+		///HTTP GET request method.
 		static const char GET[];
+		///HTTP POST request method.
 		static const char POST[];
+		///HTTP DELETE request method.
 		static const char DELETE[];
 
 	public:

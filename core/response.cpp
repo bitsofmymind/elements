@@ -1,30 +1,74 @@
-/* response.cpp - Implements an HTTP response
- * Copyright (C) 2011 Antoine Mercier-Linteau
+// SVN FILE: $Id: $
+/**
+ * @lastChangedBy           $lastChangedBy: Mercier $
+ * @revision                $Revision: 397 $
+ * @copyright    			GNU General Public License
+ * 		This program is free software: you can redistribute it and/or modify
+ * 		it under the terms of the GNU General Public License as published by
+ * 		the Free Software Foundation, either version 3 of the License, or
+ * 		(at your option) any later version.
+ * 		This program is distributed in the hope that it will be useful,
+ * 		but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * 		GNU General Public License for more details.
+ * 		You should have received a copy of the GNU General Public License
+ * 		along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Source file for the Response class.
  */
 
+//INCLUDES
 #include <stdlib.h>
-#include "message.h"
-#include "response.h"
 #include <pal/pal.h>
 #include <stdint.h>
 #include <string.h>
+//If the itoa function is not available, use the equivalent from cstdio.
 #if !ITOA
 #include <cstdio>
 #endif
+#include "message.h"
+#include "response.h"
 
+///Response implements an HTTP response.
+/**
+ * @class Response
+ * */
+
+///Class constructor.
+/**
+ * @param _response_code the response's status code.
+ * @param _orginial_request the request that triggered this response; NULL
+ * 	if there is none.*/
+Response::Response(
+		const status_code _response_code,
+		Request* _original_request):
+			Message(),
+			response_code_int(_response_code),
+			original_request(_original_request)
+{
+	object_type = RESPONSE; //Set the object type.
+	//If a request is associated to this response.
+	if(_original_request)
+	{
+		/*Invert the "to" and "from" urls to get the origin and destination
+		of this response. This means it will follow that same route of its
+		triggering request.*/
+		to_url = _original_request->from_url;
+		from_url = _original_request->to_url;
+	}
+
+#if LOCATION //If the Location header field is used.
+	location = NULL;
+#endif
+}
+
+///Class destructor.
+Response::~Response()
+{
+	delete original_request;
+}
+
+///Prints the content of a Response to the output.
 void Response::print(void)
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
@@ -35,7 +79,7 @@ void Response::print(void)
 	DEBUG_PRINT(' ');
 	uint16_t rc = ( response_code_int >> 5 ) * 100 + ( response_code_int & 0b00011111 );
 	DEBUG_TPRINTLN(rc, DEC);
-	if(content_type)
+	if(content_type) //If there is a content type header field.
 	{
 		DEBUG_PRINT("Content-Type: ");
 		DEBUG_PRINTLN(content_type);
@@ -43,133 +87,137 @@ void Response::print(void)
 	Message::print();
 }
 
-
-Response::Response(
-		const status_code _response_code,
-		Request* _original_request):
-			Message(),
-			response_code_int(_response_code),
-			original_request(_original_request)
-{
-	object_type = RESPONSE;
-	if(_original_request)
-	{
-		to_url = _original_request->from_url;
-		from_url = _original_request->to_url;
-	}
-
-#if LOCATION
-	location = NULL;
-#endif
-}
-
-Response::~Response()
-{
-	delete original_request;
-}
-
+//Since response deserialization is not always needed, it can be deactivated.
 #if RESPONSE_DESERIALIZATION
-	Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
+///Parses a line from the response specific part of the HTTP header.
+/**@param line the header line currently being parsed.
+ * @param size the size in bytes of the header line.
+ * @see Message::parse().*/
+Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
+{
+	//If the end of the line is not a CRLF.
+	if(line[size - 2] != '\r' && line[size - 1] != '\n')
 	{
-		if(line[size - 2] != '\r' && line[size - 1] != '\n')
-		{
-			return LINE_INCOMPLETE;
-		}
-
-		if(!header)
-		{
-			header = (char*)ts_malloc(size - 2); /*We substract two because the
-			\r\n is implicit*/
-			if(!header)
-			{
-				return Message::OUT_OF_MEMORY;
-			}
-			header_length = size - 2;
-			memcpy(header, line , size - 2);
-
-			/*We do not really care about the HTTP version here, in fact, we could avoir saving it entirely*/
-
-			char* index = header;
-
-			while(true)
-			{
-				if( *index == ' ' )
-				{
-					response_code_int = (*(++index) - 48) << 5;
-					response_code_int += atoi(index);
-					break;
-				}
-				else if (index > (header + header_length))
-				{
-					return HEADER_MALFORMED;
-				}
-				index++;
-			}
-			Message::PARSER_RESULT res = PARSING_SUCESSFUL;
-
-			/*We do not really care about the reason phrase here, in fact, we could avoir saving it entirely*/
-
-			return PARSING_SUCESSFUL;
-		}
-
-		//Here we would parse for headers we want to keep
-
-		return Message::parse_header(line, size);
+		return LINE_INCOMPLETE;
 	}
+
+	if(!header) //If this is the first time we received a header line.
+	{
+		/*Allocate  a buffer for the line. Two is substracted because the
+		 * CRLF is implicit*/
+		header = (char*)ts_malloc(size - 2);
+		if(!header) //If memory allocation failed.
+		{
+			return Message::OUT_OF_MEMORY;
+		}
+		header_length = size - 2; //Compute the header length.
+		memcpy(header, line , size - 2); //Copy the line to the buffer.
+
+		/*We do not really care about the HTTP version here, in fact, we
+		 * could avoid saving it entirely.*/
+
+		char* index = header; //Index for the header line.
+
+		while(true) //Attempt to find the response code.
+		{
+			if( *index == ' ' ) //If a space is detected.
+			{
+				/* The response code appears at the end of the first space.
+				 * The response code is compressed to fit in a byte.
+				 * Save the first part of the response code.*/
+				response_code_int = (*(++index) - 48) << 5;
+				//Save the second part of the response code.
+				response_code_int += atoi(index);
+				break; //Done with finding the response code.
+			}
+			//If we have reached the end of the header buffer.
+			else if (index > (header + header_length))
+			{
+				return HEADER_MALFORMED; //No response code was present.
+			}
+			index++;
+		}
+		Message::PARSER_RESULT res = PARSING_SUCESSFUL;
+
+		/*We do not really care about the reason phrase here, in fact, we could avoid
+		 *  saving it entirely.*/
+
+		return PARSING_SUCESSFUL;
+	}
+
+	//Here we would parse for headers we want to keep
+
+	 //Calls the parent to parse other headers.
+	return Message::parse_header(line, size);
+}
 #endif
 
+///Serialize the response to a buffer.
+/** Serialize the response to a buffer and/or returns the length in bytes of the
+ * serialized request. Simply returning the length is useful for allocating a
+ * buffer to which the message is then serialized to.
+ * @param buffer the buffer to serialize the response to.
+ * @param write if the data should be written to the buffer. If set to false,
+ * 		only the length of the serialized response will be returned.
+ * @return if write is true, the number of bytes written to the buffer, if
+ * 		write is false, the length of the serialized response. */
 size_t Response::serialize( char* buffer, bool write)
 {
+	char* start = buffer; //Save the start of the buffer.
 
-	char* start = buffer;
-
-	if( write )
+	if( write ) //If we should write the data.
 	{
+		//Write "HTTP/1.0".
 		*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
 		*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '0';
 		*buffer++ = ' ';
+		//Convert the response code to a a uint16_t.
 		uint16_t rc = ( response_code_int >> 5 ) * 100 + ( response_code_int & 0b00011111 );
 #if ITOA
-		itoa(rc, buffer, 10);
+		itoa(rc, buffer, 10); //Write the response code.
 
 #else
-		sprintf(buffer, "%d", rc);
+		sprintf(buffer, "%d", rc); //Write the response code.
 #endif
 	}
 	else { buffer += 9; }
 
-	buffer += 3; //Moved the pointer after the last part of the response code
+	buffer += 3; //Move the pointer after the last part of the response code
 
-	if( write )
+	if( write ) //If we should write the data.
 	{
-		*buffer = '\r';
+		*buffer = '\r'; //Write a CRLF.
 		*( buffer + 1 ) = '\n';
 	}
 	buffer += 2;
 #if LOCATION
-	if(location)
+	if(location) //If location header is present.
 	{
-		if( write ) { strcpy(buffer, LOCATION_STR); }
-		buffer += 8; //strlen(LOCATION); //Moves the pointer after "Content-Type"
-		if( write )
+		if( write ) { strcpy(buffer, LOCATION_STR); } //Write the header name.
+		buffer += 8; //strlen(LOCATION); //Moves the pointer after "Location".
+		if( write ) //If we should write the data.
 		{
 			*buffer = ':';
 			*( buffer + 1 ) = ' ';
 		}
 		buffer += 2;
-		if( write ) { strcpy(buffer, location); }
+		if( write ) { strcpy(buffer, location); } //Write the location content.
 		buffer += strlen(location); //Moves the pointer after the content type
-		if( write )
+		if( write ) //If we should write the data.
 		{
-			*buffer = '\r';
+			*buffer = '\r'; //Write a CRLF.
 			*( buffer + 1 ) = '\n';
 		}
 		buffer += 2;
 	}
 #endif
+
+	//Serialize other headers here.
+
+	 //Calls the parent to write other headers.
 	buffer += Message::serialize(buffer, write);
 
-	return buffer - start;
+	return buffer - start; //Return the size of the buffer.
 }
 
 //STATUS CODE DEFINITIONS

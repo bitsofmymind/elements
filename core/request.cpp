@@ -1,71 +1,103 @@
-/* request.cpp - Implements an HTTP request
- * Copyright (C) 2011 Antoine Mercier-Linteau
+// SVN FILE: $Id: $
+/**
+ * @lastChangedBy           $lastChangedBy: Mercier $
+ * @revision                $Revision: 397 $
+ * @copyright    			GNU General Public License
+ * 		This program is free software: you can redistribute it and/or modify
+ * 		it under the terms of the GNU General Public License as published by
+ * 		the Free Software Foundation, either version 3 of the License, or
+ * 		(at your option) any later version.
+ * 		This program is distributed in the hope that it will be useful,
+ * 		but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * 		GNU General Public License for more details.
+ * 		You should have received a copy of the GNU General Public License
+ * 		along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Source file for the Request class.
  */
 
-#include "message.h"
-#include "request.h"
-#include "url.h"
+//INCLUDES
 #include <stdint.h>
 #include <pal/pal.h>
 #include <ctype.h>
 #include <string.h>
+#include "message.h"
+#include "request.h"
+#include "url.h"
 
+///Request implements an HTTP request.
+/**
+ * @class Request
+ * */
+
+///Request class constructor.
 Request::Request():
-		Message()
+	Message(),
+	method(NULL)
 {
+	object_type = REQUEST;
+
+	//Allocates two blank URL objects for the source and destination urls.
 	to_url = new URL();
 	from_url = new URL();
-	object_type = REQUEST;
-	method = NULL;
 }
 
+///Request class destructor.
 Request::~Request()
 {
 	delete to_url;
 	delete from_url;
 }
 
-
+///Prints the content of a Request to the output.
 void Request::print(void)
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
 	 * this method should be optimizes away by the compiler.*/
 	DEBUG_PRINT(" % Request: ");
+
+	//Prints the HTTP request header.
 	DEBUG_PRINT(method);
 	DEBUG_PRINT(' ');
-	to_url->print();
+	to_url->print(); //Prints the url.
 	DEBUG_PRINTLN(" HTTP/1.0");
-	Message::print();
+
+	Message::print(); //Hands of printing to parent method.
 }
 
 #if REQUEST_SERIALIZATION
+///Serialize the request to a buffer.
+/** Serialize the request to a buffer and/or returns the length in bytes of the
+ * serialized request. Simply returning the length is useful for allocating a
+ * buffer to which the message is then serialized to.
+ * @param buffer the buffer to serialize the request to.
+ * @param write if the data should be written to the buffer. If set to false,
+ * 		only the length of the serialized request will be returned.
+ * @return if write is true, the number of bytes written to the buffer, if
+ * 		write is false, the length of the serialized request. */
 size_t Request::serialize(char* buffer, bool write)
 {
-	char* start = buffer;
+	char* start = buffer; //The start of the buffer.
 
+	//HTTP REQUEST HEADER SERIALIZATION
+
+	//Serialize the method.
 	if( write ){ strcpy(buffer, method); }
 	buffer += strlen(method);
 
+	///TODO merge with method write.
 	if( write ){ *buffer = ' '; }
 	buffer++;
 
-	buffer += to_url->serialize(buffer, write);
+	buffer += to_url->serialize(buffer, write); //Serialize the destination URL.
 
+	//Serialize the HTTP version.
 	if(write)
 	{
+		/*Note: In order so save on RAM, the following string is hardcoded in
+		 * program memory.*/
+
 		*buffer++ = ' ';
 		*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
 		*buffer++ = '1';
@@ -76,137 +108,197 @@ size_t Request::serialize(char* buffer, bool write)
 	}
 	else
 	{
-		buffer += 11;
+		buffer += 11; //The length of " HTTP/1.x\r\n".
 	}
 
+	//Calls the parent method to do generic message serialization
 	buffer += Message::serialize(buffer, write);
 
-	return buffer - start;
+	return buffer - start; //Return the size of the serialized message.
 }
 #endif
 
+///Parses a line from the message header.
+/**
+ * Parses the first line of an HTTP request header and if that line has
+ * already been parsed, hand of parsing to the parent method.
+ * @param line a pointer to a complete line.
+ * @param size the size of the line (including CRLF).
+ * @return the result of the parsing.
+ */
 Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 {
-
+	//If the received line does not end with CRLF.
 	if(line[size - 2] != '\r' && line[size - 1] != '\n')
 	{
-		return LINE_INCOMPLETE;
+		return LINE_INCOMPLETE; //Return the appropriate error.
 	}
 
-	if(!header)
+	if(!header) //If we are parsing the first line of the header.
 	{
-		header = (char*)ts_malloc(size - 2); /*We substract two because the
-		\r\n is implicit*/
-		if(!header)
+		/*Allocates space for the request header line. 2 is substracted to that
+		because the CRLF is implicit.*/
+		header = (char*)ts_malloc(size - 2);
+		if(!header) //If allocating memory failed.
 		{
-			return Message::OUT_OF_MEMORY;
+			return Message::OUT_OF_MEMORY; //Return the appropriate error.
 		}
-		header_length = size - 2;
+		header_length = size - 2; //Set the header length.
+		//Copy the content of the buffer to the header buffer.
 		memcpy(header, line , size - 2);
 
-		char* index = header;
+		char* index = header; //Index for the header buffer.
 
+		//HTTP REQUEST METHOD PARSING
 
 		while(true)
 		{
-			if( *index == ' ' )
+			if( *index == ' ' ) //If space is found.
 			{
-				method = header;
+				//This means we have reached the end of the method part.
+				method = header; //Save the location of the method.
+				/*Replace the space with a null character so the method can
+				 * be used like a normal string.*/
 				*index = '\0';
-				break;
+				break; //Done parsing the method.
 			}
+			//If the index has incremented past the header.
 			else if (index > (header + header_length))
 			{
+				//The HTTP method was not found so the header is malformed.
 				return HEADER_MALFORMED;
 			}
+			//If a letter in the header is upper case.
 			if(*index >= 'A' && *index <= 'Z')
 			{
-				*index += 32;
+				/*TODO this should be done when parts of the header are saved.
+				 * Should save a bit of program memory.*/
+				*index += 32; //change it to lower case.
 			}
-			index++;
+			index++; //Increment the index to the next character.
 		}
+		//Parsing is a sucess so far.
 		Message::PARSER_RESULT res = PARSING_SUCESSFUL;
 
-		to_url->parse( ++index );
-		//Should checl is url parsing was sucessful
+		//HTTP REQUEST URL PARSING
 
-		/*We do not really care about the HTTP version here, in fact, we could avoir saving it entirely*/
+		to_url->parse( ++index ); //Parse the url.
+		//TODO Should check is url parsing was sucessful
+
+		//We do not really care about the HTTP version for now.
+
+		//TODO delete this and return res.
 		if(res != PARSING_SUCESSFUL)
 		{
 			return HEADER_MALFORMED;
 		}
 		return PARSING_SUCESSFUL;
 	}
+	//Else the header's first line has already been parsed.
 
-	//Here we would parse for headers we want to keep
 
+	//Here we would parse for request specific headers we want to keep.
+
+	//Hand generic parsing to the parent method.
 	return Message::parse_header(line, size);
 }
 
 #if BODY_ARGS_PARSING
+//TODO check if MIME type is correct in comment.
+///Finds an argument within a x-www-htmlform and returns it.
+/** This method is a helper for parsing the arguments provided within an
+ * x-www-htmlform encoded body in POST requests.
+ * @param key the name of the argument.
+ * @param value a string where the value will be stored.
+ * @param max_size the maximum allowed size of the value. Since the space for
+ * 	value can be preallocated (if we are expecting arguments of a certain size),
+ * 	its size must be limited to avoid potential overflows.
+ * 	@return the length of the argument's value or 0 if it was not found.
+ * */
 uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 {
+	/* Note: Arguments are given in the following form:
+	 * key1=value1&key2value2&key3=value3&...*/
 
-	if(!body)
+	if(!body) //If there is no body for this request.
 	{
-		return 0;
+		return 0; //There cannot be body arguments so return 0.
 	}
 
+	//Argument parser states.
 	enum STATE {KEY, VALUE, SEPARATOR} state = KEY;
-	uint8_t read;
-	char buffer;
-	uint8_t index = 0;
 
-	body->cursor(0);
+	uint8_t read; //Number of bytes read in the body file.
+	char buffer; //The char currently being read.
+	uint8_t index = 0; //Index of the character being read.
 
-	do
+	body->cursor(0); //Reset the body's file cursor.
+
+	do //While there is still data in the body file.
 	{
-		read = body->read(&buffer, 1);
+		read = body->read(&buffer, 1); //Read one byte.
 
 		switch(state)
 		{
-			case KEY:
-				if(buffer != key[index])
+			case KEY: //Parser is finding the key.
+				if(buffer != key[index]) //If the keys do not match.
 				{
-					state = SEPARATOR;
+					//This is not the argument we are looking for.
+					state = SEPARATOR; //Find the next separator.
 				}
+				/**TODO: This should be else if, otherwise this could trigger
+				a false positive.*/
+				//If we have checked the entire key and have reached the value.
 				if( key[index++] == '\0' && buffer == '=')
 				{
-					index = 0;
-					state = VALUE;
+					//The argument has been found!
+					index = 0; //Reset the index.
+					state = VALUE; //Next output the argument's value.
 				}
+				/**TODO: if buffer is = and we have not reached the end of the
+				 * key, go look for the next key*/
 				break;
-			case SEPARATOR:
+			case SEPARATOR: //Parser is finding an argument separator.
 				if(buffer == '&')
 				{
 					state = KEY;
-					index = 0;
+					index = 0; //Reset the index
 				}
 				break;
-			case VALUE:
+			case VALUE: //Parser is outputting the value.
+				//If we have reached another argument of the end of the buffer.
 				if(buffer == '&' || read == 0)
 				{
-					return index;
+					return index; //Done, return the number of bytes read.
 				}
 				value[index++] = buffer;
+				//If we have reached the maximum size allowed.
 				if(index == max_size)
 				{
-					return index;
+					return index; //Quit.
 				}
 				break;
 		}
 
 	}
-	while(read);
+	while(read); //While there is still characters in the buffer.
 
-	return 0;
+	return 0; //The argument was not found so return 0.
 }
 #endif
 
+///Compare a string with the request's method.
+/**
+ * While comparison could be done inline, going through this method saves
+ * a bit of program memory.
+ * @param m the method string.
+ * @return boolean true if the request method and m matches.
+ */
 bool Request::is_method(const char* m)
 {
 	return !strcmp(method, m);
 }
+
 //const string< uint8_t > Request::ACCEPT = {"accept", 19};
 //const string< uint8_t > Request::ACCEPT_CHARSET = {"accept-string< uint8_t >set", 20};
 //const string< uint8_t > Request::ACCEPT_ENCODING = {"accept-encoding", 21};
@@ -226,6 +318,8 @@ bool Request::is_method(const char* m)
 //const string< uint8_t > Request::TE = {"te", 35};
 //const string< uint8_t > Request::USER_AGENT = {"user-agent", 36};
 
+//METHODS
+// Methods are defined as static class constants to save on memory.
 const char Request::GET[] = "get";
 const char Request::POST[] = "post";
 const char Request::DELETE[] = "delete";

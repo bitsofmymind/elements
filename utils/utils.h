@@ -146,6 +146,7 @@ T List<T>::remove_item( T item )
 {
 	return (T*)GenericList::remove_item( (void*)item );
 }
+
 template< class T>
 T List<T>::remove( uint8_t index )
 {

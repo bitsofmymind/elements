@@ -145,6 +145,7 @@ void* GenericDictionary::find( const char* key )
 	return kv->value;
 }
 
+
 const char* GenericDictionary::find_val( void* value )
 {
     for(uint8_t i = 0; i < items; i++)
@@ -309,3 +310,4 @@ GenericLinkedList::entry* GenericLinkedList::get(uint8_t position)
 
 	return current;
 }
+
