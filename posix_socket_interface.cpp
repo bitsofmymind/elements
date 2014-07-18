@@ -1,112 +1,134 @@
-/*
- * interface.cpp
+/* posix_socket_interface.cpp - A resource that interfaces with a POSIX socket.
+ * Copyright (C) 2014 Antoine Mercier-Linteau
  *
- *  Created on: Jul 2, 2009
- *      Author: Antoine
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+// INCLUDES
 
 #include "posix_socket_interface.h"
 #include <iostream>
-using namespace std;
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <pal/pal.h>
 #include <core/request.h>
 #include <core/response.h>
+#include <signal.h>
 
-Elements::string<uint8_t> make_connection_key(sockaddr_in &address)
+using namespace std;
+
+void* PosixSocketInterface::receive( void* args )
 {
-	char* key_text = (char*)malloc( sizeof( address.sin_port ) + sizeof( address.sin_addr) );
-
-	key_text[0] = (&address.sin_addr.s_addr)[0];
-	key_text[1] = (&address.sin_addr.s_addr)[1];
-	key_text[2] = (&address.sin_addr.s_addr)[2];
-	key_text[3] = (&address.sin_addr.s_addr)[3];
-	key_text[4] = (&address.sin_port)[0];
-	key_text[5] = (&address.sin_port)[1];
-	Elements::string< uint8_t > key = { key_text, sizeof( address.sin_port ) + sizeof( address.sin_addr) };
-
-	return key;
-}
-
-Elements::string<uint8_t> connection_address_type = MAKE_STRING("ipv4_addr");
-
-void* PosixSocketInterface::dispatch( void* args )
-{
-
 	int socket_file_descriptor = ((PosixSocketInterface*)args)->file_descriptor;
+
+	// The PosixSocketInterface object was passed in the arguments.
 	PosixSocketInterface* interface = (PosixSocketInterface*)args;
 	int number_of_characters_exchanged;
-	char buffer[1024];
+	char buffer[1024]; // A buffer to hold the received data.
 	socklen_t client_address_length;
 	Connection c;
 
+	// Block this thread from receiving signals.
+	sigset_t set;
+	sigfillset(&set);
+	pthread_sigmask(SIG_SETMASK, &set, NULL);
+
+	/* Since this method is meant to run inside a thread, it is not supposed to
+	 * return. */
 	while( true )
 	{
 		client_address_length = sizeof(sockaddr_in);
+		// Initialize a connection.
 		c.request = NULL;
 		c.response = NULL;
-		c.file_descriptor = accept(
-				socket_file_descriptor,
-				(sockaddr*)&c.addr,
-				&client_address_length);
+		// Accept a connection. This is a blocking call.
+		c.file_descriptor = accept(socket_file_descriptor, (sockaddr*)&c.addr, &client_address_length);
 
-		if( c.file_descriptor < 0)
+		if( c.file_descriptor < 0) // If there was an error on accept.
 		{
 			cerr << "Error on accept." << endl;
-			exit(1);
+			break; // End the thread.
 		}
 
-		/*cout << "Accepted connection from client at address " << \
-		(uint8_t)((&c->addr.sin_addr.s_addr)[3]) << '.' << \
-		(uint8_t)((&c->addr.sin_addr.s_addr)[2]) << '.' << \
-		(uint8_t)((&c->addr.sin_addr.s_addr)[1]) << '.' << \
-		(uint8_t)((&c->addr.sin_addr.s_addr)[0]) \
-		<< " from port " << client_address.sin_port << endl;*/
+		cout << "Accepted connection from client at address " << \
+		(uint8_t)(c.addr.sin_addr.s_addr >> 24) << '.' << \
+		(uint8_t)(c.addr.sin_addr.s_addr >> 16) << '.' << \
+		(uint8_t)(c.addr.sin_addr.s_addr >> 8) << '.' << \
+		(uint8_t)(c.addr.sin_addr.s_addr) \
+		<< " from port " << c.addr.sin_port << endl;
 
-		number_of_characters_exchanged = read( c.file_descriptor, buffer, 1024);
-
-		if( number_of_characters_exchanged < 0 )
+		bool done_read = false; // If we are done reading from the buffer.
+		do // Loop until all request data has been read and parsed..
 		{
-			cerr << "Reading from the socket caused and error." << endl;
-			pthread_exit(NULL);
-		}
+			/* Read some number of characters from the buffer. Its entirety could
+			 * be read, but for the sake of testing the framework, it is retrieved
+			 * and parsed in small chunks.*/
+			number_of_characters_exchanged = read( c.file_descriptor, buffer, 246);
 
-		Connection* current = NULL;
-
-		for(int i = 0; i < interface->connections.items; i++)
-		{
-			if(c.file_descriptor == interface->connections[i]->file_descriptor)
+			if( number_of_characters_exchanged < 0 ) // If reading failed.
 			{
-				current = interface->connections[i];
+				cerr << "Reading from the socket caused and error." << endl;
+				close(c.file_descriptor); // Close the connection.
+				break;
+			}
+
+			Connection* current = NULL;
+
+			// For each opened connection.
+			for(int i = 0; i < interface->connections.items; i++)
+			{
+				// If this connection is receiving new data.
+				if(c.file_descriptor == interface->connections[i]->file_descriptor)
+				{
+					current = interface->connections[i]; // Set it as a the current connection.
+				}
+			}
+
+			if(current == NULL) // If this is a new connection.
+			{
+				// Allocate space for the new connection.
+				current = (Connection*)malloc(sizeof(Connection));
+				*current = c; // Copy the data from the accepted conneciton.
+				current->request = new Request(); // Create a request object.
+				// Add the connection to the list.
+				interface->connections.append(current);
+			}
+
+			// Parse the part of the buffer we have received.
+			switch(current->request->parse(buffer, number_of_characters_exchanged))
+			{
+				case Message::PARSING_SUCESSFUL: // Parsing is going well.
+					break;
+				case Message::PARSING_COMPLETE: // Parsing is done.
+					done_read = true;
+					interface->dispatch(current->request); // Dispatch the request.
+					cout << "New message has arrived!" << endl;
+					break;
+				default: // Something went wrong.
+					cout << "Parsing failed!" << endl;
+					//Clean up the connection.
+					delete current->request;
+					interface->connections.remove_item(current);
+					close(c.file_descriptor);
+					free(current);
+					done_read = true;  // Done reading the request data.
 			}
 		}
-		if(current == NULL)
-		{
-			current = (Connection*)malloc(sizeof(Connection));
-			*current = c;
-			current->request = new Request();
-			interface->connections.append(current);
-		}
-
-		switch(current->request->parse(buffer, number_of_characters_exchanged))
-		{
-			case Message::PARSING_SUCESSFUL:
-				break;
-			case Message::PARSING_COMPLETE:
-				interface->send(current->request);
-				cout << "New message has arrived!" << endl;
-				break;
-			default:
-				cout << "Parsing failed!" << endl;
-				delete current->request;
-				interface->connections.remove_item(current);
-				free(current);
-				continue;
-		}
-
+		while(!done_read);
 	}
+
 	pthread_exit(NULL);
 }
 
@@ -116,115 +138,152 @@ PosixSocketInterface::PosixSocketInterface( int port_number ):
 	dispatching_thread(0)
 {
 	cout << "Connecting socket to port " << port_number << endl;
-	file_descriptor = socket( AF_INET, SOCK_STREAM, 0);
 
-	if( file_descriptor < 0)
+	file_descriptor = socket( AF_INET, SOCK_STREAM, 0); // Creates a socket.
+	if( file_descriptor < 0) // If the socket creation failed.
 	{
-		cerr << "The socket could not be openend." << endl;
-		return;
+		cerr << "The socket could not be opened." << endl;
+		return; // Cannot proceed.
 	}
 
+	// Blanks the server_address structure to start from a clean slate.
 	bzero( (char*)&server_address, sizeof(server_address) );
+
+	// Sets the wanted parameters for the address.
 	server_address.sin_family = AF_INET;
 	server_address.sin_port = htons(port_number);
 	server_address.sin_addr.s_addr = INADDR_ANY;
 
+	// Bind the socket to the wanted address.
 	if( bind(file_descriptor, (struct sockaddr*) &server_address, sizeof(server_address)) < 0)
 	{
 		cerr << "Error during binding." << endl;
-		return;
+		return; // Cannot proceed.
 	}
 
-	listen( file_descriptor, 5);
+	listen( file_descriptor, 5); // Listen to the wanted address.
 
 	cout << "Listening for connection on port " << port_number << endl;
 	cout << "Starting dispatching thread..." << endl;
 
-	if( pthread_create( &dispatching_thread, NULL, dispatch, this) )
+	// Start the thread that will dispatch received requests.
+	if(pthread_create(&dispatching_thread, NULL, receive, this))
 	{
 		cerr << "Error creating thread." << endl;
-		return;
+		return; // Cannot proceed.
 	}
-
 }
+
 PosixSocketInterface::~PosixSocketInterface()
 {
-	close( file_descriptor );
+	pthread_cancel(dispatching_thread); // Stop the receiving thread.
+	pthread_join(dispatching_thread, NULL); // Wait for it to terminate.
+
+	// For each current connection.
+	for(int i = 0; i < connections.items; i++)
+	{
+		// Close the connection.
+		close(connections[i]->file_descriptor);
+		/* PROBLEM!
+		 * Since the connections also hold pointers to the request and response
+		 * and those could currently being processed by the framework, it is
+		 * difficult to know if they can be deleted here. Messages should not
+		 * be kept in the connections.
+		 * */
+	}
+
+	close(file_descriptor); // Close the socket.
 }
 
 void PosixSocketInterface::run()
 {
-    Connection* c;
-
-    schedule(NEVER);
-    for(int i = 0; i < connections.items; i++)
+	// For each connection currently open.
+	for(int i = 0; i < connections.items; i++)
     {
+    	 // If there is a response pending for this connection.
     	if(connections[i]->response != NULL)
     	{
+    		 // Remove the connection from the list.
     		Connection* c = connections.remove(i);
-    		reply(c);
-    		free(c);
+    		reply(c); // Reply to the client.
+    		delete c->response; // Also deletes the request.
+    		close(c->file_descriptor); // Close the connection with the client.
+    		free(c); // Frees the connection.
     	}
 
     }
 
+    Authority::run(); // Call parent method.
 }
 
-Response::status_code PosixSocketInterface::process( Response* response, Message** return_message )
+Response::status_code PosixSocketInterface::process( Response* response )
 {
-
+	// For each connection currently open.
 	for(int i = 0; i < connections.items; i++)
 	{
+		// If the received response is for this connection.
 		if(connections[i]->request == response->original_request)
 		{
-			connections[i]->response = response;
+			connections[i]->response = response; // Set the response on that connection.
+			 // Run the resource as soon as possible to send the reply.
 			schedule(ASAP);
-			return OK_200;
+
+			return OK_200; // Response has been processed.
 		}
 	}
 
-	delete response;
-	return OK_200;
-
+	return Authority::process(response); // Calls the parent.
 }
-
 
 void PosixSocketInterface::reply(Connection* c)
 {
+	char* response; // Wil hold the response string.
 
-	MESSAGE_SIZE length = c->response->get_header_length();
-	char header[length];
-	c->response->serialize(header);
-	if(!write(c->file_descriptor, header, length))
+	// Compute the length of the response.
+	size_t length = c->response->serialize(response, false);
+
+	response = (char*)malloc(length); // Allocates a block for the response.
+
+	c->response->serialize(response, true); // Serialize the response in the buffer.
+
+	 // Sends the response's header to the client.
+	if(!write(c->file_descriptor, response, length))
 	{
 		cerr << "Writing to the socket caused and error." << endl;
-		exit(1);
+		free(response); // Frees the buffer for the response.
+		return; // Cannot proceed.
 	}
 
-	if(c->response->body_file)
+	free(response); // Frees the buffer for the response.
+
+	if(c->response->get_body()) // If the response has a body.
 	{
-		MESSAGE_SIZE len;
-		const int sz = 100;
-		char buffer[sz];
+		MESSAGE_SIZE len; // Length of the body chunk.
+		const int sz = 100; // The size of the buffer.
+		char buffer[sz]; //
+
+		/* Body will be sent in chunk. It could very well be send in one block,
+		 * but just for the sake of testing, it is sent in many parts. */
 		while(true)
 		{
-			len = c->response->body_file->read(buffer, sz, true);
-			if(len != 0 &&!write(c->file_descriptor, buffer, len))
+			// Read part of the body in the buffer.
+			len = c->response->get_body()->read(&buffer[0], sz);
+
+			// Send the part of the body that is currently in the buffer.
+			if(len != 0 && !write(c->file_descriptor, buffer, len))
 			{
 				cerr << "Writing to the socket caused and error." << endl;
-				exit(1);
+				return; // Cannot proceed.
 			}
+
 			if(len < sz)
 			{
-				break;
+				break; // Done sending the body.
 			}
 		}
 	}
 
 	cout << "Reply sent" << endl;
-
-	delete c->response;
-	close(c->file_descriptor);
 }
 
 
