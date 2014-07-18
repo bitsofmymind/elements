@@ -35,15 +35,6 @@
  * @todo check this seems unelegant. */
 static const char null_chr = '\0';
 
-///Resource implements a Elements resource for use with HTTP messages.
-/** Resource is the cornerstone of the Elements framework. Resources
- * are responsible for shaping the resource tree, processing messages and doing
- * periodic processing, Implementations of this framework will necessarily
- * mainly be done by adapting this class'behavior through inheritance.
- * @class Resource
- */
-
-///Resource class constructor.
 Resource::Resource(void):
   children_sleep_clock(MAX_UPTIME),
   own_sleep_clock(MAX_UPTIME)
@@ -57,26 +48,21 @@ Resource::Resource(void):
 }
 
 #if RESOURCE_DESTRUCTION
-///Resource class destructor.
 Resource::~Resource(void)
 {
-	//unregister_element();
-	delete children;
+	if(children) // If a children dictionary was created.
+	{
+		// For each children of this resource.
+		for(uint8_t i = 0; i < children->items; i++)
+		{
+			delete (*children)[i]->value; // Delete the children.
+		}
+
+		delete children;
+	}
 }
 #endif
 
-///Dispatches a message up or down the resource tree.
-/** dispatch() is one of the core methods of the elements framework. When a
- * message transit in the tree, it does so through this method. dispatch()
- * will look at a message's origin and destination, hand it to the Resource's
- * processing methods for processing or interception or return the appropriate
- * error response if a message is lost.
- *
- * dispatch() works recursively amongst resources but is stopped when it
- * reaches an Authority because the latter buffers messages.
- * @param message the message to dispatch.
- * @see process()
- */
 void Resource::dispatch( Message* message )
 {
 	Response::status_code sc; //The status code of the processing.
@@ -229,10 +215,6 @@ void Resource::dispatch( Message* message )
 	}
 }
 
-///Gets the name of child resource.
-/** @param resource the child resource we want the name of.
- * @return the name of the child resource. NULL if the resource was not found.
- */
 const char* Resource::get_name(Resource* resource)
 {
     if(children) //If this resource has children.
@@ -243,10 +225,6 @@ const char* Resource::get_name(Resource* resource)
     return NULL; //Since there are no children, the name could not be found.
 }
 
-///Adds a Resource as a child.
-/** @param name the name of the child.
- * @param child the child to add.
- * @return 0 if adding was successful, another value if an error occurred. */
 int8_t Resource::add_child(const char* name, Resource* child )
 {
 	if(children == NULL) //If there are no children.
@@ -277,7 +255,6 @@ int8_t Resource::add_child(const char* name, Resource* child )
 	return return_code; //Return the result of the operation.
 }
 
-/** @return the number of children of this resource. */
 uint8_t Resource::get_number_of_children()
 {
 	return !children ? 0 : children->items;
@@ -298,8 +275,6 @@ Resource* Resource::remove_child(const char* name)
 	return NULL;
 }
 
-///Prints the content of a message.
-/** @param message the message to print. */
 void Resource::print_transaction(Message* message)
 {
 	/*If VERBOSITY is undefined, this method should be optimized away
@@ -318,17 +293,6 @@ void Resource::print_transaction(Message* message)
 
 }
 
-/// Process a request message.
-/** YOU SHOULD NOT DELETE OR FREE THE REQUEST ARGUMENT!
- * This method is meant to be overridden in order to specialize this class.
- * The reason it is given a response is to save on code space by doing away
- * by moving the same response initialization routine out of this method.
- * @param request the request to process.
- * @param response the response to fill if a response should be returned (which
- * depends on the status code).
- * @return the status_code produced while processing the request.
- * @todo make the request object const so it will not be deleted.
- */
 Response::status_code Resource::process(Request* request, Response* response)
 {
 	if(!request->to_destination()) //If the message it a destination.
@@ -340,12 +304,6 @@ Response::status_code Resource::process(Request* request, Response* response)
 	return PASS_308; //Pass the message.
 }
 
-/// Process a response message.
-/** YOU SHOULD NOT DELETE OR FREE THE RESPONSE ARGUMENT!
- * This method is meant to be overridden in order to specialize this class.
- * @param response the response to process.
- * @return the status_code produced while processing the response.
- */
 Response::status_code Resource::process(Response* response)
 {
 	if(!response->to_destination()) //If message is at destination.
@@ -357,40 +315,18 @@ Response::status_code Resource::process(Response* response)
 	return PASS_308; //Pass the message.
 }
 
-/// Run the resource
-/** The run method is used for implementing periodic processing for a resource.
- * It is automatically called once the own_sleep_clock timer has expired.
- * Depending on the implementation on the framework, the interval at which this
- * method is called might be more than what was request. It will, however, never
- * be less.
- * This method is meant to be overridden in order to specialize this class.
- * @see own_sleep_clock.*/
 void Resource::run(void)
 {
 	 //Nothing to do, schedule the timer so it never expires again.
 	schedule(&own_sleep_clock, NEVER);
 }
 
-/// Get the sleep timer of this resource.
-/** When asked by the next uptime a resource is to be ran, it can either be
- * its own internal sleep clock or one of its children, whichever is less.
- * This value will determine when the Resource is next visited by processing.
- * @see Processing::start()
- * @return children_sleep_clock or own_sleep_clock, whichever is less.
- * */
 uptime_t Resource::get_sleep_clock(void)
 {
 	//Return children_sleep_clock or own_sleep_clock, whichever is less.
 	return children_sleep_clock > own_sleep_clock ? own_sleep_clock: children_sleep_clock;
 }
 
-/// Schedule a timer to a certain time
-/** And propagate that timer up the resource tree.
- * This method may be called by an interrupt.
- * @todo something is fucked up with this method...
- * @param timer the timer to update.
- * @param time the time to add to the timer.
- * */
 void Resource::schedule(volatile uptime_t* timer, uptime_t time)
 {
     ///TODO check if timer will overflow.
@@ -431,19 +367,11 @@ void Resource::schedule(volatile uptime_t* timer, uptime_t time)
 
 }
 
-/// Schedules the own_sleep_clock.
-/** @param time the interval for which the resource should sleep. */
 void Resource::schedule(uptime_t time)
 {
 	schedule(&own_sleep_clock, time);
 }
 
-/// Get the next child to visit.
-/** This method is called by Processing::step() to get the next child that it
- * should visit.
- * @return the next child to visit; NULL if there is none.
- * @see Processing::step()
- * */
 Resource* Resource::get_next_child_to_visit(void)
 {
 	//If this resource has children and if some need to be visited.

@@ -21,24 +21,26 @@
 File::~File(){ }
 
 #if VERBOSITY
-
 void File::print(void)
 {
+	// Save the current position of the cursor to restore it later.
 	size_t prev_cursor = _cursor;
-	char c;
-	while(read(&c, 1))
+
+	char c; // Holds the character that has been read.
+	while(read(&c, 1)) // While there is data in the file.
 	{
-		DEBUG_TPRINT((int8_t)c, BYTE);
+		DEBUG_TPRINT((int8_t)c, BYTE); // Prints the data.
 	}
-	_cursor = prev_cursor;
+
+	_cursor = prev_cursor; // Restore the previous position of the cursor.
 }
 #endif
 
 
 size_t File::extract(char* buffer)
 {
-	_cursor = 0;
-	return read(buffer, size);
+	_cursor = 0; // Moves the cursor to the beginning of the file.
+	return read(buffer, size); // Read the whole file.
 }
 
 void File::cursor(size_t val)

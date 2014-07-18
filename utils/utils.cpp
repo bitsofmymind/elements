@@ -24,167 +24,232 @@
 
 GenericList::GenericList( void )
 {
-	items = 0;
+	items = 0; //todo/ Move to initialization list.
+	// Sets all the positions in the list to NULL.
 	memset(list, NULL, CAPACITY * sizeof(void*));
 }
 
-int8_t GenericList::append(void* item)
+int8_t GenericList::append( void* item )
 {
-	if(items == CAPACITY){ return 1; }
-	list[items] = item;
-	items++;
-	return 0;
+	if(items >= CAPACITY) // If there is no more space in the list.
+	{
+		return 1; // Return an error.
+	}
+
+	if(item == NULL) // If a NULL value is being inserted.
+	{
+		return 2; // Return an error.
+	}
+
+	list[items] = item; // Inserts the item at the end of the list.
+	items++; // We have added an item.
+
+	return 0; // Success.
 }
 
-int8_t GenericList::insert(void* item, uint8_t position)
+int8_t GenericList::insert( void* item, uint8_t position )
 {
-    if(position > items)
+    if(position > items) // If position goes pas the number of items.
     {
-        return -1;
+        return -1; // Return an error.
     }
-    if(items + 1 > CAPACITY)
+
+    if(items >= CAPACITY) // If the list is full.
     {
-        return -2;
+        return -2; // Return an error.
     }
+
+    if(item == NULL) // If a NULL value is being inserted.
+    {
+    	return -3; // Item is illegal.
+    }
+
+    // For each item in the list from the end to the desired position..
     for(uint8_t i = items; i > position; i--)
     {
-        list[i] = list[i - 1];
+    	list[i] = list[i - 1]; // Shift the item to the right.
     }
-    list[position] = item;
-    items++;
 
-    return 0;
+    list[position] = item; // Inserts the item in the desired position.
+    items++; // We have added an item to the list.
+
+    return 0; // Success.
 }
 
 void* GenericList::remove_item( void* item )
 {
+	// For each item in the list.
 	for(uint8_t i = 0; i < items; i++)
 	{
-		if(list[i] == item)
+		if(list[i] == item) // If this is the item that is supposed to be removed.
 		{
-			list[i] = NULL;
-			compact();
-			items--;
-			return item;
+			list[i] = NULL; // Blank the item.
+			compact(); // Compact the list.
+			items--; // An item was removed.
+
+			return item; // Success.
 		}
 	}
 
-
-	return NULL;
+	return NULL; // The item was not found.
 }
 
 void* GenericList::remove( uint8_t index )
 {
-	if(index >= items ) { return NULL; }
-	void* item = list[index];
-	list[index] = NULL;
-	compact();
-	items--;
-	return item;
+	if(index >= items ) // If the index is invalid.
+	{
+		return NULL; // Item not found.
+	}
+
+	void* item = list[index]; // Retrieve the item.
+	list[index] = NULL; // Blank the list at this index.
+	compact(); // Compact the list.
+	items--; // An item was removed.
+
+	return item; // Success/
 }
 
 
 void GenericList::compact()
 {
+	// For each item in the list until the end.
 	for(uint8_t i = 0; i < CAPACITY - 1; i++)
 	{
-		if(list[i] != NULL){ continue; }
-		list[i] = list[i + 1];
-		list[i + 1] = NULL;
+		if(list[i] != NULL) // If there is an item at this position.
+		{
+			continue; // Skip it.
+		}
+		// Else there is no item at this position.
+
+		list[i] = list[i + 1]; // Move the next item to that position.
+
+		list[i + 1] = NULL; // Blank the next position.
 	}
 }
 
 
-void* GenericList::operator[](uint8_t i)
+void* GenericList::operator[]( uint8_t i )
 {
-	if(!items || i >= items){ return NULL; }
-	return list[i];
+	// If there are no items or an index greater that the amount of item is requested.
+	if(!items || i >= items)
+	{
+		return NULL; // Error.
+	}
+
+	return list[i]; // Return the item at the requested index.
 }
 
 
 GenericDictionary::GenericDictionary( void )
 {
-	items = 0;
+	items = 0; ///todo move to initialization list.
 }
 
 
 int8_t GenericDictionary::add( const char* key, void* value )
 {
-	if(items == CAPACITY){ return 1; }
+	if(items >= CAPACITY) // If there is no more space in the dictionary.
+	{
+		return 1;
+	}
 
+	// Check if the entry already exists.
 	key_value_pair<void*>* kv = get(key);
 
-	if( kv == NULL)
+	if( kv == NULL) // If the entry does not exist.
 	{
+		// Instantiate an entry.
 		list[items].key = key;
 		list[items].value = value;
-		items++;
+		items++; // An entry was added.
 	}
-	else{
-		kv->value = value;}
-	return 0;
+	else // The entry already exists.
+	{
+		/**todo thats dangerous and could lead to memory leaks. A method
+		 * for replacing values should be created instead.*/
+		kv->value = value;
+	}
+
+	return 0; // Success.
 }
 
 void* GenericDictionary::remove( const char* key )
 {
-	key_value_pair<void*>* kv = get(key);
-	if(kv == NULL){ return NULL; }
-	void* value = kv->value;
-	kv->value = NULL;
-	kv->key = NULL;
-	items--;
-	compact();
+	key_value_pair<void*>* kv = get(key); // Finds the entry.
 
-	return value;
+	if(kv == NULL) // If the entry does not exist.
+	{
+		return NULL;
+	}
+
+	void* value = kv->value; // Saves the value of the entry.
+	kv->value = NULL; // Blank the value.
+	kv->key = NULL; // Blank the key.
+	items--; // An entry was removed.
+	compact(); // Compacts the storage array.
+
+	return value; // Success
 }
 
 void* GenericDictionary::find( const char* key )
 {
-	key_value_pair<void*>* kv = get( key );
-	if(kv == NULL){ return NULL; }
-	return kv->value;
-}
+	key_value_pair<void*>* kv = get(key); // Finds the entry.
 
+	if(kv == NULL) // If the entry was not found.
+	{
+		return NULL;
+	}
+
+	return kv->value; // Return the value.
+}
 
 const char* GenericDictionary::find_val( void* value )
 {
-    for(uint8_t i = 0; i < items; i++)
+    for(uint8_t i = 0; i < items; i++) // For each entry.
     {
-        if(list[i].value == value)
+        if(list[i].value == value) // If the value matches.
         {
-            return list[i].key;
+            return list[i].key; // Return the key.
         }
     }
 
-    return NULL;
+    return NULL; // The value was not found.
 }
-
 
 key_value_pair<void*>* GenericDictionary::get( const char* key )
 {
-	const char* local_key;
-	for(uint8_t i = 0; i < items; i++)
+	for(uint8_t i = 0; i < items; i++) // For each entry in the dictionary.
 	{
-		local_key = list[i].key;
-		if(!strcmp(local_key, key))
+		if(!strcmp(list[i].key, key)) // If the two keys match.
 		{
-			return &list[i];
+			return &list[i]; // Return the key_value pair.
 		}
 	}
-	return NULL;
+
+	return NULL; // The entry was not found.
 }
 
-key_value_pair<void*>* GenericDictionary::operator[](uint8_t i)
+key_value_pair<void*>* GenericDictionary::operator[]( uint8_t i )
 {
-	if( i > items ) { return NULL; }
+	if(i > items) // If the index is invald.
+	{
+		return NULL;
+	}
+
 	return &(list[i]);
 }
 
 void GenericDictionary::compact()
 {
+	// For each entry in the dictionary.
 	for(uint8_t i = 0; i < CAPACITY - 1; i++)
 	{
-		if(list[i].key != NULL){ continue; }
+		if(list[i].key != NULL) // If there is an item at this index.
+		{
+			continue;
+		}
+
+		// Shift the next item to the current index.
 		list[i].key = list[i + 1].key;
 		list[i].value = list[i + 1].value;
 		list[i + 1].key = NULL;
@@ -193,119 +258,144 @@ void GenericDictionary::compact()
 }
 
 GenericLinkedList::GenericLinkedList():
-		start(NULL)
+	start(NULL)
 {}
 
-uint8_t GenericLinkedList::items(void)
+uint8_t GenericLinkedList::items( void )
 {
 	uint8_t items = 0;
 	entry* current = start;
 
-	while(current != NULL)
+	while(current != NULL) // While there are items in the list.
 	{
-		items++;
-		current = current->next;
+		items++; // One more item.
+		current = current->next; // Go to the next item.
 	}
 
-	return items;
+	return items; // Returns the number of items.
 }
+
 int8_t GenericLinkedList::append( void* item )
 {
+	///todo I don't think we need double pointers here.
+
 	entry** next = &start;
 
+	 // Go to the end of the list by hoping from one item to the next.
 	while(*next != NULL)
 	{
-		next = &(*next)->next;
+		next = &(*next)->next; // Go to the next item.
 	}
 
+	// The end of the list has been reached, add a new entry.
+	///todo should be ts_malloc.
 	*next = (entry*)malloc(sizeof(entry));
 
-	if(!*next)
+	if(!*next) // If no memory could be allocated for the new entry.
 	{
-		return 1;
+		return 1; // Return an error.
 	}
 
+	// Initialize the entry.
 	(*next)->item = item;
 	(*next)->next = NULL;
 
-	return 0;
+	return 0; // Success.
 }
-int8_t GenericLinkedList::insert(void* item, uint8_t position)
+
+int8_t GenericLinkedList::insert( void* item, uint8_t position )
 {
+	// Allocate a new entry.
+	///todo should be ts_malloc.
 	entry* ent = (entry*)malloc(sizeof(entry));
 
-	if(!ent)
+	if(!ent) // If the new entry could not be allocated.
 	{
-		return 1;
+		return 1; // Return an error.
 	}
 
-	ent->item = item;
+	ent->item = item; // Sets the item on the new entry.
 
-	if(position == 0)
+	if(position == 0) // If the entry is to be added at the beginning of the list.
 	{
-		ent->next = start;
-		start = ent;
+		ent->next = start; // Next entry will be the old start.
+		start = ent; // The new start of the list is the new entry.
 	}
-	else
+	else // The item
 	{
-		entry* temp = get(position - 1);
-		if(!temp)
+		entry* temp = get(position - 1); // Get the item before the position we want.
+
+		if(!temp) // If the position is invalid.
 		{
-			return 2;
+			return 2; // Return an error.
 		}
+
+		// Adds the new entry at the requested position.
 		ent->next = temp->next;
 		temp->next = ent;
 	}
 
-	return 0;
+	return 0; // Success.
 
 }
+
 void* GenericLinkedList::remove( uint8_t index )
 {
 	entry* ent;
 	void* item;
 
-	if(index == 0)
+	if(index == 0) // If the first entry is to be removed.
 	{
-		if(start)
+		if(start) // If there is a first item.
 		{
+			// Remove it.
 			ent = start;
 			start = ent->next;
 		}
 		else
 		{
-			return NULL;
+			return NULL; // The linked list is empty.
 		}
 	}
-	else
+	else // Another entry has to be removed.
 	{
 		entry* temp;
+		// Gets the entry before the entry that has to be removed.
 		ent = get(index - 1);
 
-		if(!ent || !(ent->next))
+		if(!ent || !(ent->next)) // If the index is invalid.
 		{
-			return NULL;
+			return NULL; // No entry was removed.
 		}
+
+		// Removes the entry.
 		temp = ent->next;
 		ent->next = temp->next;
 		ent = temp;
 	}
-	item = ent->item;
-	free(ent);
 
-	return item;
+	item = ent->item; // Save the item.
+	///todo use ts_free.
+	free(ent); // Free the entry.
+
+	return item; // Success.
 }
 
-GenericLinkedList::entry* GenericLinkedList::get(uint8_t position)
+GenericLinkedList::entry* GenericLinkedList::get( uint8_t position )
 {
 	entry* current = start;
-	while(  current )
+
+	while(current) // While there are entries in the list.
 	{
-		current = current->next;
-		if(!--position)
+		// If this is the wanted position or the end of the list has been reached.
+		if(position == 0 || current == NULL)
 		{
-			break;
+			break; // Done.
 		}
+
+		current = current->next; // Go to the next entry.
+
+		position--; // We are one nearer the wanted position.
 	}
 
 	return current;

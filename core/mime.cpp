@@ -20,13 +20,6 @@
 //INCLUDES
 #include "mime.h"
 
-/// MIME is a namespace for MIME types.
-/**
- * @namespace MIME
- * MIME types a grouped inside a namespace to they can be logically
- * manipulated.
- */
-
 const char MIME::APPLICATION_JSON[] = "application/json";
 const char MIME::TEXT_HTML[] = "text/html";
 const char MIME::APPLICATION_OCTET_STREAM[] = "application/octet-stream";

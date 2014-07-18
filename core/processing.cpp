@@ -21,22 +21,7 @@
 #include <pal/pal.h>
 #include "processing.h"
 
-///Implements a Processing resource.
-/**
- * Processing objects are responsible for running an Elements tree. They are
- * hooked to an arbitrary node in the resource tree and from that point
- * traverse all other nodes (up to a set bound) and run then one at the time.
- * A tree can incorporate a virtually infinite number of Processing objects
- * but if there is more than one present, a mechanism for concurrency control
- * must be active.
- *
- * Processing can also be set to act as Authorities.
- * @class Processing
- * @see configuration.h/PROCESSING_AS_AUTHORITY
- * */
-
 #if PROCESSING_AS_AUTHORITY
-///Processing class constructor.
 Processing::Processing(Resource* bound): Authority(),
 #else
 Processing::Processing(Resource* bound): Resource(),
@@ -48,11 +33,6 @@ Processing::Processing(Resource* bound): Resource(),
 #endif
 {}
 
-///Steps trough a processing run.
-/** A processing run consists of running the current Resource and
- * then getting the Resource that should be run next.
- * @todo this method sould be protected.
- * */
 void Processing::step(void)
 {
 	//If the current resource is scheduled to be run.
@@ -77,14 +57,12 @@ void Processing::step(void)
 	//Else we are one resource below the bound. Stay there.
 }
 
-///Starts a processing object's activity.
-/** This method does not return and can be considered the main program loop.*/
 void Processing::start(void)
 {
 	for(;;)
 	{
 		step(); //Step through a resource.
-		if(current == bound) //If the bound has been reached.
+		if(current->parent == bound) //If the bound has been reached.
 		{
 			/*The sleep clock for the current resource gives us the next
 			 * time processing will be needed again.

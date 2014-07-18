@@ -24,10 +24,13 @@
 #include <stdint.h>
 #include "message.h"
 
+///Request implements an HTTP request.
 class Request: public Message
 {
 	protected:
+
 		static const Message::TYPE type = REQUEST; //TODO this is probably useless.
+
 		///The HTTP method of this request.
 		const char* method;
 
@@ -61,20 +64,63 @@ class Request: public Message
 		///HTTP DELETE request method.
 		static const char DELETE[];
 
-	public:
+		/// Class constructor.
 		Request();
+
+		/// Class destructor.
 		~Request();
 
+		/// Prints the content of a request to the output.
 		virtual void print();
+
 #if REQUEST_SERIALIZATION
+		/// Serialize the request to a buffer.
+		/** Serialize the request to a buffer and/or returns the length in bytes of the
+		 * serialized request. Simply returning the length is useful for allocating a
+		 * buffer to which the message is then serialized to.
+		 * @param buffer the buffer to serialize the request to.
+		 * @param write if the data should be written to the buffer. If set to false,
+		 * 		only the length of the serialized request will be returned.
+		 * @return if write is true, the number of bytes written to the buffer, if
+		 * 		write is false, the length of the serialized request.
+		 * */
 		virtual size_t serialize( char* buffer, bool write );
 #endif
+
 #if BODY_ARGS_PARSING
+		//TODO check if MIME type is correct in comment.
+		/// Finds an argument within a x-www-htmlform and returns it.
+		/** This method is a helper for parsing the arguments provided within an
+		 * x-www-htmlform encoded body in POST requests.
+		 * @param key the name of the argument.
+		 * @param value a string where the value will be stored.
+		 * @param max_size the maximum allowed size of the value. Since the space for
+		 * 	value can be preallocated (if we are expecting arguments of a certain size),
+		 * 	its size must be limited to avoid potential overflows.
+		 * 	@return the length of the argument's value or 0 if it was not found.
+		 * */
 		uint8_t find_arg(const char* key, char* value, uint8_t max_size);
 #endif
+
+		/// Compare a string with the request's method.
+		/**
+		 * @param m the method string.
+		 * @return boolean true if the request method and m match.
+		 */
 		bool is_method(const char* m);
 
 	protected:
+
+		///Parses a line from the message header.
+		/**
+		 * Override of parent implementation to parse request specific header
+		 * lines.
+		 * Parses the first line of an HTTP request header and if that line has
+		 * already been parsed, hand off parsing to the parent method.
+		 * @param line a pointer to a complete line.
+		 * @param size the size of the line (including CRLF).
+		 * @return the result of the parsing.
+		 */
 		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
 };
 

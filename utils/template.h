@@ -1,4 +1,4 @@
-/* template.h - Implements a simple template file type
+/* template.h - Implements a simple templating file type.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,30 +21,71 @@
 #include "file.h"
 #include "utils.h"
 
+/// Defines a simple tempating file type.
+/** Template encapsulates a File to allow the setting of template markers
+ * at run time. A marker is a special character that will be replaced by
+ * a value when the template is read back. Markers have to be added in the
+ * order that they are present in the template.*/
 class Template: public File
 {
 	protected:
+		/** The encapsulated file. */
 		File* file;
+
+		/** The arguments that will substitute the markers. */
 		List<char*> args;
+		///todo change to a linked list.
+
+		/** The index of argument that is currently being substituted.*/
 		uint8_t arg_index;
+
+		/** The content of the argument currently being substituted. */
 		char* current;
+
+		/** The internal state of the templated renderer.*/
 		enum STATE {ARG, TEXT, SKIP} state;
 
 	public:
+
+		/// Class constructor.
+		/** @param file the file this template encapsulates.*/
 		Template(File* file);
+
+		/// Class destructor.
 		virtual ~Template();
 
-	public:
 		virtual size_t read(char* buffer, size_t length);
+
 #if !READ_ONLY
 		virtual size_t write(const char* buffer, size_t length);
 #endif
-		virtual void cursor(size_t val);
-		void add_arg(char* arg);
-		void add_narg(uint8_t arg);
-		void add_narg(uint16_t arg);
-		void add_narg(uint32_t arg);
 
+		virtual void cursor(size_t val);
+
+		/// Adds a string to the list of arguments.
+		/** @param arg the argument.
+		 * */
+		void add_arg(char* arg);
+
+		/**
+		 * Skips the next argument.
+		 * */
+		void skip_argument();
+
+		/// Adds a 1 byte integer to the list of arguments.
+		/** @param arg the argument.
+		 * */
+		void add_narg(uint8_t arg);
+
+		/// Adds a 2 byte integer to the list of arguments.
+		/** @param arg the argument.
+		 * */
+		void add_narg(uint16_t arg);
+
+		/// Adds a 4 byte integer to the list of arguments.
+		/** @param arg the argument.
+		 * */
+		void add_narg(uint32_t arg);
 };
 
 #endif /* TEMPLATE_H_ */

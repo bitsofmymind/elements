@@ -24,16 +24,9 @@
 #include <string.h>
 #include "url.h"
 
-///URL implements an URL for use with the Elements framework.
-/** This class parses and manages an URL's many parts for ease of
- * manipulation by objects who need to work with urls.
- * @class Response
- * */
-
-///Class constructor.
-///@todo move all the values below to the initialization list.
 URL::URL( )
 {
+	///todo move all the values below to the initialization list.
 	url_str = NULL;
 	url_length = 0;
 #if URL_PROTOCOL
@@ -54,29 +47,20 @@ URL::URL( )
 
 }
 
-///Class destructor.
 URL::~URL()
 {
 #if URL_ARGUMENTS
-	if(arguments) //If the arguments dictionnary has been allocated.
+	if(arguments) //If the arguments dictionary has been allocated.
 	{
 		delete arguments; //Delete it.
 	}
 #endif
 }
 
-///Parses a URL string.
-/** This method will decompose an URL into its many parts:
- * protcol://authority:port/resource/resource/?argument=argument#fragment
- * If the framework is configured to ignore a part, it will not be parsed.
- * The parser does copy string but keeps them in place and instead isolates
- * them by replacing their separators with null characters.
- * @param str the url string.
- * @return the result of the parsing.
- * @todo check if we have reached the end of the URL.
- * */
 URL::PARSING_RESULT URL::parse(char* str)
 {
+	 ///todo check if we have reached the end of the URL.
+
 	url_str = str; //Save the string.
 
 	//Holds the start of the part of the URL that is currently being parsed.
@@ -237,19 +221,26 @@ URL::PARSING_RESULT URL::parse(char* str)
 #if URL_SERIALIZATION
 size_t URL::serialize(char* buffer, bool write)
 {
-	char* start = buffer;
+	char* start = buffer; // The start of the buffer.
+
 #if URL_PROTOCOL
-	if( protocol )
+	if( protocol ) // If there is a protocol part to the url.
 	{
+		 // Write the protocol to the buffer.
 		if(write) { strcpy(buffer, protocol); }
+
+		 // Increment the buffer pointer past the written protocol.
 		buffer += strlen(protocol);
-		if(write)
+
+		if(write) // Adds the "://".
 		{
 			*buffer = ':'; *( buffer + 1 ) = '/'; *(buffer + 2) = '/';
 		}
-		buffer += 3;
+
+		buffer += 3; // Increments the buffer past the "://"
 	}
 #endif
+
 #if URL_AUTHORITY
 	if( authority )
 	{
@@ -258,55 +249,78 @@ size_t URL::serialize(char* buffer, bool write)
 	}
 #endif
 #if URL_PORT
-	if(port)
+	if(port) // If the url has a port.
 	{
-		if( write ){ *buffer = ':' };
-		buffer++;
-		if( write ){ strcpy(buffer, port); }
-		buffer += strlen(port);
+		if( write ){ *buffer = ':' }; // Adds the colon.
+		buffer++; // Increments the buffer past the colon.
+		if( write ){ strcpy(buffer, port); } // Write the port to the buffer.
+		buffer += strlen(port); // Increment the buffer past the port.
 	}
 #endif
 
+	if(is_absolute()) // If the url is absolute.
+	{
+		if( write ){ *buffer = '/'; } // Adds the first slash.
+		buffer++; // Increments the buffer past the slash.
+	}
+
+	// For each resource in the hierarchy.
 	for(uint8_t i = 0; i< resources.items; i++)
 	{
+		// Adds the resource to the url.
 		if( write ){ strcpy(buffer, resources[i]); }
-		buffer += strlen(resources[i]);
+		buffer += strlen(resources[i]); // Increments the pointer pas the resource.
+		 // Add a slash to signal the end of the resource.
 		if( write ){ *buffer = '/'; }
-		buffer++;
+		buffer++; // Increments the buffer pas the slash.
 	}
+
 #if URL_ARGUMENTS
-	if (arguments )
+	if (arguments ) // If the url has arguments.
 	{
-		key_value_pair<const char*>* kv;
-		if( write ){ *buffer = '?'; }
-		buffer++;
+		key_value_pair<const char*>* kv; // Holds the current key value pair.
+
+		if( write ){ *buffer = '?'; } // Adds the arguments marker.
+		buffer++; // Increments the buffer pas the arguments marker.
+
+		// For each argument.
 		for(uint8_t i = 0; i< arguments->items; i++)
 		{
-			kv = (*arguments)[i];
+			kv = (*arguments)[i]; // Gets the current argument.
+
+			// Writes the name of the argument to the buffer.
 			if( write ){ strcpy(buffer, kv->key); }
-			buffer += strlen(buffer);
-			if( write ) {*buffer = '='; }
-			buffer += 1;
+			buffer += strlen(kv->key); // Increments the buffer past the name.
+
+			if( write ) {*buffer = '='; } // Adds the equal sign.
+			buffer++; // Increments the buffer pas the equal sign.
+
+			// Writes the value of the argument to the buffer.
 			if( write ){ strcpy(buffer, kv->value); }
-			buffer += strlen(buffer);
-			if( write ){ *buffer = '&'; }
-			buffer += 1;
+			buffer += strlen(kv->value); // Increments the buffer past the argument.
+
+			if( write ){ *buffer = '&'; } // Writes the marker for a new argument.
+			buffer++; // Increments the buffer past the marker.
 		}
-		if(arguments->items)
+
+		if(arguments->items) // If there were arguments.
 		{
-			buffer--; //We do not need the last '&'
+			buffer--; // An extra "&" was added by the previous loop.
 		}
 	}
 #endif
+
 #if URL_FRAGMENT
-	if(fragment)
+	if(fragment) // If the url has a fragment.
 	{
-		if( write ){ *buffer = '#'; }
-		buffer++;
-		if( write ){ strcpy(buffer, fragment); }
-		buffer += strlen(fragment);
+		if( write ){ *buffer = '#'; } // Adds a fragment marker.
+		buffer++; // Increments the buffer past the fragment marker.
+		if( write ){ strcpy(buffer, fragment); } // Adds the fragment.
+		buffer += strlen(fragment); // Increments the buffer pas the fragment.
 	}
 #endif
+
+	 // The difference between the two pointers is the number of bytes written.
 	return buffer - start;
 }
 #endif
@@ -367,7 +381,12 @@ void URL::print(void)
 
 bool URL::is_absolute(void)
 {
-	if(resources.items && *(resources[0]) == '\0')
+	 // If the first resource is a slash.
+	if((resources.items && *(resources[0]) == '\0')
+#if URL_AUTHORITY
+		|| authority
+#endif
+	)
 	{
 		return true;
 	}

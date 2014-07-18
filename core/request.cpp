@@ -26,12 +26,10 @@
 #include "request.h"
 #include "url.h"
 
-///Request implements an HTTP request.
 /**
  * @class Request
  * */
 
-///Request class constructor.
 Request::Request():
 	Message(),
 	method(NULL)
@@ -43,14 +41,12 @@ Request::Request():
 	from_url = new URL();
 }
 
-///Request class destructor.
 Request::~Request()
 {
 	delete to_url;
 	delete from_url;
 }
 
-///Prints the content of a Request to the output.
 void Request::print(void)
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
@@ -67,15 +63,6 @@ void Request::print(void)
 }
 
 #if REQUEST_SERIALIZATION
-///Serialize the request to a buffer.
-/** Serialize the request to a buffer and/or returns the length in bytes of the
- * serialized request. Simply returning the length is useful for allocating a
- * buffer to which the message is then serialized to.
- * @param buffer the buffer to serialize the request to.
- * @param write if the data should be written to the buffer. If set to false,
- * 		only the length of the serialized request will be returned.
- * @return if write is true, the number of bytes written to the buffer, if
- * 		write is false, the length of the serialized request. */
 size_t Request::serialize(char* buffer, bool write)
 {
 	char* start = buffer; //The start of the buffer.
@@ -118,14 +105,6 @@ size_t Request::serialize(char* buffer, bool write)
 }
 #endif
 
-///Parses a line from the message header.
-/**
- * Parses the first line of an HTTP request header and if that line has
- * already been parsed, hand of parsing to the parent method.
- * @param line a pointer to a complete line.
- * @param size the size of the line (including CRLF).
- * @return the result of the parsing.
- */
 Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 {
 	//If the received line does not end with CRLF.
@@ -204,17 +183,6 @@ Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 }
 
 #if BODY_ARGS_PARSING
-//TODO check if MIME type is correct in comment.
-///Finds an argument within a x-www-htmlform and returns it.
-/** This method is a helper for parsing the arguments provided within an
- * x-www-htmlform encoded body in POST requests.
- * @param key the name of the argument.
- * @param value a string where the value will be stored.
- * @param max_size the maximum allowed size of the value. Since the space for
- * 	value can be preallocated (if we are expecting arguments of a certain size),
- * 	its size must be limited to avoid potential overflows.
- * 	@return the length of the argument's value or 0 if it was not found.
- * */
 uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 {
 	/* Note: Arguments are given in the following form:
@@ -269,6 +237,7 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 				//If we have reached another argument of the end of the buffer.
 				if(buffer == '&' || read == 0)
 				{
+					value[index] = '\0'; // Terminate the string with a null character.
 					return index; //Done, return the number of bytes read.
 				}
 				value[index++] = buffer;
@@ -287,13 +256,6 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 }
 #endif
 
-///Compare a string with the request's method.
-/**
- * While comparison could be done inline, going through this method saves
- * a bit of program memory.
- * @param m the method string.
- * @return boolean true if the request method and m matches.
- */
 bool Request::is_method(const char* m)
 {
 	return !strcmp(method, m);

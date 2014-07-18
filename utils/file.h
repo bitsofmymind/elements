@@ -21,25 +21,59 @@
 
 #include <configuration.h>
 
+/// File is a base class for data streams.
+/**
+ * This class declares basic methods for manipulating data streams.
+ */
 class File
 {
 
 	protected:
+
+		/** A cursor that points to the location in the stream that
+		 * is currently being read. */
 		size_t _cursor;
+
 	public:
+
+		/** The total size of the data stream. */
 		size_t size;
 
+	public:
+
+		/** Class destructor. */
 		virtual ~File();
 
-		#if VERBOSITY
-			void print();
-		#endif
+#if VERBOSITY
+		/// Prints out the content of the file to the debug output.
+		void print();
+#endif
+
+		/// Reads a data into a buffer.
+		/** @param buffer the buffer to transfer the read data into.
+		 * @param length the number of bytes to read.
+		 * @return the number of bytes that have been read. */
 		virtual size_t read(char* buffer, size_t length) = 0;
+
+		/// Extracts the whole file into a buffer.
+		/** @param buffer the buffer to transfer the data to.
+		 * @return the number of bytes that have been transfered. */
 		size_t extract(char* buffer);
+
 #if !READ_ONLY
+		/// Writes bytes to the file.
+		/** @param buffer the bytes to write from.
+		 * @param length the number of bytes to write.
+		 * @return the number of bytes that have been written. */
 		virtual size_t write(const char* buffer, size_t length) = 0;
 #endif
+
+		/// Get the position of the cursor in the file.
+		/** @return the position of the cursor. */
 		inline size_t cursor(void) { return _cursor; }
+
+		/// Moves the cursor in the file.
+		/** @param val the new position of the cursor.  */
 		virtual void cursor(size_t val);
 };
 

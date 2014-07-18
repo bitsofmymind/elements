@@ -1,4 +1,4 @@
-/* memfile.h - Implements a simple RAM file type
+/* memfile.h - Implements a file whose data is stored in RAM.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,21 +20,41 @@
 
 #include "file.h"
 
+/// A file whose data is stored in RAM.
 class MemFile: public File
 {
 
 	protected:
+		/** If the file is read-only.*/
 		bool is_const;
+		///todo rename to read-only.
 
 	public:
+
+		/** The buffer that holds the file's data.*/
 		char* data;
+		///todo make this attribute protected.
+
 	public:
+
+		/// Class constructor.
+		/** Use this constructor when the buffer is terminated by a null
+		 * character.
+		 * @param data the data that will be contained by the file.
+		 * @param is_const if the data should be read only.*/
 		MemFile(char* data, bool is_const);
+
+		/// Class constructor.
+		/** @param data the data that will be contained by the file.
+		 * @param length the length of the data.
+		 * @param is_const if the data should be read only.*/
 		MemFile(char* data, size_t length, bool is_const);
 
+		/// Class destructor.
 		virtual ~MemFile();
 
 		virtual size_t read(char* buffer, size_t length);
+
 #if !READ_ONLY
 		virtual size_t write(const char* buffer, size_t length);
 #endif

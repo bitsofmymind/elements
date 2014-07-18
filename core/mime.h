@@ -21,6 +21,11 @@
 #ifndef MIME_H_
 #define MIME_H_
 
+/// MIME is a namespace for MIME types.
+/**
+ * MIME types a grouped inside a namespace to they can be logically
+ * manipulated.
+ */
 namespace MIME
 {
 	extern const char TEXT_HTML[];

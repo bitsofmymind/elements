@@ -32,19 +32,6 @@
 ///@todo delete that if it is useless.
 #define IN_QUEUE_LENGTH 10
 
-/// An authority is a Resource class which provides message buffering.
-/**
- * @class Authority
- * An Authority act as a message flow regulator by its capacity to buffer
- * messages and releasing them according to the available processing capacity.
- * It does so by queuing every message it receives and releasing them a few at
- * a time. If much processing is available, the Authority will be visited very
- * often thereby allowing it to release message at an increased rate. If the
- * system is under a high load, an Authority will be visited less often and
- * in so doing releasing messages at a slower rate.
- */
-
-/// The constructor for the Authority class.
 Authority::Authority(void):
 	Resource()
 #if AUTHORITY_REDIRECT
@@ -53,20 +40,21 @@ Authority::Authority(void):
 {}
 
 #if RESOURCE_DESTRUCTION
-	/// The destructor for the Authority class.
-	Authority::~Authority(void)
-	{}
+Authority::~Authority(void)
+{
+	while(message_queue.items) // While there are message in the queue.
+	{
+		delete message_queue.dequeue(); // Delete the message.
+	}
+}
 #endif
 
-/**
- * Authority overrides this method to intercept messages and queue them instead
- * of processing them like a Resource would do.
- */
 Response::status_code Authority::process( Request* request, Response* response )
 {
 	/* Since a call to dispatch will cause this method to be called, we
 	 * it is possible to identify if the request being dispatched had been
 	 * queued before or not. */
+	///TODO No need to peek if the process function from Resource is called instead.
 	if(request != message_queue.peek())
 	{
 		//This request was not part of the queue.
@@ -92,10 +80,6 @@ Response::status_code Authority::process( Request* request, Response* response )
 	return PASS_308; //The message it not at destination so pass it.
 }
 
-/**
- * Authority overrides this method to intercept messages and queue them instead
- * of processing them a Resource would do.
- */
 Response::status_code Authority::process( Response* response )
 {
 	/* Since a call to dispatch will cause this method to be called, we
@@ -119,10 +103,6 @@ Response::status_code Authority::process( Response* response )
 	return PASS_308; //The message it not at destination so pass it.
 }
 
-/**
- * Authority overrides this method so what when it gets ran by processing,
- * the messages that it has in queue get dispatched.
- */
 void Authority::run(void)
 {
 	///@todo checking if queue is full here is useless.
@@ -132,6 +112,7 @@ void Authority::run(void)
 		/*Dispatch the first message in the queue. Use peek because the
 		 * processing functions should be able to tell where the message it
 		 * from. */
+		///TODO No need to peek if the process function from Resource is called instead.
 		dispatch(message_queue.peek());
 		//Message has been dispatched so it can be dequeued.
 		message_queue.dequeue();

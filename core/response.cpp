@@ -29,16 +29,6 @@
 #include "message.h"
 #include "response.h"
 
-///Response implements an HTTP response.
-/**
- * @class Response
- * */
-
-///Class constructor.
-/**
- * @param _response_code the response's status code.
- * @param _orginial_request the request that triggered this response; NULL
- * 	if there is none.*/
 Response::Response(
 		const status_code _response_code,
 		Request* _original_request):
@@ -62,13 +52,11 @@ Response::Response(
 #endif
 }
 
-///Class destructor.
 Response::~Response()
 {
 	delete original_request;
 }
 
-///Prints the content of a Response to the output.
 void Response::print(void)
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
@@ -89,10 +77,6 @@ void Response::print(void)
 
 //Since response deserialization is not always needed, it can be deactivated.
 #if RESPONSE_DESERIALIZATION
-///Parses a line from the response specific part of the HTTP header.
-/**@param line the header line currently being parsed.
- * @param size the size in bytes of the header line.
- * @see Message::parse().*/
 Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 {
 	//If the end of the line is not a CRLF.
@@ -152,15 +136,6 @@ Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 }
 #endif
 
-///Serialize the response to a buffer.
-/** Serialize the response to a buffer and/or returns the length in bytes of the
- * serialized request. Simply returning the length is useful for allocating a
- * buffer to which the message is then serialized to.
- * @param buffer the buffer to serialize the response to.
- * @param write if the data should be written to the buffer. If set to false,
- * 		only the length of the serialized response will be returned.
- * @return if write is true, the number of bytes written to the buffer, if
- * 		write is false, the length of the serialized response. */
 size_t Response::serialize( char* buffer, bool write)
 {
 	char* start = buffer; //Save the start of the buffer.

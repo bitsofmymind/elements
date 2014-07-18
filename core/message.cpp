@@ -24,20 +24,10 @@
 #include <string.h>
 #include <utils/memfile.h>
 #if !ITOA //If there is no ITOA function, use sprintf (located in cstdio)
-#include <cstdio>
+	#include <cstdio>
 #endif
 #include "message.h"
 
-/// Message is a base class for HTTP messages.
-/**
- * @class Message
- * Message implements common functionality between HTTP request and responses.
- * It takes care of functions such as header parsing, header field parsing,
- * body parsing and storage and defines methods that requests and responses
- * override to adapt to their specificities.
- */
-
-///Message class constructor.
 Message::Message():
 		parsing_body(false),
 		content_type(NULL),
@@ -55,7 +45,6 @@ Message::Message():
 #endif
 }
 
-///Message class destructor.
 Message::~Message()
 {
 	/*while(fields.items)
@@ -77,11 +66,6 @@ Message::~Message()
 	}
 }
 
-///Prints the contents of the message to the output.
-/** Prints the contents of the message to the output. Sub-classes of Message
- * should override this method to print their own data. /*If VERBOSITY,
- * OUTPUT_WARNINGS or OUTPUT_ERRORS are not defined, this method should be
- * optimized away by the compiler.*/
 void Message::print()
 {
 	//Content-Length printing.
@@ -97,17 +81,6 @@ void Message::print()
 	}
 }
 
-///Serialize the message to a buffer.
-/** Serialize the message to a buffer and/or returns the length in bytes of the
- * serialized message. Simply returning the length is useful for allocating a
- * buffer to which the message is then serialized to. Sub-classes of Message
- * should override this method to serialize their own headers and fields,
- * hence, this method should only be called within a child class.
- * @param buffer the buffer to serialize the message to.
- * @param write if the data should be written to the buffer. If set to false,
- * 		only the length of the serialized message will be returned.
- * @return if write is true, the number of bytes written to the buffer, if
- * 		write is false, the length of the serialized message. */
 size_t Message::serialize( char* buffer, bool write )
 {
 	//Note: The message header should have been serialized by a child class.
@@ -191,16 +164,6 @@ size_t Message::serialize( char* buffer, bool write )
 	return buffer - start;
 }
 
-///Parse the content of a buffer with a known size into a message.
-/**
- * Parses the content of a buffer into this message object. This method assumes
- * that the size of the buffer is known and can be called on multiple
- * message parts for cases where they are received serially. Parsing is done
- * by waiting for complete HTTP lines (ended by CRLF) and parsing them at once.
- * @param data pointer to the buffer to parse.
- * @param size the size of the message buffer.
- * @return the result of the parsing.
- */
 Message::PARSER_RESULT Message::parse(const char* data, size_t size)
 {
 	size_t line_start = 0; //Where the current line starts in the buffer.
@@ -315,13 +278,6 @@ Message::PARSER_RESULT Message::parse(const char* data, size_t size)
 	}
 }
 
-///Parse a buffer with an unknow length.
-/**
- * Overloaded version of Message::parse() for parsing a complete message.
- * Assumes that the buffer ends with a null character.
- * @param buffer pointer to the buffer to be parsed.
- * @return the result of the parsing.
- */
 Message::PARSER_RESULT Message::parse( const char* buffer )
 {
 	/*The size of the line being parsed. Initialized to 1 because buffer
@@ -360,28 +316,12 @@ Message::PARSER_RESULT Message::parse( const char* buffer )
 	return PARSING_COMPLETE; //Done parsing.
 }
 
-///Set the body of a Message.
-/**
- * Set the body of a Message.
- * @param f the File object containing the body.
- * @param mime the MIME type of the body.
- */
 void Message::set_body(File* f, const char* mime)
 {
 	body = f;
 	content_type = mime;
 }
 
-/*File* Message::get_body(void) const
-{
-	return body;
-}*/
-
-///Unsets the body of a Message.
-/**
- * Unsets the body of a Message.
- * @return the body that was unset.
- */
 File* Message::unset_body(void)
 {
 	File* f = body;
@@ -390,11 +330,6 @@ File* Message::unset_body(void)
 	return f;
 }
 
-///Returns the depth of resources to a Message's destination.
-/**
- * Returns the depth of resources to a Message's destination.
- * @return the depth.
- */
 uint8_t Message::to_destination(void)
 {
 	/*If dispatching is not relative, there is no real way to tell where
@@ -411,7 +346,6 @@ uint8_t Message::to_destination(void)
 	return to_url->resources.items - to_url_cursor - 1;
 }
 
-///Increments the to_url cursor to the next resource.
 void Message::next(void)
 {
 	//Check if there is a next resource.
@@ -421,7 +355,6 @@ void Message::next(void)
 	}
 }
 
-///Decrements the to_url cursor to the previous resource.
 void Message::previous(void)
 {
 	if(to_url_cursor > 0) //Check if there is a previous resource.
@@ -430,16 +363,6 @@ void Message::previous(void)
 	}
 }
 
-///Parses a line from the message header.
-/**
- * Parses a complete line from an HTTP message header. Subclasses of message
- * should override this method to parse their specific header lines and hand off
- * generic parsing to this method. Hence, this method should not be called
- * directly.
- * @param line a pointer to a complete line.
- * @param size the size of the line (including CRLF).
- * @return the result of the parsing.
- */
 Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 {
 	/* Note: Overrides of this method should have checked if the line was
@@ -477,16 +400,6 @@ Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 	return PARSING_SUCESSFUL; //Parsing that line was sucessful.
 }
 
-///Store a message body from a buffer.
-/**
- * A message body is treated like header lines and can be received in chunks.
- * This method assumes that the content-length header field was previously
- * received and parsed and that a File object was created to store the body,
- * otherwise, the message is assumed to have not body.
- * @param buffer pointer to the body buffer.
- * @param size the size of the body.
- * @return the result of the parsing.
- */
 Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
 {
 	if(!body) //If no body object is set.

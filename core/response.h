@@ -25,6 +25,7 @@
 #include "message.h"
 #include "request.h"
 
+///Response implements an HTTP response.
 class Response: public Message
 {
 	public:
@@ -130,15 +131,42 @@ class Response: public Message
 		 * to know which request triggered what response.*/
 		Request* original_request;
 
-	public:
+		///Class constructor.
+		/**
+		 * @param _response_code the response's status code.
+		 * @param _orginial_request the request that triggered this response; NULL
+		 * 	if there is none.
+		 * */
 		Response( const status_code response_code,	Request* request );
+
+		///Class destructor.
 		~Response();
 
+		/// Prints the content of a Response to the output.
 		virtual void print();
+
+		/// Serialize the response to a buffer.
+		/**
+		 * Serialize the response to a buffer and/or returns the length in bytes of the
+		 * serialized request. Simply returning the length is useful for allocating a
+		 * buffer to which the message is then serialized to.
+		 * @param buffer the buffer to serialize the response to.
+		 * @param write if the data should be written to the buffer. If set to false,
+		 * 		only the length of the serialized response will be returned.
+		 * @return if write is true, the number of bytes written to the buffer, if
+		 * 		write is false, the length of the serialized response.
+		 * */
 		virtual size_t serialize(char* buffer, bool write);
 
 	protected:
+
 #if RESPONSE_DESERIALIZATION
+		///Parses a line from the response specific part of the HTTP header.
+		/**
+		 * @param line the header line currently being parsed.
+		 * @param size the size in bytes of the header line.
+		 * @see Message::parse().
+		 * */
 		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
 #endif
 };

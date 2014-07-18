@@ -47,6 +47,10 @@ uptime_t system_uptime = 0;
 uptime_t get_uptime( void )
 {
 	uptime_t val;
+	/* On 32 or 64 bit systems, retrieving the uptime is done in a singular
+	 * operation. However, one 16 bit and 8 bit architectures, it takes more
+	 * so in order to prevent the uptime from changing during the call
+	 * due to an interrupt updating it, its retrival is made atomic. */
 	ATOMIC
 	{
 		val = system_uptime;
@@ -67,6 +71,9 @@ void increase_uptime(uptime_t time)
 void* ts_malloc(size_t size)
 {
 	void* block;
+
+	/* To prevent corruption of the heap due to concurrent access between two
+	 * threads or by an interrupt routine, this call is made atomic.*/
 	ATOMIC
 	{
 		block = malloc(size);
@@ -74,7 +81,7 @@ void* ts_malloc(size_t size)
 
 	if(!block)
 	{
-		//This should be optimized away by the compiler when ERROR_OUTPUT is defined to 0
+		//This should be optimized away by the compiler when ERROR_OUTPUT is defined to 0.
 		ERROR_PRINTLN("Malloc failed!");
 	}
 
@@ -83,8 +90,10 @@ void* ts_malloc(size_t size)
 
 void ts_free(void* block)
 {
-	if(block != NULL)
+	if(block != NULL) // Makes sure we are not freeing a NULL pointer.
 	{
+		/* To prevent corruption of the heap due to concurrent access between two
+		 * threads or by an interrupt routine, this call is made atomic.*/
 		ATOMIC
 		{
 			free(block);
@@ -95,60 +104,53 @@ void ts_free(void* block)
 void* ts_realloc(void* ptr, size_t size)
 {
 	void* block;
+
+	/* To prevent corruption of the heap due to concurrent access between two
+	 * threads or by an interrupt routine, this call is made atomic.*/
 	ATOMIC
 	{
 		block = realloc(ptr, size);
 	}
+
 	return block;
 }
 
-/*
-It would be a great idea to build a bunch of functions for elements to register with interrupts, EEPROM adresses and system registers. The problem, there is no memory security
-( at least on the AVR) to begin with and keeping track of who owns what memory appears to be too resource intensive for now.
-bool register_interrupt_handler( void ( *handler_pointer )( void ), void* vector_address )
-{
-
-}
-
-bool unregister_interrupt_handler( void ( *handler_pointer )( void ), void* vector_address )
-{
-	for( unsigned int i = VECTORS_BOTTOM; i < VECTORS_TOP ; i += sizeof( void * )
-	{
-		if( *i == vector_address )
-		{
-			*i = 0;
-			//Deactivate interrupt
-		}
-	}
-	return false;
-}
-*/
 #if OUTPUT_ERRORS || OUTPUT_WARNING || VERBOSITY || OUTPUT_DEBUG
+
+/** Prints a number using an arbitrary base.
+ * @param n the number to print.
+ * @param base the base ro print the number in.*/
 void printNumber(uint32_t n, uint8_t base)
 {
-  unsigned char buf[8 * sizeof(int32_t)]; // Assumes 8-bit chars.
-  uint32_t i = 0;
+	unsigned char buf[8 * sizeof(int32_t)]; // Assumes 8-bit chars.
+	uint32_t i = 0;
 
-  if (n == 0) {
-	  Debug::print_char('0');
-    return;
-  }
+	if (n == 0) // If the number is 0.
+	{
+	  Debug::print_char('0'); // 0 is valid in every base.
+	  return;
+	}
 
-  while (n > 0) {
-    buf[i++] = n % base;
-    n /= base;
-  }
+	while (n > 0) // Divides the number into its digits.
+	{
+		buf[i++] = n % base;
+		n /= base;
+	}
 
-  for (; i > 0; i--)
-	  Debug::print_char((char) (buf[i - 1] < 10 ?
-      '0' + buf[i - 1] :
-      'A' + buf[i - 1] - 10));
+	for (; i > 0; i--) // For each digit in the number.
+	{
+		// Prints a digit using numerical digits below 10 and letters above.
+		Debug::print_char((char) (buf[i - 1] < 10 ?
+		  '0' + buf[i - 1] :
+		  'A' + buf[i - 1] - 10));
+	}
 }
 
 void Debug::print(const char* str)
 {
-	while(*str)
+	while(*str) // While we have not reached the end of the string.
 	{
+		// Prints the current character.
 		Debug::print_char((char)(*str++));
 	}
 }
@@ -160,8 +162,9 @@ void Debug::print(char c)
 
 void Debug::nprint(const char* str, uint16_t length)
 {
-	while(length--)
+	while(length--) // Where there is still some characters to print.
 	{
+		// Prints the current character.
 		Debug::print((int8_t)(*str++), BYTE);
 	}
 }
@@ -188,17 +191,24 @@ void Debug::print(uint16_t n, uint8_t base)
 
 void Debug::print(int32_t n, uint8_t base)
 {
-  if (base == 0) {
+	if (base == 0) // If the value should be printed as a character.
+	{
 	  Debug::print_char(n);
-  } else if (base == 10) {
-    if (n < 0) {
-    	Debug::print_char('-');
-      n = -n;
-    }
-    printNumber(n, 10);
-  } else {
-    printNumber(n, base);
-  }
+	}
+	else if (base == 10) // If the base is 10.
+	{
+		if (n < 0) // If the number is negative.
+		{
+			Debug::print_char('-'); // Add a minus sign.
+			n = -n; // Make the number positive.
+		}
+
+		printNumber(n, 10); // Print the number.
+	}
+	else
+	{
+		printNumber(n, base); // Print the number using the required base.
+	}
 }
 
 void Debug::print(uint32_t n, uint8_t base)
@@ -206,11 +216,6 @@ void Debug::print(uint32_t n, uint8_t base)
   if (base == 0) { Debug::print_char(n); }
   else { printNumber(n, base); }
 }
-
-/*void Print::print(double n, int digits)
-{
-  printFloat(n, digits);
-}*/
 
 void Debug::println(char c)
 {
@@ -265,4 +270,5 @@ void Debug::println(uint32_t n, uint8_t base)
 	Debug::print(n, base);
 	Debug::println();
 }
+
 #endif

@@ -32,28 +32,62 @@
 ///@todo delete that if it is useless.
 #define MAX_NUMBER_OF_CHILD_AUTHORITIES 10
 
+/// An authority is a Resource class which provides message buffering.
+/**
+ * An Authority act as a message flow regulator by its capacity to buffer
+ * messages and releasing them according to the available processing capacity.
+ * It does so by queuing every message it receives and releasing them a few at
+ * a time. If much processing is available, the Authority will be visited very
+ * often thereby allowing it to release message at an increased rate. If the
+ * system is under a high load, an Authority will be visited less often and
+ * in so doing releasing messages at a slower rate.
+ */
 class Authority: public Resource
 {
 	private:
+
 		/** The queue the authority uses to buffer its messages.
-		 * Defined inline so the cost of memory allocation is saved.*/
+		 * Defined inline so the cost of memory allocation is saved.
+		 * */
 		Queue<Message*> message_queue;
+
 	public:
+
 #if AUTHORITY_REDIRECT
-		/** The redirect url when requests for this authority should get
+		/**
+		 * The redirect url when requests for this authority should get
 		 * redirected. The content of this variable gets put in the Location
-		 * header field. */
+		 * header field.
+		 * */
 		const char* redirect_url;
 #endif
 
+		/// Class constructor.
 		Authority(void);
+
 #if RESOURCE_DESTRUCTION
+		/// Class destructor.
 		virtual ~Authority(void);
 #endif
 
 	protected:
+
+		/**
+		 * Authority overrides this method to intercept messages and queue them instead
+		 * of processing them like a Resource would do.
+		 * */
 		virtual Response::status_code process( Request* request, Response* response );
+
+		/**
+		 * Authority overrides this method to intercept messages and queue them instead
+		 * of processing them a Resource would do.
+		 * */
 		virtual Response::status_code process( Response* response );
+
+		/**
+		 * Authority overrides this method so what when it gets ran by processing,
+		 * the messages that it has in queue get dispatched.
+		 * */
 		virtual void run(void);
 };
 
