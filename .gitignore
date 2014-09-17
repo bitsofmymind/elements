@@ -1,0 +1,11 @@
+.csettings
+.settings
+.cproject
+.dep.inc
+.project
+nbproject
+Debug
+Release
+svn
+docs
+
