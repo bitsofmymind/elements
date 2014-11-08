@@ -20,39 +20,52 @@
 
 void processing_wake(){}
 void processing_sleep(uint64_t time){}
-void Debug::print(char c){ std::cout << c; }
+void Debug::print_char(char c){ std::cout << c; }
 void Debug::println(){ std::cout << std::endl; }
+void heart_beat(){}
 
 uint32_t steps = 0;
 
 class Echo: public Resource
 {
+public:
 
-	virtual Response::status_code process(Response* response, Message** reply_message)
+	void send(Message* message){ dispatch(message);}
+
+	virtual Response::status_code process(Response* response)
 	{
 		std::cout << "Echo completed in " << steps << " steps." << std::endl;
-		std::cout << "Response printout:" << std::endl;
-		MESSAGE_SIZE len = response->get_header_length();
-		char* str = (char*)malloc(len + 1);
-		str[len] = '\0';
-		response->serialize(str);
-		std::cout << str << std::endl;
-		free(str);
+
+		std::cout << "Request:" << std::endl;
+		size_t len = response->original_request->serialize(NULL, false);
+		char* buffer = (char*)malloc( len + 1);
+		response->original_request->serialize(buffer, true);
+		buffer[len] = '\0';
+		std::cout << buffer << std::endl;
+		free(buffer);
+
+		std::cout << "Response:" << std::endl;
+		len = response->serialize(NULL, false);
+		buffer = (char*)malloc( len + 1);
+		response->serialize(buffer, true);
+		buffer[len] = '\0';
+		std::cout << buffer << std::endl;
+		free(buffer);
+
 		char body_buffer[21];
 		uint8_t read;
-		if(response->body_file)
+		if(response->get_body())
 		{
 			do
 			{
-				read = response->body_file->read(body_buffer, 20, false);
+				read = response->get_body()->read(body_buffer, 20);
 				body_buffer[read]  ='\0';
 				std::cout << body_buffer;
 			}while(read > 0);
 		}
+		//delete response;
 		std::cout << std::endl;
-
-		Resource::process(response, reply_message);
-		return OK_200;
+		return DONE_207;
 	}
 
 };
@@ -70,7 +83,6 @@ class Timer: public Resource
 
 	virtual void run()
 	{
-		//Elements::e_time_t time =;
 		std::cout << "Timer " << _id << " tick" << std::endl;
 		schedule( _interval );
 	}
@@ -89,7 +101,7 @@ int main()
 	root->add_child("proc", proc);
 	root->add_child("echo", echo);
 	root->add_child("res2", res2);
-	root->add_child("hw", hw);
+	res2->add_child("hw", hw);
 	//root->add_child(Elements::string<uint8_t>::make("filein"), filein);
 	echo->add_child("timer1", timer1);
 	echo->add_child("timer2", timer2);
@@ -214,7 +226,7 @@ int main()
 		return 1;
 	}*/
 
-	const char* msg = "GET /hw?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 4\r\n\r\n1234";
+	const char* msg = "GET /res2/hw/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 4\r\n\r\n1234";
 	if(req->parse(msg, strlen(msg)) != Message::PARSING_COMPLETE)
 	{
 		std::cout << "Message parsing error" << std::endl;

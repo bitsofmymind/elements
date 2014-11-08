@@ -19,8 +19,8 @@ class HelloWorld: public Resource
 		HelloWorld();
 		~HelloWorld();
 		virtual void run(void);
-		virtual File* render( Request* request );
-		virtual Response::status_code process( Request* request, Message** return_message );
+		File* render( void );
+		virtual Response::status_code process( Request* request, Response* response );
 
 };
 

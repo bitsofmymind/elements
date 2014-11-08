@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <utils/template.h>
+#include <utils/memfile.h>
 #include <string.h>
 
 HelloWorld::HelloWorld():
@@ -38,53 +39,54 @@ void HelloWorld::run(void)
 }
 
 
-File* HelloWorld::render( Request* request )
+File* HelloWorld::render( void )
 {
 	const char* r = \
-			"<html>\
-				<body>\
-					<h2>Hello World resource</h2>\
-					You can use the following form to change the message the resource is displaying in stdout and</br>\
-					turn it on or off.</br>\
-					<br/>\
-					<form method=\"post\" accept-charset=\"us-ascii\">\
-						Message: <input type=\"text\" id=\"msg\" name=\"msg\" value=\"~\"/><br/>\
-						ON<input type=\"radio\" id =\"st_1\" name=\"st\" ~ value=\"1\"/><br/>\
-						OFF<input type=\"radio\" id=\"st_0\" name=\"st\" ~ value=\"0\"/><br/>\
-						<input type=\"submit\" value=\"Submit\" />\
-					</form>\
-				</body>\
+			"<html>\n\
+				<body>\n\
+					<h2>Hello World resource</h2>\n\
+					You can use the following form to change the message the resource is displaying in stdout and</br>\n\
+					turn it on or off.</br>\n\
+					<br/>\n\
+					<form method=\"post\" accept-charset=\"us-ascii\">\n\
+						Message: <input type=\"text\" id=\"msg\" name=\"msg\" value=\"~\"/><br/>\n\
+						ON<input type=\"radio\" id =\"st_1\" name=\"st\" ~ value=\"1\"/><br/>\n\
+						OFF<input type=\"radio\" id=\"st_0\" name=\"st\" ~ value=\"0\"/><br/>\n\
+						<input type=\"submit\" value=\"Submit\" />\n\
+					</form>\n\
+				</body>\n\
 			</html>";
 
 	//const char* r = "<html><body> ~ blah ~~ ~ </body></html>";
 
-	ConstFile* f = new ConstFile(r);
+	Template* t = new Template(new MemFile((char*)r, true));
 
-	MESSAGE_SIZE data_len = strlen(message) + 1 + strlen("checked=\"checked\"") + 1 + 1;
-	char* data = (char*)ts_malloc(data_len);
-	char* ptr = data + strlen(message) + 1;
-	memcpy(data, message, strlen(message) + 1 );
+	size_t len = strlen(message) + 1;
+	char* arg = (char*)ts_malloc(len);
+	memcpy(arg, message, len);
+	t->add_arg(arg);
+
+	if(!state)
+	{
+		t->add_arg(NULL);
+	}
+	len = strlen("checked=\"checked\"") + 1;
+	arg = (char*)ts_malloc(len);
+	memcpy(arg, "checked=\"checked\"", len);
+	t->add_arg(arg);
 	if(state)
 	{
-		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\"") + 1);
-		ptr += strlen("checked=\"checked\"") + 1;
-		*ptr = '\0';
-	}
-	else
-	{
-		*ptr++ = '\0';;
-		memcpy(ptr, "checked=\"checked\"", strlen("checked=\"checked\"") + 1);
+		t->add_arg(NULL);
 	}
 
-	return new Template(f, data, data_len, 3);
+	return t;
 }
 
-Response::status_code HelloWorld::process( Request* request, Message** return_message )
+Response::status_code HelloWorld::process( Request* request, Response* response )
 {
-	Response::status_code sc = Resource::process(request, return_message);
-	if(sc == NOT_IMPLEMENTED_501)
+	if(!request->to_destination())
 	{
-		if(!strcmp(request->method, "post"))
+		if(request->is_method(Request::POST))
 		{
 			char buffer[50];
 			uint8_t len = request->find_arg("msg", buffer, 50);
@@ -107,12 +109,17 @@ Response::status_code HelloWorld::process( Request* request, Message** return_me
 					state = false;
 				}
 			}
-
-			*return_message = http_get( request );
+			goto get;
 		}
+		else if(request->is_method(Request::GET))
+		{
+			get:
+			response->set_body(render(), MIME::TEXT_HTML);
+			return OK_200;
+		}
+		return NOT_IMPLEMENTED_501;
 	}
-
-	return sc;
+	return PASS_308;
 }
 
 
