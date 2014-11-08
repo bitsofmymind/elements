@@ -96,12 +96,10 @@ int main()
 	Processing* proc = new Processing(NULL);
 	Timer* timer1 = new Timer(500, 1);
 	Timer* timer2 = new Timer(1000, 2);
-	HelloWorld* hw = new HelloWorld();
 
 	root->add_child("proc", proc);
 	root->add_child("echo", echo);
 	root->add_child("res2", res2);
-	res2->add_child("hw", hw);
 	//root->add_child(Elements::string<uint8_t>::make("filein"), filein);
 	echo->add_child("timer1", timer1);
 	echo->add_child("timer2", timer2);
@@ -249,7 +247,6 @@ int main()
 	delete proc;
 	delete timer1;
 	delete timer2;
-	delete hw;
 
 	return 0;
 }
