@@ -16,7 +16,7 @@
  */
 
 #include <iostream>
-#include <posix_socket_interface.h>
+#include <platforms/posix/posix_socket_interface.h>
 #include <pthread.h>
 #include <core/resource.h>
 #include <core/authority.h>

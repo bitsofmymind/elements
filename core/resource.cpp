@@ -124,8 +124,8 @@ void Resource::dispatch( Message* message )
 			delete message; //Free the message to avoid memory leakage.
 			//No break.
 		case RESPONSE_DELAYED_102: //The resource will answer this message later.
-			/*TODO I should propably replace RESPONSE_DELAYED_102 with KEEP_102 to indicate the
-			* framework a resource is keeping the message wthin its control.*/
+			/*TODO I should probably replace RESPONSE_DELAYED_102 with KEEP_102 to indicate the
+			* framework a resource is keeping the message within its control.*/
 			delete response; //We do not need the response, delete it.
 			break;
 		/*The resource is not processing this message, probably because it is
@@ -295,7 +295,7 @@ void Resource::print_transaction(Message* message)
 
 Response::status_code Resource::process(Request* request, Response* response)
 {
-	if(!request->to_destination()) //If the message it a destination.
+	if(!request->to_destination()) //If the message is at destination.
 	{
 		print_transaction(request); //Print it to the console.
 		//Whatever was request is not implemented.
@@ -306,7 +306,7 @@ Response::status_code Resource::process(Request* request, Response* response)
 
 Response::status_code Resource::process(Response* response)
 {
-	if(!response->to_destination()) //If message is at destination.
+	if(!response->to_destination()) //If the message is at destination.
 	{
 		print_transaction(response); //Print it to the console.
 		//Nothing is done with the message, it will be deleted by dispatch.

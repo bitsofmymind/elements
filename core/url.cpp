@@ -251,7 +251,7 @@ size_t URL::serialize(char* buffer, bool write)
 #if URL_PORT
 	if(port) // If the url has a port.
 	{
-		if( write ){ *buffer = ':' }; // Adds the colon.
+		if( write ){ *buffer = ':'; } // Adds the colon.
 		buffer++; // Increments the buffer past the colon.
 		if( write ){ strcpy(buffer, port); } // Write the port to the buffer.
 		buffer += strlen(port); // Increment the buffer past the port.
@@ -269,7 +269,7 @@ size_t URL::serialize(char* buffer, bool write)
 	{
 		// Adds the resource to the url.
 		if( write ){ strcpy(buffer, resources[i]); }
-		buffer += strlen(resources[i]); // Increments the pointer pas the resource.
+		buffer += strlen(resources[i]); // Increments the pointer past the resource.
 		 // Add a slash to signal the end of the resource.
 		if( write ){ *buffer = '/'; }
 		buffer++; // Increments the buffer pas the slash.

@@ -19,7 +19,7 @@
 #include <string.h>
 #include <pal/pal.h>
 
-MemFile::MemFile(char* data, bool is_const):
+MemFile::MemFile(char* data, bool is_const = false ):
 	is_const(is_const),
 	data(data)
 {
@@ -28,7 +28,7 @@ MemFile::MemFile(char* data, bool is_const):
 
 }
 
-MemFile::MemFile(char* data, size_t length, bool is_const ):
+MemFile::MemFile(char* data, size_t length, bool is_const = false ):
 	is_const(is_const),
 	data(data)
 {

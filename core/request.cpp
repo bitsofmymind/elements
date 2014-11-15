@@ -26,10 +26,6 @@
 #include "request.h"
 #include "url.h"
 
-/**
- * @class Request
- * */
-
 Request::Request():
 	Message(),
 	method(NULL)
@@ -50,7 +46,7 @@ Request::~Request()
 void Request::print(void)
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
-	 * this method should be optimizes away by the compiler.*/
+	 * this method should be optimized away by the compiler.*/
 	DEBUG_PRINT(" % Request: ");
 
 	//Prints the HTTP request header.
