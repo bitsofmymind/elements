@@ -94,7 +94,7 @@ typedef unsigned short uip_stats_t;
  *
  * \hideinitializer
  */
-#define UIP_CONF_BROADCAST		0
+#define UIP_CONF_BROADCAST		1
 
 /**
  * The maximum amount of concurrent UDP connections.

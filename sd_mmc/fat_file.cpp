@@ -21,27 +21,39 @@
 FATFile::FATFile(char* name):
 	name(name)
 {
+	// Initialize the size of the file and the cursor.
 	File::size = 0;
 	File::_cursor = 0;
+
+	// Open the file in read only mode and only if it exists.
 	last_op_result = f_open(&file, name, FA_READ | FA_OPEN_EXISTING);
-	size = file.fsize;
+
+	size = file.fsize; // Set the file size.
 }
+
 FATFile::~FATFile()
 {
-	f_close(&file);
-	ts_free(name);
+	f_close(&file); // Close the open file.
+	ts_free(name); // The path string to the file is no longer needed.
 }
 
 size_t FATFile::read(char* buffer, size_t length)
 {
-	uint16_t bytes_read;
+	uint16_t bytes_read; // A unint16_t as defined by integer.h
+
+	/// TODO set the file read/write pointer along with the _cursor.
+
+	// Read the file into the buffer.
 	last_op_result = f_read(&file, buffer, length, &bytes_read);
-	_cursor += bytes_read;
+
+	_cursor += bytes_read; // Increment the cursor.
+
 	return bytes_read;
+
 }
 #if !READ_ONLY
 uint16_t FATFile::write(const char* buffer, size_t length)
 {
-	return 0;
+	return 0; // Writing to files not implemented yet.
 }
 #endif

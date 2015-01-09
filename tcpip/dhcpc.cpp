@@ -41,8 +41,7 @@
 #include "drivers/enc28j60/enc28j60.h"
 #include "../avr_pal.h"
 
-static const u8_t xid[4] = {0xad, 0xde, 0x12, 0x23};
-static const u8_t magic_cookie[4] = {99, 130, 83, 99};
+
 
 /*---------------------------------------------------------------------------*/
 static u8_t *
@@ -202,100 +201,5 @@ uint8_t DHCPClient::parse_msg(void)
 
 /*---------------------------------------------------------------------------*/
 
-static DHCPClient* dhcpc;
 
-DHCPClient::DHCPClient(uip_eth_addr* mac_addr):
-	Resource()
-{
-	dhcpc = this;
 
-	uip_ipaddr_t addr;
-
-	this->mac_addr = *mac_addr;
-
-	state = STATE_INITIAL;
-	uip_ipaddr(addr, 255,255,255,255);
-
-	conn = uip_udp_new(&addr, HTONS(DHCPC_SERVER_PORT));
-	uip_ipaddr(addr, 0,0,0,0);
-	uip_sethostaddr(addr);
-
-	if(conn != NULL)
-	{
-		uip_udp_bind(conn, HTONS(DHCPC_CLIENT_PORT));
-		VERBOSE_PRINTLN_P("DHCP Initialized");
-	}
-
-	schedule(SECONDS(10));
-
-}
-
-/*void DHCPClient::dhcpc_request(void)
-{
-  u16_t ipaddr[2];
-
-  if(state == STATE_INITIAL) {
-    uip_ipaddr(ipaddr, 0,0,0,0);
-    uip_sethostaddr(ipaddr);
-  }
-}*/
-
-void DHCPClient::run(void)
-{
-	for(uint8_t i = 0; i < UIP_UDP_CONNS; i++)
-	{
-		uip_udp_periodic(i);
-		if(uip_len > 0)
-		{
-			uip_arp_out();
-			network_send();
-		}
-	}
-}
-
-void DHCPClient::appcall(void)
-{
-	switch(state)
-	{
-		case STATE_INITIAL:
-			send_discover();
-			VERBOSE_PRINTLN_P("Discovering DHCP server...");
-			state = STATE_SENDING;
-			schedule(SECONDS(2));
-			return;
-		case STATE_SENDING:
-			if(uip_newdata() && parse_msg() == DHCPOFFER)
-			{
-				state = STATE_OFFER_RECEIVED;
-				send_request();
-				VERBOSE_PRINTLN_P("Sending request to DHCP server...");
-				schedule(SECONDS(2));
-				return;
-			}
-			break;
-		case STATE_OFFER_RECEIVED:
-			if(!uip_newdata())
-			{
-				VERBOSE_PRINT("no new data");
-			}
-			if(uip_newdata() && parse_msg() == DHCPACK)
-			{
-				state = STATE_CONFIG_RECEIVED;
-				VERBOSE_PRINTLN_P("Offer received and configured.");
-				//configure();
-				return;
-			}
-			break;
-		case STATE_CONFIG_RECEIVED:
-		default:
-			break;
-	}
-
-	state = STATE_INITIAL;
-	schedule(SECONDS(10));
-}
-
-void dhcpc_appcall()
-{
-	dhcpc->appcall();
-}

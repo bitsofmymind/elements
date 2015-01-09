@@ -30,23 +30,28 @@ Blinker::Blinker(uint32_t interval, uint8_t pin, volatile uint8_t* ddr, volatile
 	_port(port),
 	state(true)
 {
-	*ddr |= _BV(pin);
+	*ddr |= _BV(pin); // Set the data direction register to output.
+
+	// Shedule the resource to run at the end of the interval.
 	schedule( _interval );
 }
 
 void Blinker::run(void)
 {
-	if(*_port & _pin)
+	if(*_port & _pin) // Can't remember what that does.
 	{
-		*_port &= ~_pin;
+		*_port &= ~_pin; // Can't remember what that does.
 	}
-	else if(state)
+	else if(state) // If the LED is on.
 	{
-		*_port |= _pin;
+		*_port |= _pin; // Switch the state of the LED.
 	}
+
+	// Shedule the resource to run at the end of the interval.
 	schedule( _interval );
 }
 
+/** The content of the web page.*/
 #define CONTENT \
 "<html>\
 	<body>\
@@ -61,83 +66,101 @@ void Blinker::run(void)
 		</form>\
 	</body>\
 </html>"
+
+/** The size in bytes of the web page. */
 #define CONTENT_SIZE sizeof(CONTENT)
 
+/** Set the content of the web page as a program memory string. */
 static const char content_P[] PROGMEM = CONTENT;
 
 File* Blinker::http_get( void )
 {
+	// Create a program space file for the web page's content.
 	File* f = new PGMSpaceFile(content_P, CONTENT_SIZE);
-	if(!f)
+
+	if(!f) // If a file could not be created.
 	{
-		return NULL;
-	}
-	Template* t = new Template(f);
-	if(!t)
-	{
-		delete f;
 		return NULL;
 	}
 
+	// Create a template to fill the program space file with data.
+	Template* t = new Template(f);
+
+	if(!t) // If the template could not allocated.
+	{
+		delete f; // Delete the file.
+		return NULL;
+	}
+
+	// Add the interval as an number argument.
 	t->add_narg(_interval);
 
+	// Allocate a buffer containing the stated of the LED.
 	char* c = (char*)ts_malloc(strlen("checked=\"checked\"") + 1);
 	memcpy(c, "checked=\"checked\"", strlen("checked=\"checked\""));
 
-	if(!state)
+	if(!state) // If blinking is off.
 	{
-		t->add_arg(NULL);
+		t->add_arg(NULL); // Skip the next argument.
 	}
-	t->add_arg(c);
-	if(state)
+	t->add_arg(c); // Add the state of the led as an argument.
+
+	if(state) // If blinking is on.
 	{
-		t->add_arg(NULL);
+		t->add_arg(NULL); // Skip the next argument.
 	}
 
 	return t;
-
 }
 
 Response::status_code Blinker::process( Request* request, Response* response )
 {
-	if(request->is_method(Request::POST))
+	if(request->is_method(Request::POST)) // If this is a post request.
 	{
-		char buffer[8];
+		char buffer[8]; // Allocate a buffer to contain the form data.
+
+		// Find the interval argument.
 		uint8_t len = request->find_arg("i", buffer, 7);
-		if(len)
+
+		if(len) // If the interval value was found.
 		{
-			buffer[len] = '\0';
-			_interval = atoi(buffer);
+			buffer[len] = '\0'; // End it with a null character.
+			_interval = atoi(buffer); // Set the new interval value.
 		}
 
+		// Find the state argument.
 		len = request->find_arg("st", buffer, 1);
 
-		if(len)
+		if(len) // If the state value was found.
 		{
-			if(buffer[0] == '1')
+			if(buffer[0] == '1') // If the state is ON.
 			{
 				state = true;
 			}
-			else if(buffer[0] == '0')
+			else if(buffer[0] == '0') // If the state is OFF.
 			{
 				state = false;
 			}
 		}
-		goto get;
+
+		goto get; // Return the form.
 	}
-	else if(request->is_method(Request::GET))
+	else if(request->is_method(Request::GET)) // If this is a get request.
 	{
 		get:
-		File* f = http_get();
-		if(!f)
+		File* f = http_get(); // Create a file to contain the body of the response.
+		if(!f) // If the body could not be allocated.
 		{
-			return INTERNAL_SERVER_ERROR_500;
+			return INTERNAL_SERVER_ERROR_500; // Error 500.
 		}
+
+		// Set the body of the response.
 		response->set_body(f, MIME::TEXT_HTML);
-		return OK_200;
+
+		return OK_200; // Done.
 	}
 
-	return NOT_IMPLEMENTED_501;
+	return NOT_IMPLEMENTED_501; // The method was not implemented.
 }
 
 
@@ -147,17 +170,18 @@ BusyBlinker::BusyBlinker(uint32_t interval, uint8_t pin):
 	_pin(_BV(pin)),
 	counter(interval)
 {
-	DDRB |= _BV(pin);
+	DDRB |= _BV(pin);  // Set the data direction register to output.
 }
 
 void BusyBlinker::run(void)
 {
-	schedule( 1 );
+	schedule(1); // Wait 1 ms.
 
-	if(get_uptime() > counter)
+	if(get_uptime() > counter) // If the LED needs to be toggled.
 	{
+		 // Set the counter to the next time the LED needs to be toggled.
 		counter = get_uptime() + _interval;
 
-		PINB = _pin;
+		PINB = _pin; // Switch the LED's state.
 	}
 }

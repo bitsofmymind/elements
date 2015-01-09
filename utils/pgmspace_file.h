@@ -22,17 +22,37 @@
 #include <avr/pgmspace.h>
 #include <configuration.h>
 
+/// A file for strings stored in program memory.
+/** Strings are by default
+ * stored in RAM from an initialization list automatically compiled in by the
+ * compiler and ran at boot. Storing strings in program memory saves on RAM and
+ * code space as well.*/
 class PGMSpaceFile: public File
 {
 	private:
+		/// The text wrapped by this class.
 		PGM_P text;
 
 	public:
 
+		/** Class constructor.
+		 * @param text the string to wrap.
+		 * @param size the size of the string.
+		 * */
 		PGMSpaceFile(PGM_P text, size_t size);
 
+		/// Reads bytes into a buffer.
+		/** @param buffer the buffer to transfer the read bytes into.
+		 * @param length the number of bytes to read.
+		 * @return the number of bytes that have been read. */
 		virtual size_t read(char* buffer, size_t length);
+
 #if !READ_ONLY
+		/** Writes bytes to the file. For PGMSpaceFile, this function always
+		 * return 0 because program memory is read only.
+		 * @param buffer the bytes to write from.
+		 * @param length the number of bytes to write.
+		 * @return the number of bytes that have been written. */
 		virtual uint16_t write(const char* buffer, uint16_t length);
 #endif
 };

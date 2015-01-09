@@ -21,21 +21,49 @@
 #include <utils/file.h>
 #include "ff.h"
 
+/// A File for interfacing with data stored on a FAT file system.
 class FATFile: public File
 {
-	char* name;
-	FIL file;
+	private:
+
+		/// The path of the file.
+		char* name;
+
+		/// An internal object for interfacing with the file.
+		FIL file;
 
 	public:
+
+		/// The result of the last operation.
 		FRESULT last_op_result;
 
-	FATFile(char* name);
-	~FATFile();
+		/// Class constructor.
+		/**
+		 * @param name the path to the file.
+		 * */
+		FATFile(char* name);
 
-	virtual size_t read(char* buffer, size_t length);
+		/// Class destructor
+		~FATFile();
+
+		/// Reads bytes into a buffer.
+		/**
+		 * @param buffer the buffer to transfer the read bytes into.
+		 * @param length the number of bytes to read.
+		 * @return the number of bytes that have been read.
+		 * */
+		virtual size_t read(char* buffer, size_t length);
+
 #if !READ_ONLY
+		/// WRite bytes to the file.
+		/**
+		 * @param buffer the bytes to write from.
+		 * @param length the number of bytes to write.
+		 * @return the number of bytes that have been written.
+		 * */
 	virtual size_t write(const char* buffer, size_t length);
 #endif
+
 };
 
 #endif /* FAT_FILE_H_ */

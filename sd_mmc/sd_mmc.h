@@ -19,26 +19,49 @@
 #define SD_MMC_H_
 
 #include <core/resource.h>
-
 #include "ff.h"
 
+// Card detect pin configuration.
+
+/// The PORT where the card detected pin is.
 #define CARD_DETECT_PORT PORTB
+
+/// The DDR where the card detected pin is.
 #define CARD_DETECT_DDR DDRB
+
+/// The PINREG where the card detected pin is.
 #define CARD_DETECT_PINREG PINB
+
+/// The pin number of the card detect pin.
 #define CARD_DETECT_PIN PIN1
 
+/// SDMMC allows usage of a FAT file system as a Resource.
 class SDMMC: public Resource
 {
 	private:
+
+		/// The encapsulated FAT file system structure.
 		FATFS fatfs;
 
 	public:
+
+		/// Class constructor.
 		SDMMC();
 
 	protected:
-		virtual Response::status_code process( Request* request, Response* response );
-		virtual void run(void);
 
+        /// Process a request message.
+        /**
+         * Override of parent implementation to process file system queries
+         * @param request the request to process.
+         * @param response the response to fill if a response should be returned (which
+         * depends on the status code).
+         * @return the status_code produced while processing the request.
+         */
+		virtual Response::status_code process(Request* request, Response* response);
+
+		/// Runs the resource, allowing it to do processing.
+		virtual void run(void);
 };
 
 #endif /* SD_MMC_H_ */

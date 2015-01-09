@@ -1,4 +1,4 @@
-/* sd_mmc.cpp - Defines IO controls for an SD/MMC card
+/* sd_mmc_io.h - Defines IO controls for an SD/MMC card
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

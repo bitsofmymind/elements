@@ -22,6 +22,8 @@
 #include "../avr_pal.h"
 #include <string.h>
 
+/** The current instance of the ESerial resource. Needed for interrupt
+ * service routines.*/
 static ESerial* instance;
 
 ESerial::ESerial():
@@ -31,133 +33,166 @@ ESerial::ESerial():
 		buffer(0),
 		age(0)
 {
-	instance = this;
-
-
+	instance = this; // Set the running instance.
 }
 
 void ESerial::receive(uint8_t c)
 {
-	if(index >= buffer_size)
+	if(index >= buffer_size) // If we have overrun the buffer.
 	{
+		// Allocate a new larger buffer.
 		char* new_buffer = (char*)ts_malloc(buffer_size + MESSAGE_BUFFER_INCREMENT_SIZE);
-		if(new_buffer != NULL)
+
+		if(new_buffer != NULL) // If allocation succeeded.
 		{
-			if(buffer)
+			if(buffer) // If there is previously allocated buffer.
 			{
+				// Copy the old buffer over to the new buffer.
 				memcpy(new_buffer, buffer, buffer_size);
-				ts_free(buffer);
+				ts_free(buffer); // Free the old buffer.
 			}
+			// Increase the size of the buffer.
 			buffer_size += MESSAGE_BUFFER_INCREMENT_SIZE;
-			buffer = new_buffer;
+			buffer = new_buffer; // Replace the old buffer.
 		}
-		else
+		else // Allocation of a new buffer failed.
 		{
-			if(buffer)
+			if(buffer) // if there is a currently allocated buffer.
 			{
-				ts_free(buffer);
+				ts_free(buffer); // Free it.
+				buffer = NULL;
 			}
-			buffer = NULL;
-			index = buffer_size = 0;
+
+			index = buffer_size = 0; // Reset size and index.
+
+			 /* Cannot receive more characters for this message. If extra
+			  * characters keep on coming, they will parsed as an invalid
+			  * message and discarded there.*/
 			return;
 		}
 	}
 
-	age = get_uptime();
+	age = get_uptime(); // We just received a new character.
 
-	buffer[index++] = c;
+	buffer[index++] = c; // Write the character to the buffer.
 
-	schedule(ASAP);
+	DEBUG_PRINT(c); // echo back the character that was received.
+
+	schedule(ASAP); // Schedule the resource to be run ASAP to parse the message.
 }
 
 
 void ESerial::run(void)
 {
-	size_t len;
-	char* buf;
+	size_t len; // The length of the message.
+	char* buf; // A buffer to hold the received part of the message.
 
-	ATOMIC
+	ATOMIC // Disable interrupts.
 	{
-		if(age + MAX_AGE > get_uptime())
+		 // If the parsing delay has not expired.
+		if(age + DELAY > get_uptime())
 		{
-			schedule(10);
-			return;
+			schedule(10); // Wait 10 ms.
+			return; // More bytes could be received.
 		}
-		len = index;
-		buf = buffer;
+
+		len = index; // Save the length of the message.
+		buf = buffer; // Save the buffer.
+
+		// Reset the USART character buffer.
 		index = buffer_size = 0;
 		buffer = NULL;
 	}
 
 	Request* request = new Request();
-	if(!request)
+
+	if(!request) // If there is not enough memory for the request.
 	{
-		//Debug::println("not enough space");
+		Debug::println("not enough space");
+		ts_free(buf); // Free the message buffer.
+
+		return; // Not enough memory to transform the message into a request.
 	}
 
-	for(size_t i = 1; i < len; i++)
+	for(size_t i = 1; i < len; i++) // For each character in the message.
 	{
-		if( buf[i-1] == ';' && buf[i] == ';')
+		if( buf[i-1] == ';' && buf[i] == ';') // ;; are changed to /r and /n.
 		{
 			buf[i-1] = '\r';
 			buf[i] = '\n';
 		}
 	}
 
+	// Parse the message.
 	Message::PARSER_RESULT res = request->parse(buf, len);
+
 	switch(res)
 	{
 		case Message::PARSING_COMPLETE:
-			VERBOSE_PRINTLN_P("Parsing complete, sending");
-			dispatch(request);
+			DEBUG_PRINTLN("Parsing complete, sending");
+			dispatch(request); // dispatch the message to the framework.
 			break;
 		case Message::PARSING_SUCESSFUL:
-			VERBOSE_PRINTLN_P("Parsing incomplete");
+			DEBUG_PRINTLN("Parsing incomplete"); // Message is incomplete.
+			break;
 		default:
-			VERBOSE_PRINTLN_P("Parsing Error");
+			DEBUG_PRINT("Parsing Error: "); //There was a parsing error.
+			Debug::println((uint8_t)res, 10);
+
+			// Cannot process the message so delete all buffers.
 			delete request;
+			ts_free(buf);
 	}
 
-	ts_free(buf);
-
-	ATOMIC
+	ATOMIC // Disable interrupts.
 	{
+		/* If some characters were received while we were parsing the current
+		 * message. */
 		if(index)
 		{
-			schedule(ASAP);
-			return;
+			schedule(ASAP); // Run the resouce ASAP.
+			return; // Done running the resource.
 		}
 	}
-	schedule(NEVER);
+
+	schedule(NEVER); // Wait for more bytes to arrive.
 }
 
-Response::status_code ESerial::process(Response* response, Message** return_message)
+Response::status_code ESerial::process(Response* response)
 {
-	File* body = response->get_body();
-	print_transaction(response);
+	File* body = response->get_body(); // Will print the body of the response.
+	print_transaction(response); // Print the transaction.
 
-	char buffer[10];
-	if(body)
+	char buffer[10]; // Will hold part of the body while we read it.
+
+	if(body) // If the message has a body.
 	{
-		uint8_t read;
+		uint8_t read; // The number of bytes read.
+
 		do
 		{
+			 // Attempt to read ten bytes from the body.
 			read = body->read(buffer, 10);
-			DEBUG_NPRINT(buffer, read);
-		} while(read == 10);
 
-		DEBUG_PRINTLN();
+			for(uint8_t i = 0; i< read; i++) // Output the bytes read.
+			{
+				DEBUG_PRINT(buffer[i]);
+			}
+			// No longer works?
+			//DEBUG_NPRINT(buffer, read);
+
+		} while(read == 10); // While there is data left in the body.
+
+		DEBUG_PRINTLN(); // Skip a line.
 	}
 
-	delete response;
+	delete response; // Done with the response.
 
-	return OK_200;
+	return OK_200; // Response was successfully processed.
 }
 
+/// Interrupt service routine for the USART.
 ISR(USART_RX_vect)
 {
-	instance->receive(UDR0);
+	instance->receive(UDR0); // Forward the received character to the framework.
 }
-
-
-
