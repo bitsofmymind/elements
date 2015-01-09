@@ -45,5 +45,6 @@ size_t File::extract(char* buffer)
 
 void File::cursor(size_t val)
 {
+	/// TODO prevent the cursor from getting set past the size of the file.
 	_cursor = val;
 }

@@ -175,7 +175,7 @@ void* ts_realloc(void* ptr, size_t size);
 
 #endif
 
-#if OUTPUT_WARNINGS // If warnings should be outputted.
+#if OUTPUT_WARNINGS // If warnings should be output.
 
 /**
  * Prints a warning character.
@@ -198,7 +198,7 @@ void* ts_realloc(void* ptr, size_t size);
 #define WARNING_PRINTLN(a) DEBUG_PRINTLN(a);
 
 /**
- * Prints a number of warning characters followed by a new line..
+ * Prints a number of warning characters followed by a new line.
  * */
 #define WARNING_NPRINTLN(a, l) DEBUG_NPRINTLN(a, l);
 

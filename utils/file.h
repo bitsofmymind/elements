@@ -49,8 +49,8 @@ class File
 		void print();
 #endif
 
-		/// Reads a data into a buffer.
-		/** @param buffer the buffer to transfer the read data into.
+		/// Reads bytes into a buffer.
+		/** @param buffer the buffer to transfer the read bytes into.
 		 * @param length the number of bytes to read.
 		 * @return the number of bytes that have been read. */
 		virtual size_t read(char* buffer, size_t length) = 0;

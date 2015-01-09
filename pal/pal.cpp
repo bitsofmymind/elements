@@ -193,7 +193,7 @@ void Debug::print(int32_t n, uint8_t base)
 {
 	if (base == 0) // If the value should be printed as a character.
 	{
-	  Debug::print_char(n);
+	    Debug::print_char(n);
 	}
 	else if (base == 10) // If the base is 10.
 	{
