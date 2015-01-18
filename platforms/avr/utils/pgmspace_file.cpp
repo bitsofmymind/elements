@@ -17,11 +17,13 @@
 
 #include "pgmspace_file.h"
 
-PGMSpaceFile::PGMSpaceFile(PGM_P text, size_t size):
-	text(text),
-	size(size),
-	_cursor(0)
+PGMSpaceFile::PGMSpaceFile(PGM_P text, size_t length):
+	text(text)
+	//size(size),
+	//_cursor(0)
 {
+	_cursor = 0;
+	size = length;
 }
 
 size_t PGMSpaceFile::read(char* buffer, size_t length)

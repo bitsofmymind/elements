@@ -119,25 +119,25 @@ void* ts_realloc(void* ptr, size_t size)
 
 /** Prints a number using an arbitrary base.
  * @param n the number to print.
- * @param base the base ro print the number in.*/
+ * @param base the base to print the number in.*/
 void printNumber(uint32_t n, uint8_t base)
 {
 	unsigned char buf[8 * sizeof(int32_t)]; // Assumes 8-bit chars.
 	uint32_t i = 0;
 
-	if (n == 0) // If the number is 0.
+	if(n == 0) // If the number is 0.
 	{
 	  Debug::print_char('0'); // 0 is valid in every base.
 	  return;
 	}
 
-	while (n > 0) // Divides the number into its digits.
+	while(n > 0) // Divides the number into its digits.
 	{
 		buf[i++] = n % base;
 		n /= base;
 	}
 
-	for (; i > 0; i--) // For each digit in the number.
+	for(; i > 0; i--) // For each digit in the number.
 	{
 		// Prints a digit using numerical digits below 10 and letters above.
 		Debug::print_char((char) (buf[i - 1] < 10 ?

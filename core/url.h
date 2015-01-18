@@ -23,7 +23,7 @@
 //INCLUDES
 #include <stdint.h>
 #include "../utils/utils.h"
-#include "../configuration.h"
+#include <configuration.h>
 
 ///TODO: Useless, delete.
 #define NUMBER_OF_AUTHORITES 10

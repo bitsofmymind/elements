@@ -407,7 +407,7 @@ uint8_t EEPROM_24LCXX::append_to_file(uint16_t addr, File* content)
 		// Read from the new content into the page buffer.
 		copied = content->read(page_buffer, PAGE_SIZE);
 		write(start, copied); // Write the page.
-		start += copied; The start of the new block.
+		start += copied; // The start of the new block.
 	}
 
 	return 0; // Done appending data to file.
@@ -808,8 +808,9 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 				sc = GONE_410; // Return a GONE status code.
 			}
 		}
-	}
 #endif
+
+	}
 
 	return sc;
 }
@@ -1299,7 +1300,7 @@ void EEPROM_24LCXX::receive_from_uart(char c)
 	UCSR0B |= _BV(TXEN0); // Enables the UART for general use again.
 }
 
-#include "avr/interrupt.h"
+#include <avr/interrupt.h">
 ISR(USART_RX_vect) // UART reception interrupt routine.
 {
 	instance->receive_from_uart(UDR0);

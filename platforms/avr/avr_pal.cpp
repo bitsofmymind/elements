@@ -69,7 +69,7 @@ void processing_sleep(uptime_t time)
 	 * was awaken by the increase_uptime event or by another interrupt routine
 	 * that does not need to call the framework. */
 	/// TODO This condition is weird, it should be the opposite.
-	while(time_to_wake < get_uptime() || wake_up)
+	while(time_to_wake > get_uptime() && !wake_up)
 	{
 		// Enable interrupts just in case something forgot to turn them back on.
 		sei();

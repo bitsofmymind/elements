@@ -32,8 +32,8 @@ Blinker::Blinker(uint32_t interval, uint8_t pin, volatile uint8_t* ddr, volatile
 {
 	*ddr |= _BV(pin); // Set the data direction register to output.
 
-	// Shedule the resource to run at the end of the interval.
-	schedule( _interval );
+	// Schedule the resource to run at the end of the interval.
+	schedule(_interval);
 }
 
 void Blinker::run(void)
@@ -47,8 +47,8 @@ void Blinker::run(void)
 		*_port |= _pin; // Switch the state of the LED.
 	}
 
-	// Shedule the resource to run at the end of the interval.
-	schedule( _interval );
+	// Schedule the resource to run at the end of the interval.
+	schedule(_interval);
 }
 
 /** The content of the web page.*/
@@ -97,7 +97,7 @@ File* Blinker::http_get( void )
 
 	// Allocate a buffer containing the stated of the LED.
 	char* c = (char*)ts_malloc(strlen("checked=\"checked\"") + 1);
-	memcpy(c, "checked=\"checked\"", strlen("checked=\"checked\""));
+	memcpy(c, "checked=\"checked\"", strlen("checked=\"checked\"") + 1);
 
 	if(!state) // If blinking is off.
 	{
@@ -113,7 +113,7 @@ File* Blinker::http_get( void )
 	return t;
 }
 
-Response::status_code Blinker::process( Request* request, Response* response )
+Response::status_code Blinker::process(Request* request, Response* response)
 {
 	if(request->is_method(Request::POST)) // If this is a post request.
 	{

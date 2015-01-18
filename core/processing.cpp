@@ -62,6 +62,7 @@ void Processing::start(void)
 	for(;;)
 	{
 		step(); //Step through a resource.
+
 		if(current->parent == bound) //If the bound has been reached.
 		{
 			/*The sleep clock for the current resource gives us the next
@@ -69,12 +70,13 @@ void Processing::start(void)
 			 * Since the sleep clock is an uptime, is is substracted with
 			 * the uptime to get the actual amount of time.*/
 			uptime_t sleep_amount = current->get_sleep_clock() - get_uptime();
+
 			/*TODO: Since uptime_t are unsigned int, sleep amount will
 			alway be positive. See #181. */
 			if(sleep_amount > 0) //If that amount is more than 0.
 			{
 				//Make that processing element sleep.
-				processing_sleep( sleep_amount );
+				processing_sleep(sleep_amount);
 			}
 		}
 

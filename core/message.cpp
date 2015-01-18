@@ -81,7 +81,7 @@ void Message::print()
 	}
 }
 
-size_t Message::serialize( char* buffer, bool write )
+size_t Message::serialize(char* buffer, bool write)
 {
 	//Note: The message header should have been serialized by a child class.
 
@@ -278,7 +278,7 @@ Message::PARSER_RESULT Message::parse(const char* data, size_t size)
 	}
 }
 
-Message::PARSER_RESULT Message::parse( const char* buffer )
+Message::PARSER_RESULT Message::parse(const char* buffer)
 {
 	/*The size of the line being parsed. Initialized to 1 because buffer
 	 * is incremented at the beginning of the loop.*/
@@ -366,7 +366,7 @@ void Message::previous(void)
 Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 {
 	/* Note: Overrides of this method should have checked if the line was
-	 * correcly formed. */
+	 * correctly formed. */
 
 	/*Since the body of an HTTP message is separated from the header using an
 	empty line, we can detect it by only checking if size is 2 (CR and LF)*/
@@ -377,9 +377,9 @@ Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 
 	/*The content length line gets special treatment because it gives the
 	 * size of the body, for the rest of the fields, we should proceed normally
-	 * and store them in their stucture.*/
+	 * and store them in their structure.*/
 	//If the header line is "content-length".
-	if(!strncmp(CONTENT_LENGTH, line, 14)) //Could use memcmp
+	if(!strncmp(CONTENT_LENGTH, line, 14)) /// TODO Could use memcmp.
 	{
 		/*Get the content length by converting from its textual representation.
 		 * 14 is strlen(CONTENT_LENGTH) and 2 is ": ". */
