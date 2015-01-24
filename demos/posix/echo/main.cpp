@@ -1,4 +1,4 @@
-/* echo.cpp - Main file for the echo demo.
+/* main.cpp - Main file for the echo demo.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

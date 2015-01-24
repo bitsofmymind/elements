@@ -49,7 +49,7 @@ class Message
 		char*  header;
 		/** The length of the message header first line (the line specific
 		 * to requests or responses).*/
-		size_t header_length;
+		size_t header_length; /// TODO useless, the size can be known with a strlen().
 		/** Pointer to the body of the message.*/
 		File* body;
 		/** The cursor for the destination url. The cursor is used to point
@@ -72,15 +72,17 @@ class Message
 	public:
 
 		/** The possible results of parsing a message.*/
-		enum PARSER_RESULT {
+		enum PARSER_RESULT
+		{
 			//NOT_PARSED,
 			PARSING_COMPLETE = 0,
 			PARSING_SUCESSFUL,
 			LINE_INCOMPLETE,
 			LINE_MALFORMED,
 			LINE_OVERFLOW,
+			BODY_OVERFLOW,
 			HEADER_MALFORMED,
-			OUT_OF_MEMORY
+			OUT_OF_MEMORY,
 		};
 
 

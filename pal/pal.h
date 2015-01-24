@@ -36,6 +36,25 @@
 extern void init(void);
 
 /**
+ * Defines an uptime_t type for working with the framework's uptime.
+ * */
+#if UPTIME_BITS == 64
+	#define MAX_UPTIME UINT64_MAX // Largest number that can fit in a 64 bit space.
+	typedef uint64_t uptime_t;
+#elif UPTIME_BITS == 32
+	#define MAX_UPTIME UINT32_MAX // Largest number that can fit in a 32 bit space.
+	typedef uint32_t uptime_t;
+#elif UPTIME_BITS == 16
+	#define MAX_UPTIME UINT16_MAX // Largest number that can fit in a 16 bit space.
+	typedef uint16_t uptime_t;
+#elif UPTIME_BITS == 8
+	#define MAX_UPTIME UINT8_MAX // Largest number that can fit in a 8 bit space.
+	typedef uint8_t uptime_t;
+#else
+	#error "Illegal UPTIME_BITS number. This value should be one of 8, 16, 32 or 64."
+#endif
+
+/**
  * Different macros and constants to reduce some units of time to their
  * milliseconds equivalent used by the framework.
  */

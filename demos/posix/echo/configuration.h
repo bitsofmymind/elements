@@ -33,7 +33,7 @@
  * destroy resources. To save on dynamic memory and code space, destructors for
  * resources can be defined away.
  * */
-#define RESOURCE_DESTRUCTION 0
+#define RESOURCE_DESTRUCTION 1
 
 /// If the framework will process serialized response messages.
 /**
@@ -52,21 +52,21 @@
  * requests to within its own implementation, set REQUEST_SERIALIZATION to 0
  * to save on code space.
  */
-#define REQUEST_SERIALIZATION 0
+#define REQUEST_SERIALIZATION 1
 
 /// If urls need to be serialized.
 /**
  * If urls do not need to be serialized, set URL_SERIALIZATION to 0 to save on
  * code space.
  */
-#define URL_SERIALIZATION 0
+#define URL_SERIALIZATION 1
 
 /// Whether an internal clock should be kept.
 /**
  * If the implementation of the framework requires time-keeping services, set
  * TIME_KEEPING to 1. Otherwise deactivate it to save on code space and memory.
  */
-#define TIME_KEEPING 0
+#define TIME_KEEPING 1
 
 /// If the creation uptime of a message should be kept.
 /**
@@ -111,14 +111,14 @@
  * results so this type should be picked carefully so as to find a good balance
  * between usage requirements and the memory savings of a smaller type.
  */
-#define UPTIME_BITS 32
+#define UPTIME_BITS 64
 
 /// If the standard library implementation provides an ITOA function.
 /**
  * Really an ugly hack.
  * @todo get rid of this and find an stdlib agnostic itoa function.
  */
-#define ITOA 1
+#define ITOA 0
 
 /// If the framework should be able to parse POST body arguments.
 /**
@@ -169,43 +169,42 @@
  *
  * If Atomicity is not required, leave this define empty.
  */
-#include <util/atomic.h>
-#define ATOMIC ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+#define ATOMIC
 
 /// If the framework should parse the protocol part of an url.
 /**
  * For cases there the protocol part of an url does not matter for a framework
  * implementation, set URL_PROTOCOL to 0 to save on memory and code space.
  */
-#define URL_PROTOCOL 0
+#define URL_PROTOCOL 1
 
 /// If the framework should parse the authority part of an url.
 /**
  * For cases there the authority part of an url does not matter for a framework
  * implementation, set URL_PROTOCOL to 0 to save on memory and code space.
  */
-#define URL_AUTHORITY 0
+#define URL_AUTHORITY 1
 
 /// If the framework should parse the port part of an url.
 /**
  * For cases there the port part of an url does not matter for a framework
  * \mplementation, set URL_PROTOCOL to 0 to save on memory and code space.
  */
-#define URL_PORT 0
+#define URL_PORT 1
 
 /// If the framework should parse the arguments part of an url.
 /**
  * For cases there the arguments part of an url does not matter for a framework
  * implementation, set URL_PROTOCOL to 0 to save on memory and code space.
  */
-#define URL_ARGUMENTS 0
+#define URL_ARGUMENTS 1
 
 /// If the framework should parse the fragment part of an url.
 /**
  * For cases there the fragment part of an url does not matter for a framework
  * implementation, set URL_PROTOCOL to 0 to save on memory and code space.
  */
-#define URL_FRAGMENT 0
+#define URL_FRAGMENT 1
 
 /// If a file pointer should be able to rewind.
 /**

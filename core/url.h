@@ -60,7 +60,7 @@ class URL
 		const char* authority;
 #endif
 
-#if URL_PORT
+#if URL_PORT && URL_AUTHORITY
 		///The port part of the URL.
 		const char* port;
 #endif

@@ -113,23 +113,6 @@
  */
 #define UPTIME_BITS 64
 
-///@todo move this bit of code out of configuration.h
-#if UPTIME_BITS == 64
-	#define MAX_UPTIME 18446744073709551615ULL //Largest number that can fit in a 64 bit space.
-	typedef uint64_t uptime_t;
-#elif UPTIME_BITS == 32
-	#define MAX_UPTIME 4294967295 //Largest number that can fit in a 32 bit space.
-	typedef uint32_t uptime_t;
-#elif UPTIME_BITS == 16
-	#define MAX_UPTIME 16385 //Largest number that can fit in a 16 bit space.
-	typedef uint16_t uptime_t;
-#elif UPTIME_BITS == 8
-	#define MAX_UPTIME 255 //Largest number that can fit in a 8 bit space.
-	typedef uint8_t uptime_t;
-#else
-	#error "Illegal UPTIME_BITS number. This value should be one of 8, 16, 32 or 64."
-#endif
-
 /// If the standard library implementation provides an ITOA function.
 /**
  * Really an ugly hack.

@@ -35,7 +35,7 @@ URL::URL( )
 #if URL_AUTHORITY
 	authority = NULL;
 #endif
-#if URL_PORT
+#if URL_PORT && URL_AUTHORITY
 	port = NULL;
 #endif
 #if URL_ARGUMENTS
@@ -66,12 +66,13 @@ URL::PARSING_RESULT URL::parse(char* str)
 	//Holds the start of the part of the URL that is currently being parsed.
 	char* start = str;
 #if URL_PROTOCOL //If the framework is configured to parse protocols.
+
 	//PROTOCOL PART
 	while(true)
 	{
-		/*If we have reached the authority part. We check for ':' and '/' so
-		as not to confuse the protocol  with the port*/
-		if( *str == ':' && *(str + 1) == '/' )
+		/* If we have reached the authority part. We check for ':' and '/' so
+		 * as not to confuse the protocol with the port*/
+		if(*str == ':' && *(str + 1) == '/' && *(str + 2) == '/')
 		{
 			*str = '\0'; //Replace the separator by a NULL character.
 			protocol = start; //Set the start of the protocol part.
@@ -79,51 +80,71 @@ URL::PARSING_RESULT URL::parse(char* str)
 			break; //Done parsing the protocol.
 		}
 		//If there is no protocol.
-		else if( *str == '.' || *str == '/' || *str == '#' || *str == ' ')
+		else if(*str == '.' || *str == '/' || *str == '#' || *str == ' ' || *str == '?')
 		{
 			str = start; //Move the str pointer back to the beginning.
 			break; //Done parsing the protocol.
 		}
+		else if(*str == '\0') // If we have reached a null character.
+		{
+			return INVALID; // The URL is invalid.
+		}
+
 		str++;
 	}
+
 #endif
 
+	// TODO could use *str instead...
 	char next_part = *str; //Holds the start character of the next part.
+
 #if URL_AUTHORITY //If the framework is configured to parse authorities.
 	//AUTHORITY PART
-	//If the next part begins by a separator, then there is no authority.
-	if( next_part != '/' && next_part != '?' && next_part != '#' )
+	//If the next part is an alphanumeric character.
+	if((next_part >= '0' && next_part <= '9') || (next_part >= 'a' && next_part <= 'z'))
 	{
 		start = str; //Move the start pointer.
 
-		do //Find the next separator.
+		// Advance to the next separator.
+		while(*str != '/' && *str != ':' && *str != '#' && *str != '?' && *str != ' ')
 		{
-			str++;
-		} while(*str != '/' || *str != ':' || *str != '#' || *str != '?' || *str != ' ');
+			if(*str++ == '\0') // If we have reached a null character.
+			{
+				return INVALID; // The URL is invalid.
+			}
+		}
+
 		authority = start; //Save the start.
 		next_part = *str; //Save the beginning character of the next part.
 		*str++ = '\0'; //Replace the separator by a NULL character.
-	}
-#endif
 
 #if URL_PORT //If the framework is configured to parse the port.
-	//PORT PART
-	if(next_part == ':') //If the next part starts with a : then there is a port.
-	{
-		//TODO Bug! the : is included with the port.
-		port = start = str; //Save the next part.
-		//TODO bug! this will loop infinetly ! Should add ++ to the end.
-		//Go to the beginning of the next part.
-		while(*str != '/' || *str != ':' || *str != '#' || *str != '?' || *str != ' ');
-		next_part = *str; //Save the beginning character of the next part.
-		*str++ = '\0'; //Replace the separator by a NULL character.
+		//PORT PART
+
+		if(next_part == ':') //If the next part starts with a : then there is a port.
+		{
+			//TODO Bug! the : is included with the port.
+			port = start = str; //Save the next part.
+			//Go to the beginning of the next part.
+			while(*str != '/' && *str != ':' && *str != '#' && *str != '?' && *str != ' ')
+			{
+				if(*str++ == '\0') // If we have reached a null character.
+				{
+					return INVALID; // The URL is invalid.
+				}
+			}
+			next_part = *str; //Save the beginning character of the next part.
+			*str++ = '\0'; //Replace the separator by a NULL character.
+		}
+
+#endif
 	}
 #endif
 
 	//RESOURCE PART
 	/*If the next part is not a beginning character for resource, then there
 	 * are no resources.*/
-	if( next_part != '?' && next_part != '#' && next_part != ' ' )
+	if(next_part != '?' && next_part != '#' && next_part != ' ')
 	{
 		start = str; //Save the start of the resource part.
 
@@ -132,7 +153,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 			if(*str == '/') //If we have found the end of a resource.
 			{
 				*str = '\0'; //Replace the separator by a NULL character.
-				resources.append( start ); //Save that resource.
+				resources.append(start); //Save that resource.
 				start = ++str; //Move the start pointer after that resource.
 				continue; //Keep looking for other resources.
 			}
@@ -150,12 +171,23 @@ URL::PARSING_RESULT URL::parse(char* str)
 				*str++ = '\0'; //Replace the separator by a NULL character.
 				break; //Done parsing resources.
 			}
+			else if(*str == '\0') // If we have reached a null character.
+			{
+				return INVALID; // The URL is invalid.
+			}
+
 			str++;
 		}
 	}
 
-#if URL_ARGUMENT //If the framework is configured to parse authorities.
+	/* Note, there is no conditional compilation here, even if the framework
+	 * does not support arguments or fragments, their presence does not render
+	 * the url invalid, they are simply ignored.*/
+
+#if URL_ARGUMENTS //If the framework is configured to parse arguments.
+
 	//ARGUMENT PART
+
 	//If the next part starts with a ? then there are arguments.
 	if(next_part == '?')
 	{
@@ -166,6 +198,11 @@ URL::PARSING_RESULT URL::parse(char* str)
 		arguments = new Dictionary< const char* >();
 		while(true)
 		{
+			if(*str == '\0') // If we have reached a null character.
+			{
+				return INVALID; // The URL is invalid.
+			}
+
 			if(is_key) //If we are parsing for a key.
 			{
 				if( *str == '=' ) //If we have reached the key=value delimiter.
@@ -190,7 +227,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 				//If we have reached the end of the arguments part.
 				else if(*str == '#' || *str == ' ')
 				{
-					arguments->add( key, start ); .//Save the last argument.
+					arguments->add(key, start); //Save the last argument.
 					next_part = *str; //Save the beginning character.
 					*str++ = '\0'; //Replace the separator by a NULL character.
 					break; //Done parsing arguments.
@@ -200,18 +237,56 @@ URL::PARSING_RESULT URL::parse(char* str)
 			str++;
 		}
 	}
+	// If the next part is not a fragment or the end.
+	else if(next_part != ' ' && next_part != '#' )
+	{
+		return INVALID; // The URL is invalid.
+	}
+
 #endif
 
 #if URL_FRAGMENT //If the framework is configured to parse the fragment.
+
 	//FRAGMENT PART
 	if(next_part == '#') //If there is a fragment part.
 	{
 		//TODO bug! the # will be saved with the fragment.
 		fragment = str; //Save the start of the fragment.
-		while(*str++ != ' ');
+
+		while(true)
+		{
+			if(*str++ == ' ') // If a space has been reached.
+			{
+				break; // The end of the fragment has been found.
+			}
+			else if(*str == '\0') // If we have reached a null character.
+			{
+				return INVALID; // The URL is invalid.
+			}
+		}
+
 		*(str - 1) = '\0'; //Replace the separator by a NULL character.
 	}
+
 #endif
+
+	if(!resources.items // If there are no resources.
+#if URL_AUTHORITY
+		&& !authority // If there was no authority.
+#endif
+#if URL_ARGUMENTS
+		&& !arguments->items // If there are no arguments.
+#endif
+#if URL_FRAGMENT
+		&& !fragment // If there is no fragment.
+#endif
+	)
+	{
+		// Nothing useful could be parsed.
+
+		return INVALID; // Invalid URL.
+	}
+
 	///TODO the url_length is most likely useless.
 	url_length = str - url_str - 1; //Save the length of the url.
 
@@ -246,17 +321,17 @@ size_t URL::serialize(char* buffer, bool write)
 	{
 		if( write ){ strcpy(buffer, authority); }
 		buffer += strlen(authority);
-	}
 #endif
-#if URL_PORT
-	if(port) // If the url has a port.
-	{
-		if( write ){ *buffer = ':'; } // Adds the colon.
-		buffer++; // Increments the buffer past the colon.
-		if( write ){ strcpy(buffer, port); } // Write the port to the buffer.
-		buffer += strlen(port); // Increment the buffer past the port.
-	}
+#if URL_PORT && URL_AUTHORITY
+		if(port) // If the url has a port.
+		{
+			if( write ){ *buffer = ':'; } // Adds the colon.
+			buffer++; // Increments the buffer past the colon.
+			if( write ){ strcpy(buffer, port); } // Write the port to the buffer.
+			buffer += strlen(port); // Increment the buffer past the port.
+		}
 #endif
+	}
 
 	if(is_absolute()) // If the url is absolute.
 	{

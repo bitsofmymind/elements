@@ -205,7 +205,7 @@ Message::PARSER_RESULT Message::parse(const char* data, size_t size)
 				ts_free(line); //We no longer need line so free it.
 				current_line_length = 0; //Reset the line_buffer length.
 			}
-			else //A complete is contained within the current buffer.
+			else //A complete line is contained within the current buffer.
 			{
 				//Parse it.
 				res = parse_header(data + line_start, line_end - line_start + 1);
@@ -397,7 +397,7 @@ Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 
 	//Store fields in buffers
 
-	return PARSING_SUCESSFUL; //Parsing that line was sucessful.
+	return PARSING_SUCESSFUL; //Parsing that line was successful.
 }
 
 Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
@@ -412,8 +412,8 @@ Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
 
 	//Note: this method reuses the line buffer to store body chunks.
 
-	/*TODO this method should use the line buffer to store body chunks,
-	 * is should do it used the file already allocated for the body.*/
+	/*TODO this method should not use the line buffer to store body chunks,
+	 * it should do it using the file already allocated for the body.*/
 
 	if(!current_line_length) //If no buffer was allocated for the body already.
 	{
@@ -428,7 +428,11 @@ Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
 	data.*/
 	if(size > cl - current_line_length)
 	{
-		size = cl - current_line_length; //Set it back to avoid overflow.
+		ts_free(current_line);
+
+		current_line_length = 0;
+
+		return BODY_OVERFLOW; // Error;
 	}
 
 	//Copy the content of the buffer to the line buffer.

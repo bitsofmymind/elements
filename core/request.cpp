@@ -111,24 +111,28 @@ Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 
 	if(!header) //If we are parsing the first line of the header.
 	{
-		/*Allocates space for the request header line. 2 is substracted to that
-		because the CRLF is implicit.*/
-		header = (char*)ts_malloc(size - 2);
-		if(!header) //If allocating memory failed.
+		/* Allocates space for the request header line. 1 is subtracted to that
+		because the CRLF is implicit but a terminating null character is needed.*/
+		header = (char*)ts_malloc(size - 1);
+		if(!header) // If allocating memory failed.
 		{
 			return Message::OUT_OF_MEMORY; //Return the appropriate error.
 		}
+
 		header_length = size - 2; //Set the header length.
+
+		header[header_length] = '\0'; // Terminate the string.
+
 		//Copy the content of the buffer to the header buffer.
 		memcpy(header, line , size - 2);
 
 		char* index = header; //Index for the header buffer.
 
-		//HTTP REQUEST METHOD PARSING
+		// HTTP REQUEST METHOD PARSING
 
 		while(true)
 		{
-			if( *index == ' ' ) //If space is found.
+			if(*index == ' ') // If a space is found.
 			{
 				//This means we have reached the end of the method part.
 				method = header; //Save the location of the method.
@@ -138,7 +142,7 @@ Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 				break; //Done parsing the method.
 			}
 			//If the index has incremented past the header.
-			else if (index > (header + header_length))
+			else if(index > (header + header_length))
 			{
 				//The HTTP method was not found so the header is malformed.
 				return HEADER_MALFORMED;
@@ -152,21 +156,17 @@ Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 			}
 			index++; //Increment the index to the next character.
 		}
-		//Parsing is a sucess so far.
-		Message::PARSER_RESULT res = PARSING_SUCESSFUL;
 
 		//HTTP REQUEST URL PARSING
 
-		to_url->parse( ++index ); //Parse the url.
-		//TODO Should check is url parsing was sucessful
-
-		//We do not really care about the HTTP version for now.
-
-		//TODO delete this and return res.
-		if(res != PARSING_SUCESSFUL)
+		if(to_url->parse(++index) == URL::INVALID) // Parse the url.
 		{
 			return HEADER_MALFORMED;
 		}
+
+		/* We do not really care about the HTTP version for now,
+		 * everything that comes next is assumed to be valid.*/
+
 		return PARSING_SUCESSFUL;
 	}
 	//Else the header's first line has already been parsed.
