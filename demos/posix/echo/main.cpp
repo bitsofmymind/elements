@@ -48,9 +48,9 @@ class Echo: public Resource
 		 * */
 		void send(Request* request){ dispatch(request); }
 
-        /// Process a request message.
+        /// Process a response message.
         /**
-         * YOU SHOULD NOT DELETE OR FREE THE REQUEST ARGUMENT!
+         * YOU SHOULD NOT DELETE OR FREE THE RESPONSE ARGUMENT!
          * Parent method override to print the received response and its associated
          * request.
          * @param request the request to process.
@@ -137,10 +137,11 @@ class Echo: public Resource
 			}
 
 			// Allocate a buffer to copy the request's body.
-			char* buffer = (char*)malloc(request->get_body()->size);
+			char* buffer = (char*)malloc(request->get_body()->size + 1);
 			request->get_body()->extract(buffer); // Extract the body in the buffer.
+			buffer[request->get_body()->size] = '\0'; // Terminate the buffer.
 			// Create a new MemFile with the buffer and set it as the response's body.
-			response->set_body(new MemFile(buffer, request->get_body()->size), MIME::TEXT_HTML);
+			response->set_body(new MemFile(buffer, request->get_body()->size, false), MIME::TEXT_HTML);
 
 			std::cout << "Echoing message." << std::endl;
 
@@ -240,16 +241,10 @@ int main()
 		increase_uptime(100); // Increase the uptime by 100 cycles.
 	}
 
-	// Clean up all resources for good measure.
+	// Clean up all resources for good measure and to test for memory leaks.
 	/* This is not necessary since the program is ending, but it's a good habit
-	 * and lets up debug destructors. */
-	delete echo1;
-	delete echo2;
-	delete root;
-	delete res2;
-	delete proc;
-	delete timer1;
-	delete timer2;
+	 * and lets up debug destructors and find memory leaks. */
+	delete root; // Child resources will be deleted as well.
 
 	return 0;
 }

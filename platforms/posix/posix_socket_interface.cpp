@@ -26,6 +26,9 @@
 #include <core/request.h>
 #include <core/response.h>
 #include <signal.h>
+#include <pthread.h>
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
 
 using namespace std;
 
@@ -52,22 +55,20 @@ void* PosixSocketInterface::receive( void* args )
 		client_address_length = sizeof(sockaddr_in);
 		// Initialize a connection.
 		c.request = NULL;
+
 		c.response = NULL;
 		// Accept a connection. This is a blocking call.
 		c.file_descriptor = accept(socket_file_descriptor, (sockaddr*)&c.addr, &client_address_length);
 
-		if( c.file_descriptor < 0) // If there was an error on accept.
+		if(c.file_descriptor < 0) // If there was an error on accept.
 		{
 			cerr << "Error on accept." << endl;
 			break; // End the thread.
 		}
 
-		cout << "Accepted connection from client at address " << \
-		(uint8_t)(c.addr.sin_addr.s_addr >> 24) << '.' << \
-		(uint8_t)(c.addr.sin_addr.s_addr >> 16) << '.' << \
-		(uint8_t)(c.addr.sin_addr.s_addr >> 8) << '.' << \
-		(uint8_t)(c.addr.sin_addr.s_addr) \
-		<< " from port " << c.addr.sin_port << endl;
+		cout << "Accepted connection from client at address " <<
+		inet_ntoa(c.addr.sin_addr) <<
+		" from port " << c.addr.sin_port << endl;
 
 		bool done_read = false; // If we are done reading from the buffer.
 		do // Loop until all request data has been read and parsed..
@@ -75,11 +76,11 @@ void* PosixSocketInterface::receive( void* args )
 			/* Read some number of characters from the buffer. Its entirety could
 			 * be read, but for the sake of testing the framework, it is retrieved
 			 * and parsed in small chunks.*/
-			number_of_characters_exchanged = read( c.file_descriptor, buffer, 246);
+			number_of_characters_exchanged = read(c.file_descriptor, buffer, 246);
 
-			if( number_of_characters_exchanged < 0 ) // If reading failed.
+			if(number_of_characters_exchanged < 1) // If reading returned 0.
 			{
-				cerr << "Reading from the socket caused and error." << endl;
+				cerr << "Client closed the connection prematurely." << endl;
 				close(c.file_descriptor); // Close the connection.
 				break;
 			}
@@ -100,10 +101,14 @@ void* PosixSocketInterface::receive( void* args )
 			{
 				// Allocate space for the new connection.
 				current = (Connection*)malloc(sizeof(Connection));
-				*current = c; // Copy the data from the accepted conneciton.
+				*current = c; // Copy the data from the accepted connection.
 				current->request = new Request(); // Create a request object.
-				// Add the connection to the list.
-				interface->connections.append(current);
+
+				// This call needs to be protected by a mutex.
+				pthread_mutex_lock(&interface->_receive_mutex);
+					// Add the connection to the list.
+					interface->connections.append(current);
+				pthread_mutex_unlock(&interface->_receive_mutex);
 			}
 
 			// Parse the part of the buffer we have received.
@@ -120,7 +125,10 @@ void* PosixSocketInterface::receive( void* args )
 					cout << "Parsing failed!" << endl;
 					//Clean up the connection.
 					delete current->request;
-					interface->connections.remove_item(current);
+					// This call needs to be protected by a mutex.
+					pthread_mutex_lock(&interface->_receive_mutex);
+						interface->connections.remove_item(current);
+					pthread_mutex_unlock(&interface->_receive_mutex);
 					close(c.file_descriptor);
 					free(current);
 					done_read = true;  // Done reading the request data.
@@ -137,6 +145,8 @@ PosixSocketInterface::PosixSocketInterface( int port_number ):
 	port_number(port_number),
 	dispatching_thread(0)
 {
+	pthread_mutex_init(&_receive_mutex, NULL);
+
 	cout << "Connecting socket to port " << port_number << endl;
 
 	file_descriptor = socket( AF_INET, SOCK_STREAM, 0); // Creates a socket.
@@ -176,8 +186,11 @@ PosixSocketInterface::PosixSocketInterface( int port_number ):
 
 PosixSocketInterface::~PosixSocketInterface()
 {
+	// This call needs to be protected by a mutex.
+	pthread_mutex_lock(&_receive_mutex);
 	pthread_cancel(dispatching_thread); // Stop the receiving thread.
 	pthread_join(dispatching_thread, NULL); // Wait for it to terminate.
+	pthread_mutex_unlock(&_receive_mutex);
 
 	// For each current connection.
 	for(int i = 0; i < connections.items; i++)
@@ -197,52 +210,59 @@ PosixSocketInterface::~PosixSocketInterface()
 
 void PosixSocketInterface::run()
 {
-	// For each connection currently open.
-	for(int i = 0; i < connections.items; i++)
-    {
-    	 // If there is a response pending for this connection.
-    	if(connections[i]->response != NULL)
-    	{
-    		 // Remove the connection from the list.
-    		Connection* c = connections.remove(i);
-    		reply(c); // Reply to the client.
-    		delete c->response; // Also deletes the request.
-    		close(c->file_descriptor); // Close the connection with the client.
-    		free(c); // Frees the connection.
-    	}
-
-    }
+	// This call needs to be protected by a mutex.
+	pthread_mutex_lock(&_receive_mutex);
+		// For each connection currently open.
+		for(int i = 0; i < connections.items; i++)
+		{
+			 // If there is a response pending for this connection.
+			if(connections[i]->response != NULL)
+			{
+				 // Remove the connection from the list.
+				Connection* c = connections.remove(i);
+				reply(c); // Reply to the client.
+				delete c->response; // Also deletes the request.
+				close(c->file_descriptor); // Close the connection with the client.
+				free(c); // Frees the connection.
+			}
+		}
+	pthread_mutex_unlock(&_receive_mutex);
 
     Authority::run(); // Call parent method.
 }
 
-Response::status_code PosixSocketInterface::process( Response* response )
+Response::status_code PosixSocketInterface::process(Response* response)
 {
-	// For each connection currently open.
-	for(int i = 0; i < connections.items; i++)
-	{
-		// If the received response is for this connection.
-		if(connections[i]->request == response->original_request)
+	// This call needs to be protected by a mutex.
+	pthread_mutex_lock(&_receive_mutex);
+		// For each connection currently open.
+		for(int i = 0; i < connections.items; i++)
 		{
-			connections[i]->response = response; // Set the response on that connection.
-			 // Run the resource as soon as possible to send the reply.
-			schedule(ASAP);
+			// If the received response is for this connection.
+			if(connections[i]->request == response->original_request)
+			{
+				connections[i]->response = response; // Set the response on that connection.
+				 // Run the resource as soon as possible to send the reply.
+				schedule(ASAP);
 
-			return OK_200; // Response has been processed.
+				pthread_mutex_unlock(&_receive_mutex);
+
+				return OK_200; // Response has been processed.
+			}
 		}
-	}
+	pthread_mutex_unlock(&_receive_mutex);
 
 	return Authority::process(response); // Calls the parent.
 }
 
 void PosixSocketInterface::reply(Connection* c)
 {
-	char* response; // Wil hold the response string.
+	char* response; // Will hold the response string.
 
 	// Compute the length of the response.
-	size_t length = c->response->serialize(response, false);
+	size_t length = c->response->serialize(NULL, false);
 
-	response = (char*)malloc(length); // Allocates a block for the response.
+	response = (char*)malloc(length + 1); // Allocates a block for the response.
 
 	c->response->serialize(response, true); // Serialize the response in the buffer.
 

@@ -101,13 +101,13 @@ File* Blinker::http_get( void )
 
 	if(!state) // If blinking is off.
 	{
-		t->add_arg(NULL); // Skip the next argument.
+		t->skip_argument(); // Skip the next argument.
 	}
 	t->add_arg(c); // Add the state of the led as an argument.
 
 	if(state) // If blinking is on.
 	{
-		t->add_arg(NULL); // Skip the next argument.
+		t->skip_argument(); // Skip the next argument.
 	}
 
 	return t;

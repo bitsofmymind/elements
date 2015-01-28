@@ -21,7 +21,7 @@
 #include "file.h"
 #include "utils.h"
 
-/// Defines a simple tempating file type.
+/// Defines a simple templating file type.
 /** Template encapsulates a File to allow the setting of template markers
  * at run time. A marker is a special character that will be replaced by
  * a value when the template is read back. Markers have to be added in the

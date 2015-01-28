@@ -26,10 +26,10 @@
 #endif
 
 Template::Template(File* file):
-		file(file),
-		arg_index(0),
-		current(NULL),
-		state(TEXT)
+	file(file),
+	arg_index(0),
+	current(NULL),
+	state(TEXT)
 {
 	File::_cursor = 0; // Set the cursor to the beginning of the template.
 	///todo move to initialization list.
@@ -49,6 +49,11 @@ Template::~Template()
 
 void Template::add_arg(char* arg)
 {
+	if(!arg) // If the string is null, this means this argument is being skipped.
+	{
+		return skip_argument();
+	}
+
 	//todo do error checking.
 	args.append(arg); // Adds the argument to the end of the list.
 
@@ -59,7 +64,7 @@ void Template::add_arg(char* arg)
 void Template::skip_argument(void)
 {
 	// Allocate space for an empty string.
-	char* empty_argument = (char*)ts_malloc(1);
+	char* empty_argument = (char*)ts_malloc(sizeof(char));
 
 	if(empty_argument) // If allocation was a success.
 	{
@@ -78,7 +83,7 @@ void Template::add_narg(uint8_t arg)
 	if(string) // If allocation was successful.
 	{
 #if ITOA
-		itoa(arg, string, 10); // Convert the number to a string.
+		itoa(arg, string, 11); // Convert the number to a string.
 #else
 		sprintf(string, "%d", arg); // Convert the number to a string.
 #endif
@@ -92,7 +97,7 @@ void Template::add_narg(uint16_t arg)
 	///todo simplify this method using by making the size of the argument configurable.
 
 	// Allocate a buffer to contain the string representation of the argument.
-	char* string = (char*)ts_malloc(4);
+	char* string = (char*)ts_malloc(6);
 
 	if(string) // If allocation was successful.
 	{

@@ -26,6 +26,18 @@
 /**
  * This program creates a simple system that blinks the onboard led on an
  * arduino development board and provides serial access to itself.
+ *
+ * The framework can be interfaced with using a serial terminal such as
+ * GNU screen.
+ *
+ * Once in the terminal, requests can be made by copying them  into the terminal.
+ * To make crafting requests easier, the HTTP line termination (CRLF) sequence
+ * has been replaced with two semicolons (;;).
+ *
+ * Examples:
+ * GET /blinker HTTP/1.0;;;;
+ * POST /blinker HTTP/1.0;;flab1: flab1;;flab2: blab2;;Content-Length: 10;;;;i=300&st=1
+ *
  * */
 int main(void)
 {

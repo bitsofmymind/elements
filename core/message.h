@@ -27,6 +27,7 @@
 #include <utils/file.h>
 #include "mime.h"
 #include "url.h"
+#include <pal/pal.h>
 
 ///@todo delete that if it is useless.
 #ifndef MESSAGE_SIZE
@@ -83,6 +84,7 @@ class Message
 			BODY_OVERFLOW,
 			HEADER_MALFORMED,
 			OUT_OF_MEMORY,
+			SIZE_IS_0
 		};
 
 
@@ -146,7 +148,7 @@ class Message
 		/// Prints the contents of the message to the output.
 		/**
 		 * Prints the contents of the message to the output. Sub-classes of Message
-		 * should override this method to print their own data. /*If VERBOSITY,
+		 * should override this method to print their own data. If VERBOSITY,
 		 * OUTPUT_WARNINGS or OUTPUT_ERRORS are not defined, this method should be
 		 * optimized away by the compiler.
 		 * */

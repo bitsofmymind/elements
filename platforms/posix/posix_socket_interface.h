@@ -35,7 +35,10 @@
  * */
 class PosixSocketInterface: public Authority
 {
-    protected:
+	private:
+		pthread_mutex_t _receive_mutex;
+
+	protected:
 
 		/**
 		 * This structure holds the information from a connection to the socket.

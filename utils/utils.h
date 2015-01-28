@@ -30,12 +30,26 @@ class GenericList
 {
 	protected:
 
+#ifdef STATIC_LIST // If the list is static (ie. it will not grow in size).
 		/**
 		 * The array that holds the items kept in the list.
 		 * */
 		void* list[CAPACITY];
+#else
+		void** list;
+#endif
+
+#ifdef STATIC_LIST
+		/// The capacity of the list.
+		const uint8_t capacity = CAPACITY;
+#else
+		uint8_t capacity;
+#endif
 
 	public:
+
+		/// Class destructor.
+		~GenericList();
 
 		/**
 		 * The number of items in the list.
@@ -91,10 +105,21 @@ class GenericList
 		 * Compacts the list.
 		 * */
 		void compact( void );
+
+	private:
+
+#ifndef STATIC_LIST
+		/**
+		 * Grow the list.
+		 * @return 0 if the growing the list succeeded.
+		 * */
+		int8_t grow(void);
+#endif
+
 };
 
 /** A templated version of the generic list. */
-template< class T> class List: public GenericList
+template<class T> class List: public GenericList
 {
 	public:
 		/**
@@ -136,7 +161,7 @@ template< class T> class List: public GenericList
 };
 
 ///todo move to class definition.
-template< class T>
+template<class T>
 int8_t List<T>::append(T item)
 {
 	return GenericList::append((void*)item);
@@ -150,7 +175,7 @@ int8_t  List<T>::insert(T item, uint8_t position)
 }
 
 ///todo move to class definition.
-template< class T>
+template<class T>
 T List<T>::remove_item( T item )
 {
 	return (T)GenericList::remove_item( (void*)item );

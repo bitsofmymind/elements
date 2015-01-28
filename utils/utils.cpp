@@ -22,18 +22,47 @@
 #include "utils.h"
 #include <string.h>
 
-GenericList::GenericList( void )
+
+GenericList::GenericList(void):
+	items(0)
 {
-	items = 0; //todo/ Move to initialization list.
+
+#ifndef STATIC_LIST
+	list = (void**)malloc(CAPACITY * sizeof(void**)); // Allocate space for the list.
+
+	if(!list) // If the list could not me allocated.
+	{
+		capacity = 0;
+		return;
+	}
+
+	capacity = CAPACITY;
+#endif
+
 	// Sets all the positions in the list to NULL.
 	memset(list, NULL, CAPACITY * sizeof(void*));
 }
 
-int8_t GenericList::append( void* item )
+GenericList::~GenericList()
 {
-	if(items >= CAPACITY) // If there is no more space in the list.
+#ifndef STATIC_LIST
+	free(list);
+#endif
+
+}
+
+int8_t GenericList::append(void* item)
+{
+	if(items >= capacity) // If there is no more space in the list.
 	{
-		return 1; // Return an error.
+#ifdef STATIC_LIST
+		return 1; // Error;
+#else
+		if(grow()) // Grow the list.
+		{
+			return 1; // Error.
+		}
+#endif;
 	}
 
 	if(item == NULL) // If a NULL value is being inserted.
@@ -47,16 +76,23 @@ int8_t GenericList::append( void* item )
 	return 0; // Success.
 }
 
-int8_t GenericList::insert( void* item, uint8_t position )
+int8_t GenericList::insert(void* item, uint8_t position)
 {
     if(position > items) // If position goes pas the number of items.
     {
         return -1; // Return an error.
     }
 
-    if(items >= CAPACITY) // If the list is full.
+    if(items >= capacity) // If the list is full.
     {
-        return -2; // Return an error.
+#ifdef STATIC_LIST
+		return 1; // Error;
+#else
+		if(grow()) // Grow the list.
+		{
+			return 1; // Error.
+		}
+#endif;
     }
 
     if(item == NULL) // If a NULL value is being inserted.
@@ -110,10 +146,10 @@ void* GenericList::remove( uint8_t index )
 }
 
 
-void GenericList::compact()
+void GenericList::compact(void)
 {
 	// For each item in the list until the end.
-	for(uint8_t i = 0; i < CAPACITY - 1; i++)
+	for(uint8_t i = 0; i < capacity - 1; i++)
 	{
 		if(list[i] != NULL) // If there is an item at this position.
 		{
@@ -125,8 +161,48 @@ void GenericList::compact()
 
 		list[i + 1] = NULL; // Blank the next position.
 	}
+
+#ifndef STATIC_LIST
+
+
+	// If there is more than 2 * CAPACITY of free space after the last item.
+	if(capacity > 2 * CAPACITY && items < capacity - (2 * CAPACITY))
+	{
+		// Shrink the list.
+
+		uint8_t previous_capacity = capacity; // Save the old capacity.
+
+		capacity -= 3 * CAPACITY; // Trick grow into thinking we are growing.
+		if(grow())
+		{
+			// Not enough memory to copy the list.
+			capacity = previous_capacity; // Restore the capacity;
+			return; // Leave the list as is.
+		}
+	}
+
+#endif;
 }
 
+#ifndef STATIC_LIST
+
+int8_t GenericList::grow(void)
+{
+	void** new_list = (void**)realloc(list, (capacity + CAPACITY) * sizeof(void**));
+
+	if(!new_list) // If there was not enough space for the new list.
+	{
+		return 1; // Error.
+	}
+
+	capacity += CAPACITY; // Increase the capacity of the list.
+
+	list = new_list;
+
+	return 0;
+}
+
+#endif
 
 void* GenericList::operator[]( uint8_t i )
 {
@@ -140,7 +216,7 @@ void* GenericList::operator[]( uint8_t i )
 }
 
 
-GenericDictionary::GenericDictionary( void )
+GenericDictionary::GenericDictionary(void)
 {
 	items = 0; ///todo move to initialization list.
 }

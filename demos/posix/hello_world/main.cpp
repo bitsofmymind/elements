@@ -16,7 +16,7 @@
  */
 
 #include <iostream>
-#include <platforms/posix/posix_socket_interface.h>
+#include <platform/posix_socket_interface.h>
 #include <pthread.h>
 #include <core/resource.h>
 #include <core/authority.h>
@@ -32,9 +32,9 @@ Authority* root;
 
 /** A function that cleanly terminates the framework.
  * @param i the signal number. */
-void exit_function( int i )
+void exit_function(int i)
 {
-	if(i != SIGINT && i != SIGHUP && i != SIGTERM)
+	if(i != SIGINT && i != SIGHUP && i != SIGTERM && i != SIGQUIT)
 	{
 		return;
 	}
@@ -54,26 +54,39 @@ int main(int argc, char* argv[])
 	}
 
 	std::cout << "Starting Elements Framework." << std::endl;
+	signal(SIGINT, exit_function); // Bind the exit function to the interrupt signal.
+	signal(SIGQUIT, exit_function); // Bind the exit function to the quit signal.
+	signal(SIGHUP, exit_function); // Bind the exit function to the hangup signal.
+	signal(SIGTERM, exit_function); // Bind the exit function to the terminate signal.
+
+// Does not WORK!
+//	struct sigaction sigint_handler;
+//
+//	sigint_handler.sa_handler = exit_function;
+//	sigemptyset(&sigint_handler.sa_mask);
+//	sigint_handler.sa_flags = 0;
+//
+//	/* NOTE: SIGINT is added just for good mesure. Since we are in a multithreaded
+//	 * environment, it will get caught by pthread and not rebroadcasted.*/
+//	sigaction(SIGINT, &sigint_handler, NULL);
+//	sigaction(SIGHUP, &sigint_handler, NULL);
+//	sigaction(SIGTERM, &sigint_handler, NULL);
+//
+//    /* Block the SIGINT signal. The threads will inherit the signal mask.
+//     * This will avoid them catching SIGINT instead of this thread. */
+//    sigset_t sigset, oldset;
+//    sigemptyset(&sigset);
+//    sigaddset(&sigset, SIGINT);
+//    sigaddset(&sigset, SIGHUP);
+//    sigaddset(&sigset, SIGTERM);
+//    sigaddset(&sigset, SIGQUIT);
+//    pthread_sigmask(SIG_BLOCK, &sigset, &oldset);
 
 	init(); // Initialize the platform.
 
 	std::cout << "Creating Resources...";
 
 	root = new Authority(); // Create the root resource.
-
-	//signal(SIGINT, exit_function); // Bind the exit function to the interrupt signal.
-
-	struct sigaction sigint_handler;
-
-	sigint_handler.sa_handler = exit_function;
-	sigemptyset(&sigint_handler.sa_mask);
-	sigint_handler.sa_flags = 0;
-
-	/* NOTE: SIGINT is added just for good mesure. Since we are in a multithreaded
-	 * environment, it will get caught by pthread and not rebroadcasted.*/
-	sigaction(SIGINT, &sigint_handler, NULL);
-	sigaction(SIGHUP, &sigint_handler, NULL);
-	sigaction(SIGTERM, &sigint_handler, NULL);
 
 	// Create a bunch of vanilla resources.
 	Authority* auth0 = new Authority();
@@ -101,7 +114,10 @@ int main(int argc, char* argv[])
 	std::cout << "[DONE]" << std::endl;
 
 	std::cout << "Starting processing...[DONE]" << std::endl;
-	std::cout << "Waiting for request ( press c to quit )..." << std::endl;
+	std::cout << "Waiting for request ( press Ctrl-c to quit )..." << std::endl;
+
+    // Restore the old signal mask only for this thread.
+	//pthread_sigmask(SIG_SETMASK, &oldset, NULL);
 
 	proc0->start(); // Start the framework.
 

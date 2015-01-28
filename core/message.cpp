@@ -33,6 +33,7 @@ Message::Message():
 		content_type(NULL),
 		to_url_cursor(0),
 		from_url_cursor(0),
+		object_type(UNKNOWN),
 		dispatching(UNDETERMINED)
 {
 	body = NULL;
@@ -87,49 +88,51 @@ size_t Message::serialize(char* buffer, bool write)
 
 	char* start = buffer; //Keep a pointer to the start of the buffer.
 
-	//CONTENT-LENGTH FIELD SERIALIZING
-	if( write ){ strcpy( buffer, CONTENT_LENGTH ); }
-	buffer += 14; //Equivalent to strlen(CONTENT_LENGTH);
-	if( write )
+	if(body && body->size) // If there is a message body.
 	{
-		*buffer = ':';
-		*(buffer + 1) = ' ';
+		//CONTENT-LENGTH FIELD SERIALIZING
+		if( write ){ strcpy( buffer, CONTENT_LENGTH ); }
+		buffer += 14; //Equivalent to strlen(CONTENT_LENGTH);
+		if( write )
+		{
+			*buffer = ':';
+			*(buffer + 1) = ' ';
+		}
+		buffer += 2;
+
+		size_t cl; //The size of the body.
+		if(body){ cl = body->size; } //If there is a body, get its length.
+		else { cl = 0; } //Else Content-Length is 0.
+
+		if( write )
+		{
+			//Convert the content-length integer to a string.
+	#if ITOA
+			itoa(cl, buffer, 10);
+	#else
+			sprintf(buffer, "%d", cl);
+	#endif
+		}
+
+		/*This loop finds the number of chars in the content-length string.
+		 * itoa and sprintf return the number of bytes written but since a
+		 * buffer is generally not allocated when this method is called with
+		 * write = false, we cannot use either.*/
+		do
+		{
+			/* Finding the number of time cl divides by 10 gives us the length of
+			the string. */
+			buffer++;
+			cl /= 10;
+		}while( cl > 0 );
+
+		if( write )
+		{
+			*buffer = '\r';
+			*(buffer + 1) = '\n';
+		}
+		buffer += 2;
 	}
-	buffer += 2;
-
-	size_t cl; //The size of the body.
-	if(body){ cl = body->size; } //If there is a body, get its length.
-	else { cl = 0; } //Else Content-Length is 0.
-
-	if( write )
-	{
-		//Convert the content-length integer to a string.
-#if ITOA
-		itoa(cl, buffer, 10);
-#else
-		sprintf(buffer, "%d", cl);
-#endif
-	}
-
-	/*This loop finds the number of chars in the content-length string.
-	 * itoa and sprintf return the number of bytes written but since a
-	 * buffer is generally not allocated when this method is called with
-	 * write = false, we cannot use either.*/
-	do
-	{
-		/* Finding the number of time cl divides by 10 gives us the length of
-		the string. */
-		buffer++;
-		cl /= 10;
-	}while( cl > 0 );
-
-	if( write )
-	{
-		*buffer = '\r';
-		*(buffer + 1) = '\n';
-	}
-	buffer += 2;
-
 	//CONTENT-TYPE FIELD SERIALIZING
 	if(content_type) //If the message has a Content-type.
 	{
@@ -166,6 +169,11 @@ size_t Message::serialize(char* buffer, bool write)
 
 Message::PARSER_RESULT Message::parse(const char* data, size_t size)
 {
+	if(size < 1) // If size is 0.
+	{
+		return SIZE_IS_0;
+	}
+
 	size_t line_start = 0; //Where the current line starts in the buffer.
 	///TODO rename line_end to ptr.
 	size_t line_end = 0; //What we are currently parsing.
@@ -276,6 +284,11 @@ Message::PARSER_RESULT Message::parse(const char* data, size_t size)
 		}
 		line_end++; //Parse the next character.
 	}
+
+	/* This code is in theory not reachable, but included otherwise to
+	 * satisfy the compiler. */
+
+	return HEADER_MALFORMED;
 }
 
 Message::PARSER_RESULT Message::parse(const char* buffer)

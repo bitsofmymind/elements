@@ -136,11 +136,11 @@ void Resource::dispatch( Message* message )
 			 finding its destination.*/
 			if(message->dispatching == Message::ABSOLUTE)
 			{
-				if(!parent) //If this resource has not parent.
+				if(!parent) //If this resource has no parent.
 				{
 					//We are at root! dispatch message the other way!
 					next = this; //Message will go twice trough root!
-					//Dispatching is not relative (to root).
+					//Dispatching is now relative (to root).
 					message->dispatching = Message::RELATIVE;
 					/*Add a blank resource to from_url to indicate that
 					 the message went trough root (/).*/

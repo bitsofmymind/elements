@@ -1,4 +1,4 @@
-/* main.cpp - Main file for the unit tests.
+/* test_request_parsing.h - Request parsing unit tests.
  * Copyright (C) 2015 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,32 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// INCLUDES
-#include <pal/pal.h>
-#include <iostream>
-#include <stdlib.h>
-#include "string.h"
-#include "test_request_parsing.h"
-#include "test_file_manipulation.h"
+#ifndef TEST_REQUEST_PARSING_H_
+#define TEST_REQUEST_PARSING_H_
 
-// Platform function implementations.
-void processing_wake(){}
-void processing_sleep(uint64_t time){}
-void Debug::print_char(char c){ std::cout << c; }
-void Debug::println(){ std::cout << std::endl; }
-void heart_beat(){}
+/** Request parsing testing function.
+* @return if the test passed.
+*/
+bool test_request_parsing(void);
 
-/// The program's entry point.
-int main()
-{
-	bool error = false;
-
-	std::cout << "Starting unit tests..." << std::endl;
-
-	error |= test_request_parsing();
-	error |= test_file_manipulation();
-
-	std::cout << (error ? "Failed": "Done") << std::endl;
-
-	return error ? 1: 0;
-}
+#endif //TEST_REQUEST_PARSING_H_

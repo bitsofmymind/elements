@@ -105,6 +105,8 @@ void* update_uptime(void* args)
 		//increase_uptime(SECONDS(current_time.tv_sec - timer.tv_sec) + ((double)current_time.tv_nsec / 1000000 - (double)timer.tv_nsec / 1000000));
 		increase_uptime(1); // The above causes the thread to stop waiting for some reason.
 	}
+
+	return NULL;
 }
 
 void init(void)
@@ -156,7 +158,7 @@ void processing_sleep(uptime_t sleep_time)
 void heart_beat(void)
 {
 	/* No need to have a POSIX compatible system do heartbeats since the status
-	 * of the process can easily be check using operating system tools.*/
+	 * of the process can easily be checked using operating system tools.*/
 }
 #endif
 

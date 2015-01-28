@@ -45,6 +45,13 @@ class MemFile: public File
 		MemFile(char* data, bool is_const);
 
 		/// Class constructor.
+		/**
+		 * The contents of const_data will be copied to a buffer.
+		 * @param data the data that will be contained by the file.
+		 */
+		MemFile(const char* const_data);
+
+		/// Class constructor.
 		/** @param data the data that will be contained by the file.
 		 * @param length the length of the data.
 		 * @param is_const if the data should be read only.*/

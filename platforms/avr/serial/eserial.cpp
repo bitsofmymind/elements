@@ -108,7 +108,6 @@ void ESerial::run(void)
 
 	if(!request) // If there is not enough memory for the request.
 	{
-		Debug::println("not enough space");
 		ts_free(buf); // Free the message buffer.
 
 		return; // Not enough memory to transform the message into a request.
@@ -116,15 +115,17 @@ void ESerial::run(void)
 
 	for(size_t i = 1; i < len; i++) // For each character in the message.
 	{
-		if( buf[i-1] == ';' && buf[i] == ';') // ;; are changed to /r and /n.
+		if( buf[i - 1] == ';' && buf[i] == ';') // ;; are changed to /r and /n.
 		{
-			buf[i-1] = '\r';
+			buf[i - 1] = '\r';
 			buf[i] = '\n';
 		}
 	}
 
 	// Parse the message.
 	Message::PARSER_RESULT res = request->parse(buf, len);
+
+	ts_free(buf); // Done parsing that part of the message.
 
 	switch(res)
 	{
@@ -134,14 +135,15 @@ void ESerial::run(void)
 			break;
 		case Message::PARSING_SUCESSFUL:
 			DEBUG_PRINTLN("Parsing incomplete"); // Message is incomplete.
+
+			delete request; // Partial messages are not processed.
 			break;
 		default:
-			DEBUG_PRINT("Parsing Error: "); //There was a parsing error.
+			DEBUG_PRINT("Parsing Error: "); // There was a parsing error.
 			Debug::println((uint8_t)res, 10);
 
 			// Cannot process the message so delete all buffers.
 			delete request;
-			ts_free(buf);
 	}
 
 	ATOMIC // Disable interrupts.
@@ -150,7 +152,7 @@ void ESerial::run(void)
 		 * message. */
 		if(index)
 		{
-			schedule(ASAP); // Run the resouce ASAP.
+			schedule(ASAP); // Run the resource ASAP.
 			return; // Done running the resource.
 		}
 	}

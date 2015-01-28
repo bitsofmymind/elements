@@ -23,12 +23,29 @@ MemFile::MemFile(char* data, bool is_const = false ):
 	is_const(is_const),
 	data(data)
 {
-	File::size = strlen(data); // Find the end of the buffer.
+	File::size = strlen(data) + 1; // Find the end of the buffer.
 	File::_cursor = 0; ///todo move to the initialization list.
-
 }
 
-MemFile::MemFile(char* data, size_t length, bool is_const = false ):
+MemFile::MemFile(const char* const_data):
+	is_const(false)
+{
+	File::size = strlen(const_data) + 1; // Find the end of the buffer.
+	File::_cursor = 0; ///todo move to the initialization list.
+
+	data = (char*)ts_malloc(size);
+	if(!data) // If space for the data could not be allocated.
+	{
+		size = 0;
+	}
+	else
+	{
+		strcpy(data, const_data);
+	}
+}
+
+// Note: is_const is not pre assigned to prevent a mixup with the other constructor.
+MemFile::MemFile(char* data, size_t length, bool is_const):
 	is_const(is_const),
 	data(data)
 {
