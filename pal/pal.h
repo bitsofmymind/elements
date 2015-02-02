@@ -30,10 +30,15 @@
  * */
 
 /**
- * Initializes the hardware of the platform to make it ready for executing the
+ * Initializes the platform to make it ready for executing the
  * framework.
  * */
 extern void init(void);
+
+/**
+ * Terminate the execution of the framework.
+ * */
+extern void terminate(void);
 
 /*
  * Defines an uptime_t type for working with the framework's uptime.

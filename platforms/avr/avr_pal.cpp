@@ -158,6 +158,11 @@ void init(void)
 	sei(); // Enable interrupts.
 }
 
+void terminate(void)
+{
+	// Nothing to for termination.
+}
+
 #if HEARTBEAT  // If the framework should output an heart beat.
 void heart_beat(void)
 {

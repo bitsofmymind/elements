@@ -41,6 +41,7 @@ void exit_function(int i)
 
 	std::cout << "Exiting framework...";
 	delete root;
+	terminate();
 	std::cout << "[DONE]" << std::endl;
 	exit(0); // Done.
 }

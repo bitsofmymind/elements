@@ -234,13 +234,12 @@ Message::PARSER_RESULT Message::parse(const char* data, size_t size)
 					return res; //Something unexpected has occurred.
 			}
 		}
-		if(line_end == size) //If we are at the end of the buffer.
+		if(line_end >= size) //If we are at the end of the buffer.
 		{
 			//If the current line ended with the buffer.
 			if(line_start == line_end)
 			{
 				//No need to save anything
-
 			}
 			else
 			{

@@ -122,6 +122,12 @@ void init(void)
 	pthread_create(&uptime_thread, NULL, update_uptime, NULL);
 }
 
+void terminate(void)
+{
+	pthread_cancel(uptime_thread); // Stop the uptime_thread.
+	pthread_join(uptime_thread, NULL); // Wait for it to terminate.
+}
+
 void processing_wake()
 {
 	pthread_mutex_lock(&mutex);
