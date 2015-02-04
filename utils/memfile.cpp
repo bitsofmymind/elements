@@ -63,16 +63,12 @@ MemFile::~MemFile(void)
 
 size_t MemFile::read(char* buffer, size_t length)
 {
-	size_t i = 0; // Index for the destination buffer.
+	// Check which is longest, the remaining data of the length requested.
+	length = length < get_size() - get_cursor() ? length : get_size() - get_cursor();
 
-	/* For all the data in the buffer or until the number of bytes wanted
-	 * have been fetched. */
-	for(; i < length && get_cursor() < get_size(); increment_cursor(1), i++)
-	{
-		buffer[i] = data[get_cursor()]; // Transfer the byte.
-	}
+	memcpy(buffer, data, length);
 
-	return i; // The index is the number of bytes read.
+	return length;
 }
 
 #if !READ_ONLY
@@ -83,16 +79,12 @@ size_t MemFile::write(const char* buffer, size_t length)
 		return 0; // It is not possible to write to it.
 	}
 
-	size_t i = 0; // Index for the destination buffer.
+	// Check which is longest, the remaining data of the length requested.
+	length = length < get_size() - get_cursor() ? length : get_size() - get_cursor();
 
-	/* For all the data in the buffer or until the number of bytes wanted
-	 * have been written. */
-	for(; i < length && get_cursor() < File::size; increment_cursor(1), i++)
-	{
-		data[get_cursor()] = buffer[i]; // Write a byte to the buffer.
-	}
+	memcpy(data, buffer, length);
 
-	return i; // Index is the number of bytes written.
+	return length;
 }
 #endif
 

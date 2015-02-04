@@ -219,7 +219,7 @@
  * If writing to files is not necessary, set READ_ONLY to 1 to save on
  * code space.
  */
-#define READ_ONLY 1
+#define READ_ONLY 0
 
 /// Define the HTTP location header.
 /**

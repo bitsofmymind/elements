@@ -31,7 +31,7 @@ class PGMSpaceFile: public File
 {
 	private:
 		/// The text wrapped by this class.
-		PGM_P text;
+		PGM_P _text;
 
 	public:
 

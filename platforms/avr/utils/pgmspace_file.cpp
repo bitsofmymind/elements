@@ -19,9 +19,8 @@
 
 PGMSpaceFile::PGMSpaceFile(PGM_P text, size_t length):
 	File(length),
-	text(text)
+	_text(text)
 {
-
 }
 
 size_t PGMSpaceFile::read(char* buffer, size_t length)
@@ -32,7 +31,7 @@ size_t PGMSpaceFile::read(char* buffer, size_t length)
 	for(; i < length && get_cursor() < get_size(); increment_cursor(1), i++)
 	{
 		// Read a byte from the file and write it to the buffer.
-		buffer[i] = pgm_read_byte(text + get_cursor());
+		buffer[i] = pgm_read_byte(_text + get_cursor());
 	}
 
 	return i;
