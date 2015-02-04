@@ -66,7 +66,7 @@ class Blinker: public Resource
          * depends on the status code).
          * @return the status_code produced while processing the request.
          */
-		virtual Response::status_code process(Request* request, Response* response);
+		virtual Response::status_code process(const Request* request, Response* response);
 };
 
 /// Blinks a led at a given interval.

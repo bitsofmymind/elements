@@ -160,7 +160,7 @@ void ESerial::run(void)
 	schedule(NEVER); // Wait for more bytes to arrive.
 }
 
-Response::status_code ESerial::process(Response* response)
+Response::status_code ESerial::process(const Response* response)
 {
 	File* body = response->get_body(); // Will print the body of the response.
 	print_transaction(response); // Print the transaction.

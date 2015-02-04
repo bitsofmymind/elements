@@ -91,7 +91,7 @@ class GenericList
 		/**
 		 *  Index operator method for retrieving items based on their indexes.
 		 * */
-		void* operator[]( uint8_t i );
+		void* operator[]( uint8_t i ) const;
 
 	protected:
 
@@ -157,7 +157,7 @@ template<class T> class List: public GenericList
 		/**
 		 *  Index operator method for retrieving items based on their indexes.
 		 * */
-		T operator[](uint8_t i);
+		T operator[](uint8_t i) const;
 };
 
 ///todo move to class definition.
@@ -190,7 +190,7 @@ T List<T>::remove( uint8_t index )
 
 ///todo move to class definition.
 template< class T >
-T List<T>::operator[](uint8_t i)
+T List<T>::operator[](uint8_t i) const
 {
 	return (T)GenericList::operator[](i);
 }
@@ -383,7 +383,7 @@ template< class T > class Queue: public List<T>
 
 		/** Checks the object at the beginning of the queue.
 		 * @return the object or NULL if the queue is empty.*/
-		T peek( void );
+		T peek( void ) const;
 };
 
 ///todo move to class definition.
@@ -402,7 +402,7 @@ T Queue<T>::dequeue(void)
 
 ///todo move to class definition.
 template< class T>
-T Queue<T>::peek(void)
+T Queue<T>::peek(void) const
 {
 	return (T)List<T>::operator[](0);
 }

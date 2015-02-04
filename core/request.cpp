@@ -30,7 +30,7 @@ Request::Request():
 	Message(),
 	method(NULL)
 {
-	object_type = REQUEST;
+	set_type(REQUEST);
 
 	//Allocates two blank URL objects for the source and destination urls.
 	to_url = new URL();
@@ -59,7 +59,7 @@ void Request::print(void)
 }
 
 #if REQUEST_SERIALIZATION
-size_t Request::serialize(char* buffer, bool write)
+size_t Request::serialize(char* buffer, bool write) const
 {
 	char* start = buffer; //The start of the buffer.
 
@@ -179,7 +179,7 @@ Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 }
 
 #if BODY_ARGS_PARSING
-uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
+uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size) const
 {
 	/* Note: Arguments are given in the following form:
 	 * key1=value1&key2value2&key3=value3&...*/
@@ -196,7 +196,7 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 	char buffer; //The char currently being read.
 	uint8_t index = 0; //Index of the character being read.
 
-	body->cursor(0); //Reset the body's file cursor.
+	body->set_cursor(0); //Reset the body's file cursor.
 
 	do //While there is still data in the body file.
 	{
@@ -252,7 +252,7 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size)
 }
 #endif
 
-bool Request::is_method(const char* m)
+bool Request::is_method(const char* m) const
 {
 	return !strcmp(method, m);
 }

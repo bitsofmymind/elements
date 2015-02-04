@@ -20,23 +20,23 @@
 #include <pal/pal.h>
 
 MemFile::MemFile(char* data, bool is_const = false ):
+	File(0),
 	is_const(is_const),
 	data(data)
 {
-	File::size = strlen(data) + 1; // Find the end of the buffer.
-	File::_cursor = 0; ///todo move to the initialization list.
+	set_size(strlen(data) + 1); // Find the end of the buffer.
 }
 
 MemFile::MemFile(const char* const_data):
+	File(0),
 	is_const(false)
 {
-	File::size = strlen(const_data) + 1; // Find the end of the buffer.
-	File::_cursor = 0; ///todo move to the initialization list.
+	set_size(strlen(const_data) + 1); // Find the end of the buffer.
 
-	data = (char*)ts_malloc(size);
+	data = (char*)ts_malloc(get_size());
 	if(!data) // If space for the data could not be allocated.
 	{
-		size = 0;
+		set_size(0);
 	}
 	else
 	{
@@ -46,11 +46,10 @@ MemFile::MemFile(const char* const_data):
 
 // Note: is_const is not pre assigned to prevent a mixup with the other constructor.
 MemFile::MemFile(char* data, size_t length, bool is_const):
+	File(length),
 	is_const(is_const),
 	data(data)
 {
-	File::size = length; ///todo move to the initialization list.
-	File::_cursor = 0; ///todo move to the initialization list.
 }
 
 MemFile::~MemFile(void)
@@ -68,9 +67,9 @@ size_t MemFile::read(char* buffer, size_t length)
 
 	/* For all the data in the buffer or until the number of bytes wanted
 	 * have been fetched. */
-	for(; i < length && File::_cursor < File::size; File::_cursor++, i++)
+	for(; i < length && get_cursor() < get_size(); increment_cursor(1), i++)
 	{
-		buffer[i] = data[File::_cursor]; // Transfer the byte.
+		buffer[i] = data[get_cursor()]; // Transfer the byte.
 	}
 
 	return i; // The index is the number of bytes read.
@@ -88,9 +87,9 @@ size_t MemFile::write(const char* buffer, size_t length)
 
 	/* For all the data in the buffer or until the number of bytes wanted
 	 * have been written. */
-	for(; i < length && File::_cursor < File::size; File::_cursor++, i++)
+	for(; i < length && get_cursor() < File::size; increment_cursor(1), i++)
 	{
-		data[File::_cursor] = buffer[i]; // Write a byte to the buffer.
+		data[get_cursor()] = buffer[i]; // Write a byte to the buffer.
 	}
 
 	return i; // Index is the number of bytes written.

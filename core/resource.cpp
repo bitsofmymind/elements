@@ -36,55 +36,54 @@
 static const char null_chr = '\0';
 
 Resource::Resource(void):
-  children_sleep_clock(MAX_UPTIME),
-  own_sleep_clock(MAX_UPTIME)
+	/* Children is initialized as needed (lazy) in order to save on memory. */
+	_children(NULL),
+    _own_sleep_clock(MAX_UPTIME),
+    _children_sleep_clock(MAX_UPTIME),
+	_parent(NULL),
+	_child_to_visit(0)
 {
-	///TODO move this to the initialization list.
-	child_to_visit = 0;
-	/*children is initialized as needed (lazy) in order to save on memory.*/
-	children = NULL;
-	parent = 0;
-	//register_element();
 }
 
 #if RESOURCE_DESTRUCTION
 Resource::~Resource(void)
 {
-	if(children) // If a children dictionary was created.
+	if(_children) // If a children dictionary was created.
 	{
 		// For each children of this resource.
-		for(uint8_t i = 0; i < children->items; i++)
+		for(uint8_t i = 0; i < _children->items; i++)
 		{
-			delete (*children)[i]->value; // Delete the children.
+			delete (*_children)[i]->value; // Delete the children.
 		}
 
-		delete children;
+		delete _children;
 	}
 }
 #endif
 
-void Resource::dispatch( Message* message )
+void Resource::dispatch(Message* message)
 {
 	Response::status_code sc; //The status code of the processing.
 	Response* response = NULL;
 
 	//If the message dispatching type has not yet be determined.
-	//TODO should probably be the responsibility of the message to determine its type of dispatching.
-	if(message->dispatching == Message::UNDETERMINED)
+	/* TODO should probably be the responsibility of the message to determine its type of dispatching.
+	 * Maybe it equates to to_url->is_absolute().*/
+	if(message->get_dispatching_type() == Message::UNDETERMINED)
 	{
 		 //If the message it going to an absolute URL.
-		if(message->to_url->is_absolute())
+		if(message->get_to_url()->is_absolute())
 		{
-			message->dispatching = Message::ABSOLUTE;
+			message->set_dispatching_type(Message::ABSOLUTE);
 		}
 		else //Else it is going to a relative URL.
 		{
-			message->dispatching = Message::RELATIVE;
+			message->set_dispatching_type(Message::RELATIVE);
 		}
 	}
 
 	//If the message is a request.
-	if(message->object_type == Message::REQUEST)
+	if(message->get_type() == Message::REQUEST)
 	{
 		/* In order to save on program memory, a response is always allocated
 		 * and given to the process method.
@@ -134,29 +133,29 @@ void Resource::dispatch( Message* message )
 			/*If the message is going to an absolute URL, it is just sent
 			 to the root because it has to transit trough there before
 			 finding its destination.*/
-			if(message->dispatching == Message::ABSOLUTE)
+			if(message->get_dispatching_type() == Message::ABSOLUTE)
 			{
-				if(!parent) //If this resource has no parent.
+				if(!_parent) //If this resource has no parent.
 				{
 					//We are at root! dispatch message the other way!
 					next = this; //Message will go twice trough root!
 					//Dispatching is now relative (to root).
-					message->dispatching = Message::RELATIVE;
+					message->set_dispatching_type(Message::RELATIVE);
 					/*Add a blank resource to from_url to indicate that
 					 the message went trough root (/).*/
-					message->from_url->resources.insert(&null_chr, 0);
+					message->get_from_url()->get_resources()->insert(&null_chr, 0);
 				}
 				else //This resource has a parent.
 				{
 					/*Since dispatching is absolute, the message has to go to
 					root.*/
-					next = parent;
+					next = _parent;
 					//If the message is a request.
-					if(message->object_type == Message::REQUEST)
+					if(message->get_type() == Message::REQUEST)
 					{
 						/*Save this resource's name to the from_url so the
-						 * message can be properbly routed back to its origin.*/
-						message->from_url->resources.insert(parent->get_name(this), 0);
+						 * message can be properly routed back to its origin.*/
+						message->get_from_url()->get_resources()->insert(_parent->get_name(this), 0);
 					}
 					//Useless if message is a response.
 				}
@@ -174,17 +173,17 @@ void Resource::dispatch( Message* message )
 					//If name is ".."
 					if(name[1] == '.' && name[2] == '\0' )
 					{
-						next = parent; //It is a parent dispatch.
+						next = _parent; //It is a parent dispatch.
 					}
 					//Else if name is "." it is an in-place dispatch.
 					else if(name[1] == '\0') { next = this; }
 				}
 				/*If a next resource has not yet been found and this resource
 				 * has children.*/
-				if(!next && children)
+				if(!next && _children)
 				{
 					//Look within the children if the next resource is there.
-					next = children->find( name );
+					next = _children->find( name );
 				}
 			}
 
@@ -200,13 +199,10 @@ void Resource::dispatch( Message* message )
 		default:
 			/*If message was a request and a response code was not found
 			in the above cases, this means it is an HTTP response code.*/
-			if(message->object_type == Message::REQUEST)
+			if(message->get_type() == Message::REQUEST)
 			{
-				//Prepare the response.
-				response->response_code_int = sc;
-				response->original_request = (Request*)message;
-				response->to_url = message->from_url;
-				response->from_url = message->to_url;
+				response->set_status_code(sc);
+				response->set_request((Request*)message);
 				dispatch(response); //Dispatch it.
 				return; //Done.
 			}
@@ -215,40 +211,40 @@ void Resource::dispatch( Message* message )
 	}
 }
 
-const char* Resource::get_name(Resource* resource)
+const char* Resource::get_name(const Resource* resource)
 {
-    if(children) //If this resource has children.
+    if(_children) //If this resource has children.
     {
         //Get the key for the value resource and return it.
-    	return children->find_val(resource);
+    	return _children->find_val((Resource*)resource);
     }
     return NULL; //Since there are no children, the name could not be found.
 }
 
 int8_t Resource::add_child(const char* name, Resource* child )
 {
-	if(children == NULL) //If there are no children.
+	if(_children == NULL) //If there are no children.
 	{
 		//This means that children was not initialized.
-		children = new Dictionary<Resource*>();
-		if(!children) //If there is no memory left.
+		_children = new Dictionary<Resource*>();
+		if(!_children) //If there is no memory left.
 		{
 			return -2; //Return an error.
 		}
 		//children_sleep_clock = 0;
 	}
 
-	int8_t return_code = children->add(name, child); //Add the child.
+	int8_t return_code = _children->add(name, child); //Add the child.
 
 	if(!return_code) //If the children was successfully added to the dictionary.
 	{
-		child->parent = this; //Set that child's parent.
+		child->_parent = this; //Set that child's parent.
 		/*Check if the children needs to be run. It could be that during
 		 * initialization, internal tasks have been scheduled.*/
-		if(child->get_sleep_clock() < children_sleep_clock)
+		if(child->get_sleep_clock() < _children_sleep_clock)
 		{
 			//If so, schedule it.
-			schedule(&children_sleep_clock, child->get_sleep_clock());
+			_schedule(&_children_sleep_clock, child->get_sleep_clock());
 		}
 	}
 
@@ -257,7 +253,7 @@ int8_t Resource::add_child(const char* name, Resource* child )
 
 uint8_t Resource::get_number_of_children()
 {
-	return !children ? 0 : children->items;
+	return !_children ? 0 : _children->items;
 }
 
 ///Removes a child resource.
@@ -265,27 +261,28 @@ uint8_t Resource::get_number_of_children()
  * @return NULL if removing failed or the children if it was successful. */
 Resource* Resource::remove_child(const char* name)
 {
-	if(children) //If there are children.
+	if(_children) //If there are children.
 	{
 		///TODO check it there is a child with that name.
-		Resource* orphan = children->remove(name);
-		orphan->parent = NULL;
+		Resource* orphan = _children->remove(name);
+		orphan->_parent = NULL;
 		return orphan;
 	}
+
 	return NULL;
 }
 
-void Resource::print_transaction(Message* message)
+void Resource::print_transaction(const Message* message)
 {
 	/*If VERBOSITY is undefined, this method should be optimized away
 	 *  by the compiler.*/
 
 #if VERBOSITY
 	VERBOSE_PRINT("from: ");
-	message->from_url->print();
+	message->get_from_url()->print();
 	VERBOSE_PRINTLN();
 	VERBOSE_PRINT("to: ");
-	message->to_url->print();
+	message->get_to_url()->print();
 	VERBOSE_PRINTLN();
 	message->print();
 	VERBOSE_PRINTLN();
@@ -293,7 +290,7 @@ void Resource::print_transaction(Message* message)
 
 }
 
-Response::status_code Resource::process(Request* request, Response* response)
+Response::status_code Resource::process(const Request* request, Response* response)
 {
 	if(!request->to_destination()) //If the message is at destination.
 	{
@@ -304,7 +301,7 @@ Response::status_code Resource::process(Request* request, Response* response)
 	return PASS_308; //Pass the message.
 }
 
-Response::status_code Resource::process(Response* response)
+Response::status_code Resource::process(const Response* response)
 {
 	if(!response->to_destination()) //If the message is at destination.
 	{
@@ -318,16 +315,21 @@ Response::status_code Resource::process(Response* response)
 void Resource::run(void)
 {
 	 //Nothing to do, schedule the timer so it never expires again.
-	schedule(&own_sleep_clock, NEVER);
+	_schedule(&_own_sleep_clock, NEVER);
 }
 
 uptime_t Resource::get_sleep_clock(void)
 {
 	//Return children_sleep_clock or own_sleep_clock, whichever is less.
-	return children_sleep_clock > own_sleep_clock ? own_sleep_clock: children_sleep_clock;
+	return _children_sleep_clock > _own_sleep_clock ? _own_sleep_clock: _children_sleep_clock;
 }
 
-void Resource::schedule(volatile uptime_t* timer, uptime_t time)
+void Resource::schedule(uptime_t time)
+{
+	_schedule(&_own_sleep_clock, time);
+}
+
+void Resource::_schedule(volatile uptime_t* timer, uptime_t time)
 {
     ///TODO check if timer will overflow.
 	if(time != MAX_UPTIME) //If time is less than MAX_UPTIME.
@@ -344,7 +346,7 @@ void Resource::schedule(volatile uptime_t* timer, uptime_t time)
 	/* Loops up the resource tree to update the children_sleep_clock.
 	 * This is not made recursive in order to save on stack space and
 	 * processing time. */
-    Resource* current = parent; //Start with the parent.
+    Resource* current = _parent; //Start with the parent.
 	while(true)
 	{
 		if (!current) //If current is null, we have reached the top.
@@ -352,52 +354,47 @@ void Resource::schedule(volatile uptime_t* timer, uptime_t time)
 			break; //Exit the loop.
 		}
 		//Update the children_sleep_clock timer.
-		if(current->children_sleep_clock > time)
+		if(current->_children_sleep_clock > time)
 		{
-			current->children_sleep_clock = time;
+			current->_children_sleep_clock = time;
 		}
 		else
 		{
 			break;
 		}
-		current = current->parent; //select the parent.
+		current = current->_parent; //select the parent.
 	}
 
     processing_wake(); //Wake processing if we were called by an interrupt.
 
 }
 
-void Resource::schedule(uptime_t time)
-{
-	schedule(&own_sleep_clock, time);
-}
-
-Resource* Resource::get_next_child_to_visit(void)
+Resource* Resource::_get_next_child_to_visit(void)
 {
 	//If this resource has children and if some need to be visited.
-	if(children && is_expired(children_sleep_clock) )
+	if(_children && is_expired(_children_sleep_clock) )
 	{
 		while(true)
 		{
 			/* An internal index of the last Resource visited is kept so all
 			 * get a chance for processing. */
 			//If we have reached the end of the children list.
-			if(child_to_visit == children->items)
+			if(_child_to_visit == _children->items)
 			{
-				child_to_visit = 0; //Reset the internal counter.
-				children_sleep_clock = MAX_UPTIME; //Reset the sleep clock.
+				_child_to_visit = 0; //Reset the internal counter.
+				_children_sleep_clock = MAX_UPTIME; //Reset the sleep clock.
 
 				/* While we were processing children, it is possible that some
 				 * other children updated their sleep clock (through an
 				 * interrupt or another instance of Processing). Loop trough
 				 * all of them to update our children sleep clock. */
-				for(uint8_t i = 0; i < children->items; i++)
+				for(uint8_t i = 0; i < _children->items; i++)
 				{
-					uptime_t sleep_clock = (*children)[i]->value->get_sleep_clock();
+					uptime_t sleep_clock = (*_children)[i]->value->get_sleep_clock();
 					//If that child's sleep_clock is lower than ours.
-					if(sleep_clock < children_sleep_clock)
+					if(sleep_clock < _children_sleep_clock)
 					{
-						children_sleep_clock = sleep_clock; //Replace it.
+						_children_sleep_clock = sleep_clock; //Replace it.
 					}
 				}
 
@@ -405,8 +402,8 @@ Resource* Resource::get_next_child_to_visit(void)
 			}
 
 			//Get the next child to visit.
-			Resource* child = (*children)[child_to_visit]->value;
-			child_to_visit++; //Increment the internal index.
+			Resource* child = (*_children)[_child_to_visit]->value;
+			_child_to_visit++; //Increment the internal index.
 			//If that child needs to be ran.
 			if(child->get_sleep_clock() <= get_uptime())
 			{

@@ -41,14 +41,15 @@ class URL
 		///The parsing result for a URL.
 		enum PARSING_RESULT { VALID, INVALID };
 
+	private:
+
 		///The string containing the URL.
-		const char* url_str;
+		const char* _url_str;
 
 		///The length of the string containing the URL.
-		size_t url_length;
+		size_t _url_length;
 
-		///All the resource names contained in the URL.
-		List< const char* > resources;
+	protected:
 
 #if URL_PROTOCOL
 		///The protocol part of the URL.
@@ -65,16 +66,21 @@ class URL
 		const char* port;
 #endif
 
-#if URL_ARGUMENTS
-		///The index arguments of the URL.
-		Dictionary< const char* >* arguments;
-#endif
-
 #if URL_FRAGMENT
 		/**The fragment part of the URL. Normally, browsers don't provide this
 		 * part to the server.*/
 		const char* fragment;
 #endif
+
+		///All the resource names contained in the URL.
+		List<const char*> resources;
+
+#if URL_ARGUMENTS
+		///The indexed arguments of the URL.
+		Dictionary<const char*>* arguments;
+#endif
+
+	public:
 
 		///Class constructor.
 		URL();
@@ -82,10 +88,38 @@ class URL
 		///Class destructor.
 		~URL();
 
+#if URL_PROTOCOL
+		/** @return the protocol part of the URL. */
+		inline const char* get_protocol(void) const { return protocol; }
+#endif
+
+#if URL_AUTHORITY
+		/** @return the authority part of the URL. */
+		inline const char* get_authority(void) const { return authority; }
+#endif
+
+#if URL_PORT && URL_AUTHORITY
+		/** @return the port part of the URL. */
+		inline const char* get_port(void) const { return port; }
+#endif
+
+#if URL_FRAGMENT
+		/** @return the fragment part of the URL. */
+		inline const char* get_fragment(void) const { return fragment; }
+#endif
+
+		/** @return the resource list of the URL. */
+		inline List<const char*> * get_resources(void) { return &resources; }
+
+		#if URL_ARGUMENTS
+		/** @return the argument list of the URL. */
+		inline Dictionary<const char*>* get_arguments(void) const { return arguments; }
+#endif
+
 		///Parses a URL string.
 		/**
 		 * This method will decompose an URL into its many parts:
-		 * protcol://authority:port/resource/resource/?argument=argument#fragment
+		 * protocol://authority:port/resource/resource/?argument=argument#fragment
 		 * If the framework is configured to ignore a part, it will not be parsed.
 		 * The parser does copy string but keeps them in place and instead isolates
 		 * them by replacing their separators with null characters.
@@ -104,16 +138,16 @@ class URL
 		 * @param write if the url's characters should be written to the buffer.
 		 * @return the number of bytes written.
 		 * */
-		size_t serialize( char* buffer , bool write);
+		size_t serialize(char* buffer, bool write) const;
 #endif
 
 		/// Prints the url to the output.
-		void print(void);
+		void print(void) const;
 
 		/**
 		 * @return if the url is absolute or relative.
 		 * */
-		bool is_absolute(void);
+		bool is_absolute(void) const;
 };
 
 #endif /* URI_H_ */

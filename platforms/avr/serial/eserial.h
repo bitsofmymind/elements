@@ -76,7 +76,7 @@ class ESerial: public Resource
          * depends on the status code).
          * @return the status_code produced while processing the request.
          */
-		virtual Response::status_code process(Response* response);
+		virtual Response::status_code process(const Response* response);
 };
 
 #endif /* ESERIAL_H_ */

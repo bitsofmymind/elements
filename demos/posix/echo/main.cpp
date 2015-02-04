@@ -59,7 +59,7 @@ class Echo: public Resource
          * @return the status_code produced while processing the request.
          * @todo make the request object const so it will not be deleted.
          */
-		virtual Response::status_code process(Response* response)
+		virtual Response::status_code process(const Response* response)
 		{
 			// If the response has not reached its destination.
 			if(response->to_destination())
@@ -75,12 +75,12 @@ class Echo: public Resource
 			std::cout << "Request:" << std::endl;
 
 			// Get the length of the serialized request.
-			size_t len = response->original_request->serialize(NULL, false);
+			size_t len = response->get_request()->serialize(NULL, false);
 			/* Allocate a buffer to hold the serialized request. The buffer length
 			 * is increased by one to make room for a null terminating character. */
 			char* buffer = (char*)malloc( len + 1);
 			//Serialize the request in the buffer.
-			response->original_request->serialize(buffer, true);
+			response->get_request()->serialize(buffer, true);
 			buffer[len] = '\0'; // Terminate the serialized request.
 			std::cout << buffer << std::endl; // Display the buffer.
 			free(buffer); // Done with the buffer.
@@ -104,7 +104,7 @@ class Echo: public Resource
 				char body_buffer[21]; // Allocate a buffer for displaying the body.
 				uint8_t read; // Number of characters read.
 
-				response->get_body()->cursor(0); // Reset the cursor.
+				response->get_body()->set_cursor(0); // Reset the cursor.
 
 				do // Read the content of the buffer.
 				{
@@ -127,7 +127,7 @@ class Echo: public Resource
          * @param response the response to process.
          * @return the status_code produced while processing the response.
          */
-		virtual Response::status_code process(Request* request, Response* response)
+		virtual Response::status_code process(const Request* request, Response* response)
 		{
 			// If the request has not reached its destination.
 			if(request->to_destination())
@@ -137,11 +137,11 @@ class Echo: public Resource
 			}
 
 			// Allocate a buffer to copy the request's body.
-			char* buffer = (char*)malloc(request->get_body()->size + 1);
+			char* buffer = (char*)malloc(request->get_body()->get_size() + 1);
 			request->get_body()->extract(buffer); // Extract the body in the buffer.
-			buffer[request->get_body()->size] = '\0'; // Terminate the buffer.
+			buffer[request->get_body()->get_size()] = '\0'; // Terminate the buffer.
 			// Create a new MemFile with the buffer and set it as the response's body.
-			response->set_body(new MemFile(buffer, request->get_body()->size, false), MIME::TEXT_HTML);
+			response->set_body(new MemFile(buffer, request->get_body()->get_size(), false), MIME::TEXT_HTML);
 
 			std::cout << "Echoing message." << std::endl;
 

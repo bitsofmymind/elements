@@ -58,7 +58,7 @@ class PosixSocketInterface: public Authority
 			/**
 			 * The response to the request.
 			 * */
-			Response* response;
+			const Response* response;
 
 			/**
 			 * The address of the client.
@@ -123,7 +123,7 @@ class PosixSocketInterface: public Authority
          * @param response the response.
          * @return the result of the processing.
          * */
-        virtual Response::status_code process( Response* response );
+        virtual Response::status_code process( const Response* response );
 
     protected:
 

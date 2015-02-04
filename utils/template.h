@@ -60,7 +60,7 @@ class Template: public File
 		virtual size_t write(const char* buffer, size_t length);
 #endif
 
-		virtual void cursor(size_t val);
+		virtual void set_cursor(size_t val);
 
 		/// Adds a string to the list of arguments.
 		/** @param arg the argument.

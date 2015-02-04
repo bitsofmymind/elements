@@ -24,7 +24,7 @@
 bool read_from_file(File* file)
 {
 	// Test extraction.
-	char* buffer = (char*)malloc(file->size);
+	char* buffer = (char*)malloc(file->get_size());
 
 	file->extract(buffer);
 
@@ -32,21 +32,21 @@ bool read_from_file(File* file)
 
 	// Test reads.
 
-	buffer = (char*)malloc(file->size + 100);
+	buffer = (char*)malloc(file->get_size() + 100);
 	char* index = buffer;
 
 	index += file->read(buffer, 5);
 
-	file->cursor(0);
+	file->set_cursor(0);
 	index = buffer;
 
 	index += file->read(buffer, 10);
 
-	index += file->read(buffer, file->size); // Read past the end of the file.
+	index += file->read(buffer, file->get_size()); // Read past the end of the file.
 
 	free(buffer);
 
-	if(index - buffer > file->size)
+	if(index - buffer > file->get_size())
 	{
 		return false;
 	}
@@ -158,7 +158,7 @@ bool test_file_manipulation(void)
 		error = true;
 	}
 
-	t->cursor(0);
+	t->set_cursor(0);
 
 	argument = (char*)malloc(strlen("<arg8>") + 1);
 	strcpy(argument, "<arg8>");
@@ -169,7 +169,7 @@ bool test_file_manipulation(void)
 		error = true;
 	}
 
-	t->cursor(0);
+	t->set_cursor(0);
 
 	argument = (char*)malloc(strlen("<arg9>") + 1);
 	strcpy(argument, "<arg9>");

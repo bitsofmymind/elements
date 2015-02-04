@@ -54,14 +54,14 @@
 		/** Processing will stop going up the resource tree when it
 		 * reaches that Resource pointer. Set to NULL if processing should
 		 * go up to the root resource.*/
-		Resource* bound;
+		const Resource* _bound;
 
 		/// The current resource being processed.
-		Resource* current;
+		Resource* _current;
 
 #if HEARTBEAT
 		/// The last time a heartbeat was done.
-		uptime_t heartbeat;
+		uptime_t _heartbeat;
 #endif
 
 	public:

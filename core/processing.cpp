@@ -26,33 +26,33 @@ Processing::Processing(Resource* bound): Authority(),
 #else
 Processing::Processing(Resource* bound): Resource(),
 #endif
-		bound(bound),
-		current(this) //A Processing object starts by running itself.
+		_bound(bound),
+		_current(this) //A Processing object starts by running itself.
 #if HEARTBEAT
-		,heartbeat(1000)
+		,_heartbeat(1000)
 #endif
 {}
 
 void Processing::step(void)
 {
 	//If the current resource is scheduled to be run.
-	if(is_expired(current->own_sleep_clock))
+	if(is_expired(_current->_own_sleep_clock))
 	{
-		current->own_sleep_clock = NEVER; //Reset its sleep clock.
-		current->run(); //Run it.
+		_current->_own_sleep_clock = NEVER; //Reset its sleep clock.
+		_current->run(); //Run it.
 	}
 	//Get the next Resource to be run.
-	Resource* to_run = current->get_next_child_to_visit();
+	Resource* to_run = _current->_get_next_child_to_visit();
 
 	if(to_run) //If a Resource was returned.
 	{
-		current = to_run; //Set to be run next.
+		_current = to_run; //Set to be run next.
 	}
 	/*Else no resource was returned. Go to the parent resource if it is not
 	 * the bound.*/
-	else if(current->parent != bound)
+	else if(_current->_parent != _bound)
 	{
-		current = current->parent; //Set it to be run next.
+		_current = _current->_parent; //Set it to be run next.
 	}
 	//Else we are one resource below the bound. Stay there.
 }
@@ -63,13 +63,13 @@ void Processing::start(void)
 	{
 		step(); //Step through a resource.
 
-		if(current->parent == bound) //If the bound has been reached.
+		if(_current->_parent == _bound) //If the bound has been reached.
 		{
 			/*The sleep clock for the current resource gives us the next
 			 * time processing will be needed again.
 			 * Since the sleep clock is an uptime, is is substracted with
 			 * the uptime to get the actual amount of time.*/
-			uptime_t sleep_amount = current->get_sleep_clock() - get_uptime();
+			uptime_t sleep_amount = _current->get_sleep_clock() - get_uptime();
 
 			/*TODO: Since uptime_t are unsigned int, sleep amount will
 			alway be positive. See #181. */
@@ -81,11 +81,11 @@ void Processing::start(void)
 		}
 
 #if HEARTBEAT //If heartbeat function is activated.
-		if(is_expired(heartbeat)) //If the heart beat timer has expired.
+		if(is_expired(_heartbeat)) //If the heart beat timer has expired.
 		{
 			heart_beat(); //Do a heart beat.
 			//Set the heartbeat timer to expire in 1 second.
-			expire(heartbeat, 1000);
+			expire(_heartbeat, 1000);
 		}
 #endif
 	}

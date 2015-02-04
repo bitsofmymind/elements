@@ -27,8 +27,8 @@
 URL::URL( )
 {
 	///todo move all the values below to the initialization list.
-	url_str = NULL;
-	url_length = 0;
+	_url_str = NULL;
+	_url_length = 0;
 #if URL_PROTOCOL
 	protocol = NULL;
 #endif
@@ -61,7 +61,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 {
 	 ///todo check if we have reached the end of the URL.
 
-	url_str = str; //Save the string.
+	_url_str = str; //Save the string.
 
 	//Holds the start of the part of the URL that is currently being parsed.
 	char* start = str;
@@ -288,13 +288,13 @@ URL::PARSING_RESULT URL::parse(char* str)
 	}
 
 	///TODO the url_length is most likely useless.
-	url_length = str - url_str - 1; //Save the length of the url.
+	_url_length = str - _url_str - 1; //Save the length of the url.
 
 	return VALID; //URL is valid.
 }
 
 #if URL_SERIALIZATION
-size_t URL::serialize(char* buffer, bool write)
+size_t URL::serialize(char* buffer, bool write) const
 {
 	char* start = buffer; // The start of the buffer.
 
@@ -400,7 +400,7 @@ size_t URL::serialize(char* buffer, bool write)
 }
 #endif
 
-void URL::print(void)
+void URL::print(void) const
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
 	 * this method should be optimized away by the compiler.*/
@@ -454,7 +454,7 @@ void URL::print(void)
 #endif
 }
 
-bool URL::is_absolute(void)
+bool URL::is_absolute(void) const
 {
 	 // If the first resource is a slash.
 	if((resources.items && *(resources[0]) == '\0')

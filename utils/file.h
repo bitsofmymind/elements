@@ -27,19 +27,20 @@
  */
 class File
 {
-
-	protected:
+	private:
 
 		/** A cursor that points to the location in the stream that
 		 * is currently being read. */
 		size_t _cursor;
 
-	public:
-
 		/** The total size of the data stream. */
-		size_t size;
+		size_t _size;
 
 	public:
+
+		/** Class constructor.
+		 * @param size the initial size of the file. */
+		inline File(size_t size) { _cursor = 0; _size = size; }
 
 		/** Class destructor. */
 		virtual ~File();
@@ -70,11 +71,27 @@ class File
 
 		/// Get the position of the cursor in the file.
 		/** @return the position of the cursor. */
-		inline size_t cursor(void) { return _cursor; }
+		inline size_t get_cursor(void) const { return _cursor; }
 
-		/// Moves the cursor in the file.
+		/// Sets the cursor position in the file.
 		/** @param val the new position of the cursor.  */
-		virtual void cursor(size_t val);
+		virtual void set_cursor(size_t val);
+
+		/// Increment the cursor in the file.
+		/** @param val the amount by which the cursor is incremented. */
+		inline void increment_cursor(size_t offset) { _cursor += offset; }
+
+		/// Increment the cursor in the file.
+		/** @param val the amount by which the cursor is decremented. */
+		inline void decrement_cursor(size_t offset) { _cursor -= offset; }
+
+		/** @return the size of the file.*/
+		inline size_t get_size(void) const { return _size; }
+
+	protected:
+
+		/** @return size the size of the file. */
+		inline void set_size(size_t size) { _size = size; }
 };
 
 #endif //FILE_H_

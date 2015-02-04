@@ -26,16 +26,13 @@
 #endif
 
 Template::Template(File* file):
+	File(file->get_size()),
 	file(file),
 	arg_index(0),
 	current(NULL),
 	state(TEXT)
 {
-	File::_cursor = 0; // Set the cursor to the beginning of the template.
-	///todo move to initialization list.
-	File::size = file->size; // Sets the size of the file.
 }
-
 
 Template::~Template()
 {
@@ -58,7 +55,7 @@ void Template::add_arg(char* arg)
 	args.append(arg); // Adds the argument to the end of the list.
 
 	// Adds the length of the argument to the length of the file.
-	size += strlen(arg) - 1; //The ~ marker is removed
+	set_size(get_size() + strlen(arg) - 1); //The ~ marker is removed
 }
 
 void Template::skip_argument(void)
@@ -186,15 +183,15 @@ size_t Template::read(char* buffer, size_t length)
 
 	}
 
-	File::_cursor += i; // Increment the cursor with the number of bytes read.
+	increment_cursor(i); // Increment the cursor with the number of bytes read.
 
 	return i; // Return the number of bytes read.
 }
 
-void Template::cursor(size_t val)
+void Template::set_cursor(size_t val)
 {
-	file->cursor(0); // Reset the cursor on the encapsulated file.
-	_cursor = 0; // Reset the internal cursor.
+	file->set_cursor(0); // Reset the cursor on the encapsulated file.
+	File::set_cursor(0); // Reset the internal cursor.
 	state = TEXT; // Reset the renderer's state.
 	arg_index = 0; // Reset the argument index.
 

@@ -19,16 +19,13 @@
 #include "../avr_pal.h"
 
 FATFile::FATFile(char* name):
+	File(0),
 	name(name)
 {
-	// Initialize the size of the file and the cursor.
-	File::size = 0;
-	File::_cursor = 0;
-
 	// Open the file in read only mode and only if it exists.
 	last_op_result = f_open(&file, name, FA_READ | FA_OPEN_EXISTING);
 
-	size = file.fsize; // Set the file size.
+	set_size(file.fsize); // Set the file size.
 }
 
 FATFile::~FATFile()
@@ -46,7 +43,7 @@ size_t FATFile::read(char* buffer, size_t length)
 	// Read the file into the buffer.
 	last_op_result = f_read(&file, buffer, length, &bytes_read);
 
-	_cursor += bytes_read; // Increment the cursor.
+	increment_cursor(bytes_read); // Increment the cursor.
 
 	return bytes_read;
 

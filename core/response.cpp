@@ -29,23 +29,13 @@
 #include "message.h"
 #include "response.h"
 
-Response::Response(
-		const status_code _response_code,
-		Request* _original_request):
-			Message(),
-			response_code_int(_response_code),
-			original_request(_original_request)
+Response::Response(const status_code code, Request* request):
+	Message(),
+	_response_code_int(code)
 {
-	object_type = RESPONSE; //Set the object type.
-	//If a request is associated to this response.
-	if(_original_request)
-	{
-		/*Invert the "to" and "from" urls to get the origin and destination
-		of this response. This means it will follow that same route of its
-		triggering request.*/
-		to_url = _original_request->from_url;
-		from_url = _original_request->to_url;
-	}
+	set_type(RESPONSE); //Set the object type.
+
+	set_request(request);
 
 #if LOCATION //If the Location header field is used.
 	location = NULL;
@@ -54,7 +44,10 @@ Response::Response(
 
 Response::~Response()
 {
-	delete original_request;
+	if(_original_request)
+	{
+		delete _original_request;
+	}
 }
 
 void Response::print(void)
@@ -65,7 +58,7 @@ void Response::print(void)
 	DEBUG_PRINT("% Response: ");
 	DEBUG_PRINT(" HTTP/1.0");
 	DEBUG_PRINT(' ');
-	uint16_t rc = ( response_code_int >> 5 ) * 100 + ( response_code_int & 0b00011111 );
+	uint16_t rc = ( _response_code_int >> 5 ) * 100 + ( _response_code_int & 0b00011111 );
 	DEBUG_TPRINTLN(rc, DEC);
 	if(content_type) //If there is a content type header field.
 	{
@@ -109,9 +102,9 @@ Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 				/* The response code appears at the end of the first space.
 				 * The response code is compressed to fit in a byte.
 				 * Save the first part of the response code.*/
-				response_code_int = (*(++index) - 48) << 5;
+				_response_code_int = (*(++index) - 48) << 5;
 				//Save the second part of the response code.
-				response_code_int += atoi(index);
+				_response_code_int += atoi(index);
 				break; //Done with finding the response code.
 			}
 			//If we have reached the end of the header buffer.
@@ -136,7 +129,7 @@ Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 }
 #endif
 
-size_t Response::serialize( char* buffer, bool write)
+size_t Response::serialize( char* buffer, bool write) const
 {
 	char* start = buffer; //Save the start of the buffer.
 
@@ -147,7 +140,7 @@ size_t Response::serialize( char* buffer, bool write)
 		*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '0';
 		*buffer++ = ' ';
 		//Convert the response code to a a uint16_t.
-		uint16_t rc = ( response_code_int >> 5 ) * 100 + ( response_code_int & 0b00011111 );
+		uint16_t rc = ( _response_code_int >> 5 ) * 100 + ( _response_code_int & 0b00011111 );
 #if ITOA
 		itoa(rc, buffer, 10); //Write the response code.
 
@@ -193,6 +186,20 @@ size_t Response::serialize( char* buffer, bool write)
 	buffer += Message::serialize(buffer, write);
 
 	return buffer - start; //Return the size of the buffer.
+}
+
+void Response::set_request(Request* request)
+{
+	_original_request = request;
+
+	if(request)
+	{
+		/*Invert the "to" and "from" urls to get the origin and destination
+		of this response. This means it will follow that same route of its
+		triggering request.*/
+		to_url = request->get_from_url();
+		from_url = request->get_to_url();
+	}
 }
 
 //STATUS CODE DEFINITIONS

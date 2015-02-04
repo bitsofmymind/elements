@@ -18,6 +18,12 @@
 #include "file.h"
 #include <pal/pal.h>
 
+/*File::File(size_t size) :
+	_size(size),
+	_cursor(0)
+{
+}*/
+
 File::~File(){ }
 
 #if VERBOSITY
@@ -40,10 +46,10 @@ void File::print(void)
 size_t File::extract(char* buffer)
 {
 	_cursor = 0; // Moves the cursor to the beginning of the file.
-	return read(buffer, size); // Read the whole file.
+	return read(buffer, _size); // Read the whole file.
 }
 
-void File::cursor(size_t val)
+void File::set_cursor(size_t val)
 {
 	/// TODO prevent the cursor from getting set past the size of the file.
 	_cursor = val;

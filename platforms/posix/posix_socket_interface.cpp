@@ -231,7 +231,7 @@ void PosixSocketInterface::run()
     Authority::run(); // Call parent method.
 }
 
-Response::status_code PosixSocketInterface::process(Response* response)
+Response::status_code PosixSocketInterface::process(const Response* response)
 {
 	// This call needs to be protected by a mutex.
 	pthread_mutex_lock(&_receive_mutex);
@@ -239,7 +239,7 @@ Response::status_code PosixSocketInterface::process(Response* response)
 		for(int i = 0; i < connections.items; i++)
 		{
 			// If the received response is for this connection.
-			if(connections[i]->request == response->original_request)
+			if(connections[i]->request == response->get_request())
 			{
 				connections[i]->response = response; // Set the response on that connection.
 				 // Run the resource as soon as possible to send the reply.

@@ -18,12 +18,10 @@
 #include "pgmspace_file.h"
 
 PGMSpaceFile::PGMSpaceFile(PGM_P text, size_t length):
+	File(length),
 	text(text)
-	//size(size),
-	//_cursor(0)
 {
-	_cursor = 0;
-	size = length;
+
 }
 
 size_t PGMSpaceFile::read(char* buffer, size_t length)
@@ -31,10 +29,10 @@ size_t PGMSpaceFile::read(char* buffer, size_t length)
 	size_t i = 0; // Number of bytes read.
 
 	// For each by we want to read until the end of the file.
-	for(; i < length && _cursor < size; _cursor++, i++)
+	for(; i < length && get_cursor() < get_size(); increment_cursor(1), i++)
 	{
 		// Read a byte from the file and write it to the buffer.
-		buffer[i] = pgm_read_byte(text + _cursor);
+		buffer[i] = pgm_read_byte(text + get_cursor());
 	}
 
 	return i;

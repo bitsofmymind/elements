@@ -204,7 +204,7 @@ int8_t GenericList::grow(void)
 
 #endif
 
-void* GenericList::operator[]( uint8_t i )
+void* GenericList::operator[]( uint8_t i ) const
 {
 	// If there are no items or an index greater that the amount of item is requested.
 	if(!items || i >= items)

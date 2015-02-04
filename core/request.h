@@ -29,8 +29,6 @@ class Request: public Message
 {
 	protected:
 
-		static const Message::TYPE type = REQUEST; //TODO this is probably useless.
-
 		///The HTTP method of this request.
 		const char* method;
 
@@ -84,7 +82,7 @@ class Request: public Message
 		 * @return if write is true, the number of bytes written to the buffer, if
 		 * 		write is false, the length of the serialized request.
 		 * */
-		virtual size_t serialize( char* buffer, bool write );
+		virtual size_t serialize( char* buffer, bool write ) const;
 #endif
 
 #if BODY_ARGS_PARSING
@@ -99,7 +97,7 @@ class Request: public Message
 		 * 	its size must be limited to avoid potential overflows.
 		 * 	@return the length of the argument's value or 0 if it was not found.
 		 * */
-		uint8_t find_arg(const char* key, char* value, uint8_t max_size);
+		uint8_t find_arg(const char* key, char* value, uint8_t max_size) const;
 #endif
 
 		/// Compare a string with the request's method.
@@ -107,7 +105,7 @@ class Request: public Message
 		 * @param m the method string.
 		 * @return boolean true if the request method and m match.
 		 */
-		bool is_method(const char* m);
+		bool is_method(const char* m) const;
 
 	protected:
 

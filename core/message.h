@@ -43,34 +43,10 @@
  * */
 class Message
 {
-	protected:
-
-		/** Points to the first line of the message header (the line specific
-		 * to requests or responses).*/
-		char*  header;
-		/** The length of the message header first line (the line specific
-		 * to requests or responses).*/
-		size_t header_length; /// TODO useless, the size can be known with a strlen().
-		/** Pointer to the body of the message.*/
-		File* body;
-		/** The cursor for the destination url. The cursor is used to point
-		 * to the current resource we are at within the destination url.*/
-		uint8_t to_url_cursor;
-		/** The cursor for the origin url. The cursor is used to point
-		 * to the current resource we are at within the origin url.*/
-		uint8_t from_url_cursor;
-
-		///TODO the following should probably be private.
-
-		//Parsing controls, used to resume parsing when new data arrives.
-		/**If we are parsing the body of the message.*/
-		bool parsing_body;
-		/** Pointer to the current line we are parsing.*/
-		char* current_line; ///TODO rename current_line to line_buffer.
-		/** The length of the line we are currently parsing.*/
-		size_t current_line_length; ///TODO rename current_line_buffer to line_buffer_length
-
 	public:
+
+		/// The different types a message can be.
+		enum TYPE { REQUEST, RESPONSE, UNKNOWN };
 
 		/** The possible results of parsing a message.*/
 		enum PARSER_RESULT
@@ -86,6 +62,11 @@ class Message
 			OUT_OF_MEMORY,
 			SIZE_IS_0
 		};
+
+		/**The type of dispatching of this message. Absolute messages
+		 * always transit trough the root resource while relative messages
+		 * are routed directly to their destination.*/
+		enum DISPATCHING_TYPE { ABSOLUTE, RELATIVE, UNDETERMINED };
 
 
 		//General header fields
@@ -110,6 +91,51 @@ class Message
 		//static const char EXPIRES[];
 		//static const char LAST_MODIFIED[];
 
+	private:
+
+		/// Parsing controls, used to resume parsing when new data arrives.
+		/**If we are parsing the body of the message.*/
+		bool _parsing_body;
+
+		/** Pointer to the current line we are parsing.*/
+		char* _current_line; ///TODO rename current_line to line_buffer.
+
+		/** The length of the line we are currently parsing.*/
+		size_t _current_line_length; ///TODO rename current_line_buffer to line_buffer_length
+
+		/** The type this message is of. Implements a crude form of
+		 * reflection.*/
+		TYPE _type;
+
+		/** The type of dispatching for this message.*/
+		DISPATCHING_TYPE _dispatching_type;
+
+#if MESSAGE_AGE
+		/** The uptime at which the message was created. */
+		uptime_t _age;
+#endif
+
+	protected:
+
+		/** Points to the first line of the message header (the line specific
+		 * to requests or responses).*/
+		char*  header;
+
+		/** The length of the message header first line (the line specific
+		 * to requests or responses).*/
+		size_t header_length; /// TODO useless, the size can be known with a strlen().
+
+		/** Pointer to the body of the message.*/
+		File* body;
+
+		/** The cursor for the destination url. The cursor is used to point
+		 * to the current resource we are at within the destination url.*/
+		uint8_t to_url_cursor;
+
+		/** The cursor for the origin url. The cursor is used to point
+		 * to the current resource we are at within the origin url.*/
+		uint8_t from_url_cursor;
+
 		/** The url this message is going to.*/
 		URL* to_url;
 
@@ -119,23 +145,9 @@ class Message
 		 * message has reached destination.*/
 		URL* from_url;
 
-		/** The type this message is of. Implements a crude form of
-		 * reflection.*/
-		enum TYPE { REQUEST, RESPONSE, UNKNOWN } object_type;
-
 		/** The Content-type of the message's body. Defined as an attribute
 		 * field because is it very often needed.*/
 		const char* content_type;
-
-		/**The type of dispatching this message uses. Absolute messages
-		 * always transit trough the root resource while relative messages
-		 * are routed directly to their destination.*/
-		enum dispatching { ABSOLUTE, RELATIVE, UNDETERMINED } dispatching;
-
-#if MESSAGE_AGE
-		/**The uptime at which the message was created.*/
-		uptime_t age;
-#endif
 
 	public:
 
@@ -145,6 +157,24 @@ class Message
 		/// Class destructor.
 		virtual ~Message();
 
+		/** @return the uptime at which the message was created. */
+		inline const uptime_t get_age(void) const { return _age; }
+
+		/** @return the destination URL.*/
+		inline URL* get_to_url(void) const { return to_url; }
+
+		/** @return the source URL.*/
+		inline URL* get_from_url(void) const { return from_url; }
+
+		/** @return the type of the message. */
+		inline Message::TYPE get_type(void) const { return _type; }
+
+		/** @return the type of dispatching for this message. */
+		inline DISPATCHING_TYPE get_dispatching_type(void) const { return _dispatching_type; }
+
+		/** @return the type of dispatching for this message. */
+		inline void set_dispatching_type(DISPATCHING_TYPE type) { _dispatching_type = type; }
+
 		/// Prints the contents of the message to the output.
 		/**
 		 * Prints the contents of the message to the output. Sub-classes of Message
@@ -152,7 +182,7 @@ class Message
 		 * OUTPUT_WARNINGS or OUTPUT_ERRORS are not defined, this method should be
 		 * optimized away by the compiler.
 		 * */
-		virtual void print();
+		virtual void print() const;
 
 		/// Serialize the message to a buffer.
 		/**
@@ -167,7 +197,7 @@ class Message
 		 * @return if write is true, the number of bytes written to the buffer, if
 		 * 		write is false, the length of the serialized message.
 		 * */
-		virtual size_t serialize( char* buffer, bool write);
+		virtual size_t serialize( char* buffer, bool write) const;
 
 		/// Parse the content of a buffer with a known size into a message.
 		/**
@@ -215,7 +245,7 @@ class Message
 		 * Returns the number of resources left to a Message's destination.
 		 * @return the number of resources.
 		 */
-		uint8_t to_destination(void);
+		uint8_t to_destination(void) const;
 
 		/// Increments the to_url cursor to the next resource.
 		void next(void);
@@ -228,9 +258,12 @@ class Message
 		 *  cursor is the resource name the framework is routing the message
 		 *  to next.
 		 *  @return name of the resource pointed by the destination url cursor.*/
-		inline const char* current(void) { return to_url->resources[to_url_cursor];	}
+		inline const char* current(void) const { return (*(to_url->get_resources()))[to_url_cursor];	}
 
 	protected:
+
+		/** @param type the type of the message. */
+		inline void set_type(Message::TYPE type) { _type = type; }
 
 		/// Parses a line from the message header.
 		/**

@@ -39,24 +39,24 @@ class Resource
 	private:
 
 		///The children of this resource. NULL if there are no children.
-		Dictionary< Resource* >* children;
+		Dictionary< Resource* >* _children;
 
 		/**
 		 * This resource's sleep clock. Used to tell the next uptime the run()
 		 * method will be called. This attribute is declared volatile because it
 		 * may be modified asynchronously.
 		 * */
-		volatile uptime_t own_sleep_clock;
+		volatile uptime_t _own_sleep_clock;
 
 		/** This resource's children sleep clock. This clock tells the next
 		 * uptime this a child will need to be run hence, it is always set
 		 * to the lowest sleep clock of all the children. This attribute is
 		 * declared volative because it may be modified asynchronously.
 		 * */
-		volatile uptime_t children_sleep_clock;
+		volatile uptime_t _children_sleep_clock;
 
 		///This resource's parent. NULL if the resource has not parent.
-		Resource* parent;
+		Resource* _parent;
 
 		/**
 		 * Since Processing needs access to attributes that are normally private
@@ -68,7 +68,7 @@ class Resource
 		 * The index of the child to visit the next time processing visits
 		 * this resource.
 		 * */
-		uint8_t child_to_visit;
+		uint8_t _child_to_visit;
 
 	public:
 
@@ -127,7 +127,7 @@ class Resource
 		 * This method is meant to be overridden in order to specialize this class.
 		 * @see own_sleep_clock.
 		 * */
-		virtual void run( void );
+		virtual void run(void);
 
 		/// Get the sleep timer of this resource.
 		/**
@@ -137,13 +137,13 @@ class Resource
 		 * @see Processing::start()
 		 * @return children_sleep_clock or own_sleep_clock, whichever is less.
 		 * */
-		uptime_t get_sleep_clock( void );
+		uptime_t get_sleep_clock(void);
 
 		/// Gets the name of child resource.
 		/** @param resource the child resource we want the name of.
 		 * @return the name of the child resource. NULL if the resource was not found.
 		 */
-        const char* get_name(Resource* resource);
+        const char* get_name(const Resource* resource);
 
         /// Process a request message.
         /**
@@ -157,7 +157,7 @@ class Resource
          * @return the status_code produced while processing the request.
          * @todo make the request object const so it will not be deleted.
          */
-        virtual Response::status_code process( Request* request, Response* response );
+        virtual Response::status_code process(const Request* request, Response* response);
 
         /// Process a response message.
         /**
@@ -166,7 +166,7 @@ class Resource
          * @param response the response to process.
          * @return the status_code produced while processing the response.
          */
-        virtual Response::status_code process( Response* response );
+        virtual Response::status_code process(const Response* response);
 
 #if HTTP_GET
         Response* http_get(Request* request);
@@ -178,17 +178,7 @@ class Resource
 		Response* http_trace(Request* request);
 #endif
 
-		/// Schedule a timer to a certain time
-		/**
-		 * And propagate that timer up the resource tree.
-		 * This method may be called by an interrupt.
-		 * @todo something is fucked up with this method...
-		 * @param timer the timer to update.
-		 * @param time the time to add to the timer.
-		 * */
-		void schedule(volatile uptime_t* timer, uptime_t time );
-
-		/// Schedules the own_sleep_clock.
+		/// Schedules the resource to run.
 		/**
 		 * @param time the interval for which the resource should sleep.
 		 * */
@@ -198,7 +188,7 @@ class Resource
         /**
          *  @param message the message to print.
          * */
-        void print_transaction(Message* message);
+        void print_transaction(const Message* message);
 
 	private:
 
@@ -209,7 +199,17 @@ class Resource
          * @return the next child to visit; NULL if there is none.
          * @see Processing::step()
          * */
-        Resource* get_next_child_to_visit();
+        Resource* _get_next_child_to_visit();
+
+		/// Schedule a timer to a certain time
+		/**
+		 * And propagate that timer up the resource tree.
+		 * This method may be called by an interrupt.
+		 * @todo something is fucked up with this method...
+		 * @param timer the timer to update.
+		 * @param time the time to add to the timer.
+		 * */
+		void _schedule(volatile uptime_t* timer, uptime_t time);
 };
 
 #endif /* RESOURCE_H_ */

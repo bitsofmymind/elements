@@ -73,7 +73,7 @@ void Blinker::run(void)
 /** Set the content of the web page as a program memory string. */
 static const char content_P[] PROGMEM = CONTENT;
 
-File* Blinker::http_get( void )
+File* Blinker::http_get(void)
 {
 	// Create a program space file for the web page's content.
 	File* f = new PGMSpaceFile(content_P, CONTENT_SIZE);
@@ -113,7 +113,7 @@ File* Blinker::http_get( void )
 	return t;
 }
 
-Response::status_code Blinker::process(Request* request, Response* response)
+Response::status_code Blinker::process(const Request* request, Response* response)
 {
 	if(request->is_method(Request::POST)) // If this is a post request.
 	{

@@ -124,12 +124,17 @@ class Response: public Message
 		//static const char VARY[];
 		//static const char WWW_AUTHENTICATE[];
 
+	private:
+
 		///The status code of this response.
-		status_code response_code_int;
+		status_code _response_code_int;
+
 		///The request that triggered this response.
 		/**The request is kept for many reasons but mainly for the framework
 		 * to know which request triggered what response.*/
-		Request* original_request;
+		Request* _original_request;
+
+	public:
 
 		///Class constructor.
 		/**
@@ -137,10 +142,29 @@ class Response: public Message
 		 * @param _orginial_request the request that triggered this response; NULL
 		 * 	if there is none.
 		 * */
-		Response( const status_code response_code,	Request* request );
+		Response(const status_code code, Request* request);
 
 		///Class destructor.
 		~Response();
+
+		/** @param url the destination URL.*/
+		inline void set_to_url(URL* url) { to_url = url; }
+
+		/** @param url the source URL.*/
+		inline void set_from_url(URL* url) { from_url = url; }
+
+		/** @return the response status code. */
+		inline status_code get_status_code() const { return _response_code_int; }
+
+		/** @param code the response status code. */
+		inline void set_status_code(status_code code) { _response_code_int = code; }
+
+		/** @return the original request. */
+		inline const Request* get_request(void) const { return _original_request; }
+
+		/** @param request the original request. */
+		void set_request(Request* request);
+
 
 		/// Prints the content of a Response to the output.
 		virtual void print();
@@ -156,7 +180,7 @@ class Response: public Message
 		 * @return if write is true, the number of bytes written to the buffer, if
 		 * 		write is false, the length of the serialized response.
 		 * */
-		virtual size_t serialize(char* buffer, bool write);
+		virtual size_t serialize(char* buffer, bool write) const;
 
 	protected:
 

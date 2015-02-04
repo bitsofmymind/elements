@@ -49,7 +49,7 @@ class Authority: public Resource
 		/** The queue the authority uses to buffer its messages.
 		 * Defined inline so the cost of memory allocation is saved.
 		 * */
-		Queue<Message*> message_queue;
+		Queue<const Message*> _message_queue;
 
 	public:
 
@@ -76,13 +76,13 @@ class Authority: public Resource
 		 * Authority overrides this method to intercept messages and queue them instead
 		 * of processing them like a Resource would do.
 		 * */
-		virtual Response::status_code process( Request* request, Response* response );
+		virtual Response::status_code process(const Request* request, Response* response);
 
 		/**
 		 * Authority overrides this method to intercept messages and queue them instead
 		 * of processing them a Resource would do.
 		 * */
-		virtual Response::status_code process( Response* response );
+		virtual Response::status_code process(const Response* response);
 
 		/**
 		 * Authority overrides this method so what when it gets ran by processing,
