@@ -1,4 +1,4 @@
-/* blink.h - Implements a resource for blinking leds
+/* blink.h - Header file for the Blinker and BusyBlinker classes.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

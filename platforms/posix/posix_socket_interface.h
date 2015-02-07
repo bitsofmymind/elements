@@ -1,4 +1,4 @@
-/* posix_socket_interface.h - A resource that interfaces with a POSIX socket.
+/* posix_socket_interface.h - Header file for the PosixSocketInterface class.
  * Copyright (C) 2014 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

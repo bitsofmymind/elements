@@ -1,4 +1,4 @@
-/* fat_file.cpp - Implements a file to interface with FAT file systems
+/* fat_file.cpp -  Source file for the FATFile class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

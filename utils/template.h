@@ -1,4 +1,4 @@
-/* template.h - Implements a simple templating file type.
+/* template.h - Header file for the Template class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

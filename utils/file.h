@@ -1,5 +1,5 @@
 
-/* file.h - Implements an abstract file type
+/* file.h - Header file for the abstract File class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

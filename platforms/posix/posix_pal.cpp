@@ -1,4 +1,4 @@
-/* posix_pal.cpp - Defines the platform abstraction layer for a POSIX platform.
+/* posix_pal.cpp - Platform abstraction layer function source for a POSIX platform.
  * Copyright (C) 2014 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

@@ -1,4 +1,4 @@
-/* hello_world.cpp - a basic hello_world resource.
+/* hello_world.cpp - Source file for the HelloWorld resourse.
  * Copyright (C) 2014 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

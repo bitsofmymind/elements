@@ -1,4 +1,4 @@
-/* utils.cpp - Implements a few basic data structures
+/* utils.cpp - Source file for the framework's basic data structures.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

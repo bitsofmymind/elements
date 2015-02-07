@@ -1,4 +1,4 @@
-/* hello_world.h - a basic hello_world resource.
+/* hello_world.h - Header file for the HelloWorld resource.
  * Copyright (C) 2014 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

@@ -1,4 +1,4 @@
-/* eeprom_24LCxx.h - Implements a resource for interfacing with a 24_LCxx eeprom
+/* eeprom_24LCxx.h - Implements a resource for interfacing with a 24_LCxx eeprom.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

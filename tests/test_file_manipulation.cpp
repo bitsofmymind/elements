@@ -1,4 +1,4 @@
-/* test_file_manipulation.cpp - File manipulation unit tests.
+/* test_file_manipulation.cpp - Source file for the File manipulation unit tests.
  * Copyright (C) 2015 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

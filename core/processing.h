@@ -1,26 +1,25 @@
-// SVN FILE: $Id: $
-/**
- * @lastChangedBy           $lastChangedBy: Mercier $
- * @revision                $Revision: 397 $
- * @copyright    			GNU General Public License
- * 		This program is free software: you can redistribute it and/or modify
- * 		it under the terms of the GNU General Public License as published by
- * 		the Free Software Foundation, either version 3 of the License, or
- * 		(at your option) any later version.
- * 		This program is distributed in the hope that it will be useful,
- * 		but WITHOUT ANY WARRANTY; without even the implied warranty of
- *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * 		GNU General Public License for more details.
- * 		You should have received a copy of the GNU General Public License
- * 		along with this program. If not, see <http://www.gnu.org/licenses/>.
+/* processing.h - Header file for the Processing class.
+ * Copyright (C) 2015 Antoine Mercier-Linteau
  *
- * Header file for the Processing class.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef PROCESSING_H_
 #define PROCESSING_H_
 
 //INCLUDES
+
 #include <utils/utils.h>
 #include <stdlib.h>
 #include "message.h"
@@ -28,7 +27,7 @@
 #include "request.h"
 #include "resource.h"
 #if PROCESSING_AS_AUTHORITY
-#include "authority.h"
+	#include "authority.h"
 #endif
 
 ///Implements a Processing resource.

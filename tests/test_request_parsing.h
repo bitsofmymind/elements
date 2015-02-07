@@ -1,4 +1,4 @@
-/* test_request_parsing.h - Request parsing unit tests.
+/* test_request_parsing.h - Header file for the Request parsing unit tests.
  * Copyright (C) 2015 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

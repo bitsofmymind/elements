@@ -1,4 +1,4 @@
-/* memfile.cpp - Implements a file whose data is stored in RAM.
+/* memfile.cpp - Source file for the MemFile class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

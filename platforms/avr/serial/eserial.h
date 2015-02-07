@@ -1,4 +1,4 @@
-/* eserial.h - Implements a resource to interface with an USART
+/* eserial.h - Header file for the ESerial class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

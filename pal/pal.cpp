@@ -1,4 +1,4 @@
-/* pal.cpp - Implements an abstract platform abstraction layer
+/* pal.cpp - Source file the platform abstraction layer.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

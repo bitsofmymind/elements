@@ -1,4 +1,4 @@
-/* template.cpp - Implements a simple template file type
+/* template.cpp - Source file for the Template class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

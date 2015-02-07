@@ -1,4 +1,4 @@
-/* pgmspace_file.cpp - Implements a file to interface with data in program space
+/* pgmspace_file.cpp - Source file for the PGMSpaceFile class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

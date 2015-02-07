@@ -1,4 +1,4 @@
-/* main.h - main file for a elements hello world demo.
+/* main.cpp - main file for a elements hello world demo.
  * Copyright (C) 2014 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

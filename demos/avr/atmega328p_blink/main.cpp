@@ -1,4 +1,4 @@
-/* main.cpp - main file for the blink demo
+/* main.cpp - main file for the blink demo.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

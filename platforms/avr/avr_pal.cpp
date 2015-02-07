@@ -1,4 +1,4 @@
-/* avr_pal.cpp - Platform abstraction layer for the AVR architecture
+/* avr_pal.cpp - Platform abstraction layer for the AVR architecture.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

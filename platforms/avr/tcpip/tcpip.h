@@ -1,4 +1,4 @@
-/* tcpip.h - Implements a resource to interface with a TCP/IP network
+/* tcpip.h - Header file for the TCPIPStack class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

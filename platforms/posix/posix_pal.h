@@ -1,4 +1,4 @@
-/* posix_pal.h - Defines the platform abstraction layer for a POSIX platform.
+/* posix_pal.h - Platform abstraction layer function headers for a POSIX platform.
  * Copyright (C) 2014 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

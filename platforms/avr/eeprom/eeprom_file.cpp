@@ -1,4 +1,4 @@
-/* eeprom_file.cpp - Implements a file for interfacing with a 24_LCxx eeprom
+/* eeprom_file.cpp - Source file for the EEPROMFile class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

@@ -1,4 +1,4 @@
-/* utils.h - Implements a few basic data structures
+/* utils.h - Header file for the framework's basic data structures.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

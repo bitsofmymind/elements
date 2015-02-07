@@ -1,4 +1,4 @@
-/* eeprom_file.h - Implements a file for interfacing with a 24_LCxx eeprom
+/* eeprom_file.h - Header file for the EEPROMFile class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

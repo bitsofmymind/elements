@@ -1,4 +1,4 @@
-/* sd_mmc.h - Implements a resource to interface with FAT on SD/MMC cards
+/* sd_mmc.h - Header file for the SDMMC class.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify

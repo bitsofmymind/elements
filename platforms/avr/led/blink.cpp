@@ -1,4 +1,4 @@
-/* blink.cpp - Implements a resource for blinking leds
+/* blink.cpp - Source file for the Blinker and BusyBlinker classes.
  * Copyright (C) 2011 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -86,7 +86,7 @@ File* Blinker::http_get(void)
 	// Create a template to fill the program space file with data.
 	Template* t = new Template(f);
 
-	if(!t) // If the template could not allocated.
+	if(!t) // If memory for the template could not be allocated.
 	{
 		delete f; // Delete the file.
 		return NULL;
