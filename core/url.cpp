@@ -156,7 +156,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 				continue; //Keep looking for other resources.
 			}
 			//If we have reached the end of the resource part.
-			else if(*str == '?' || *str == '#' || *str == ' ')
+			else if(*str == '?' || *str == '#' || *str == ' ' || *str == '\0')
 			{
 				next_part = *str; //Save the beginning character.
 				//If the previous resource did not finish with a "/".
@@ -164,14 +164,16 @@ URL::PARSING_RESULT URL::parse(char* str)
 				{
 					resources.append(start); //It has not been saved yet.
 				}
+
+				if(*str == '\0') // If we have reached a null character.
+				{
+					return VALID; // The URL ends here.
+				}
+
 				/*If the resource did finish with a "/", it has been accounted
 				 * for previously. */
 				*str++ = '\0'; //Replace the separator by a NULL character.
 				break; //Done parsing resources.
-			}
-			else if(*str == '\0') // If we have reached a null character.
-			{
-				return INVALID; // The URL is invalid.
 			}
 
 			str++;
@@ -238,7 +240,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 	// If the next part is not a fragment or the end.
 	else if(next_part != ' ' && next_part != '#' )
 	{
-		return INVALID; // The URL is invalid.
+		return VALID; // What comes next is not part of the URL.
 	}
 
 #endif
@@ -268,12 +270,12 @@ URL::PARSING_RESULT URL::parse(char* str)
 
 #endif
 
-	if(!resources.items // If there are no resources.
+	if(!resources.get_item_count() // If there are no resources.
 #if URL_AUTHORITY
 		&& !authority // If there was no authority.
 #endif
 #if URL_ARGUMENTS
-		&& !arguments->items // If there are no arguments.
+		&& !arguments->get_item_count() // If there are no arguments.
 #endif
 #if URL_FRAGMENT
 		&& !fragment // If there is no fragment.
@@ -328,8 +330,8 @@ size_t URL::serialize(char* buffer, bool write) const
 			if( write ){ strcpy(buffer, port); } // Write the port to the buffer.
 			buffer += strlen(port); // Increment the buffer past the port.
 		}
-#endif
 	}
+#endif
 
 	if(is_absolute()) // If the url is absolute.
 	{
@@ -338,7 +340,7 @@ size_t URL::serialize(char* buffer, bool write) const
 	}
 
 	// For each resource in the hierarchy.
-	for(uint8_t i = 0; i< resources.items; i++)
+	for(uint8_t i = is_absolute() ? 1: 0; i < resources.get_item_count(); i++)
 	{
 		// Adds the resource to the url.
 		if( write ){ strcpy(buffer, resources[i]); }
@@ -349,7 +351,7 @@ size_t URL::serialize(char* buffer, bool write) const
 	}
 
 #if URL_ARGUMENTS
-	if (arguments ) // If the url has arguments.
+	if (arguments) // If the url has arguments.
 	{
 		key_value_pair<const char*>* kv; // Holds the current key value pair.
 
@@ -357,7 +359,7 @@ size_t URL::serialize(char* buffer, bool write) const
 		buffer++; // Increments the buffer pas the arguments marker.
 
 		// For each argument.
-		for(uint8_t i = 0; i< arguments->items; i++)
+		for(uint8_t i = 0; i< arguments->get_item_count(); i++)
 		{
 			kv = (*arguments)[i]; // Gets the current argument.
 
@@ -376,7 +378,7 @@ size_t URL::serialize(char* buffer, bool write) const
 			buffer++; // Increments the buffer past the marker.
 		}
 
-		if(arguments->items) // If there were arguments.
+		if(arguments->get_item_count()) // If there were arguments.
 		{
 			buffer--; // An extra "&" was added by the previous loop.
 		}
@@ -422,7 +424,7 @@ void URL::print(void) const
 		DEBUG_PRINT(port);
 	}
 #endif
-	for(uint8_t i = 0; i < resources.items; i++)
+	for(uint8_t i = 0; i < resources.get_item_count(); i++)
 	{
 		DEBUG_PRINT(resources[i]);
 		DEBUG_PRINT('/');
@@ -431,12 +433,12 @@ void URL::print(void) const
 	if(arguments)
 	{
 		DEBUG_PRINT('?');
-		for(uint8_t i = 0; i < arguments->items; i++)
+		for(uint8_t i = 0; i < arguments->get_item_count(); i++)
 		{
 			DEBUG_PRINT((*arguments)[i]->key)
 			DEBUG_PRINT('=');
 			DEBUG_PRINT((*arguments)[i]->value)
-			if(i != arguments->items - 1)
+			if(i != arguments->get_item_count() - 1)
 			{
 				DEBUG_PRINT('&');
 			}
@@ -455,7 +457,7 @@ void URL::print(void) const
 bool URL::is_absolute(void) const
 {
 	 // If the first resource is a slash.
-	if((resources.items && *(resources[0]) == '\0')
+	if((resources.get_item_count() && *(resources[0]) == '\0')
 #if URL_AUTHORITY
 		|| authority
 #endif

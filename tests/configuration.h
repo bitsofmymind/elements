@@ -41,7 +41,7 @@
  * within this implementation (in the form of objects),
  * RESPONSE_DESERIALIZATION should be set to 0 in order to save on code space.
  */
-#define RESPONSE_DESERIALIZATION 0
+#define RESPONSE_DESERIALIZATION 1
 
 /// If the framework should send out serialized request.
 /**

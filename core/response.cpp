@@ -51,7 +51,7 @@ Response::~Response()
 void Response::print(void)
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
-	 * this method should be optimizes away by the compiler.*/
+	 * this method should be optimized away by the compiler.*/
 
 	DEBUG_PRINT("% Response: ");
 	DEBUG_PRINT(" HTTP/1.0");
@@ -78,9 +78,9 @@ Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 
 	if(!header) //If this is the first time we received a header line.
 	{
-		/*Allocate  a buffer for the line. Two is substracted because the
-		 * CRLF is implicit*/
-		header = (char*)ts_malloc(size - 2);
+		/*Allocate  a buffer for the line. Two is subtracted because the
+		 * CRLF is implicit but a null char needs to be added.*/
+		header = (char*)ts_malloc(size - 2 + 1);
 		if(!header) //If memory allocation failed.
 		{
 			return Message::OUT_OF_MEMORY;
@@ -88,10 +88,18 @@ Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 		header_length = size - 2; //Compute the header length.
 		memcpy(header, line , size - 2); //Copy the line to the buffer.
 
-		/*We do not really care about the HTTP version here, in fact, we
-		 * could avoid saving it entirely.*/
+		header[size - 2] = '\0'; // Terminate the header.
 
 		char* index = header; //Index for the header line.
+
+		// If the first two letters of the response header are not HT (for HTTP/1.x).
+		if(index[0] != 'H' || index[1] != 'T')
+		{
+			return HEADER_MALFORMED; // Wrong message type.
+		}
+
+		/*We do not really care about the HTTP version here, in fact, we
+		 * can avoid saving it entirely.*/
 
 		while(true) //Attempt to find the response code.
 		{
@@ -101,8 +109,9 @@ Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 				 * The response code is compressed to fit in a byte.
 				 * Save the first part of the response code.*/
 				_response_code_int = (*(++index) - 48) << 5;
+
 				//Save the second part of the response code.
-				_response_code_int += atoi(index);
+				_response_code_int += atoi(++index);
 				break; //Done with finding the response code.
 			}
 			//If we have reached the end of the header buffer.
@@ -122,12 +131,52 @@ Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 
 	//Here we would parse for headers we want to keep
 
+	/* If the To-Url is present, this means the message comes from another
+	 * resource.*/
+	else if(!strncmp(TO_URL, line, 6))
+	{
+		///todo what if a previous "To-Url" has been parsed?
+
+		line += 8; // Move past the "To-Url: ".
+
+		const char* end = strchr(line, '\r');
+		if(!end) // If the header end character was not found.
+		{
+			return HEADER_MALFORMED;
+		}
+
+		char* url = (char*)malloc(end - line + 1);
+
+		if(!url) // If no memory could be allocated.
+		{
+			return OUT_OF_MEMORY;
+		}
+
+		url[end-line] = '\0'; // Add termination to the URL string.
+
+		strncpy(url, line, end - line);
+
+		to_url = new URL();
+
+		if(!to_url) // If no memory could be allocated.
+		{
+			ts_free(url);
+			return OUT_OF_MEMORY;
+		}
+
+		if(to_url->parse(url) != URL::VALID)
+		{
+			// Do not delete the allocated url string, it is now owned by the URL.
+			return LINE_MALFORMED;
+		}
+	}
+
 	 //Calls the parent to parse other headers.
 	return Message::parse_header(line, size);
 }
 #endif
 
-size_t Response::serialize( char* buffer, bool write) const
+size_t Response::serialize(char* buffer, bool write) const
 {
 	char* start = buffer; //Save the start of the buffer.
 
@@ -179,6 +228,28 @@ size_t Response::serialize( char* buffer, bool write) const
 #endif
 
 	//Serialize other headers here.
+
+	//To-URL FIELD SERIALIZATION
+	if(to_url) // If the message came from another url.
+	{
+		if(write) { strcpy(buffer, TO_URL); }
+		buffer += 6; // Equivalent to strlen(TO_URL);
+		if(write)
+		{
+			*buffer = ':';
+			*( buffer + 1 ) = ' ';
+		}
+		buffer += 2;
+
+		buffer += to_url->serialize(buffer, write);
+
+		if(write)
+		{
+			*buffer = '\r';
+			*( buffer + 1 ) = '\n';
+		}
+		buffer += 2;
+	}
 
 	 //Calls the parent to write other headers.
 	buffer += Message::serialize(buffer, write);

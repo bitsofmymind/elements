@@ -49,7 +49,7 @@ Resource::~Resource(void)
 	if(_children) // If a children dictionary was created.
 	{
 		// For each children of this resource.
-		for(uint8_t i = 0; i < _children->items; i++)
+		for(uint8_t i = 0; i < _children->get_item_count(); i++)
 		{
 			delete (*_children)[i]->value; // Delete the children.
 		}
@@ -139,9 +139,14 @@ void Resource::dispatch(Message* message)
 					next = this; //Message will go twice trough root!
 					//Dispatching is now relative (to root).
 					message->set_dispatching_type(Message::RELATIVE);
-					/*Add a blank resource to from_url to indicate that
-					 the message went trough root (/).*/
-					message->get_from_url()->get_resources()->insert(&null_chr, 0);
+
+					// If the source url is not already absolute.
+					if(!message->get_from_url()->is_absolute())
+					{
+						/*Add a blank resource to from_url to indicate that
+						 the message went trough root (/).*/
+						message->get_from_url()->get_resources()->insert(&null_chr, 0);
+					}
 				}
 				else //This resource has a parent.
 				{
@@ -153,6 +158,7 @@ void Resource::dispatch(Message* message)
 					{
 						/*Save this resource's name to the from_url so the
 						 * message can be properly routed back to its origin.*/
+						//todo error checking.
 						message->get_from_url()->get_resources()->insert(_parent->get_name(this), 0);
 					}
 					//Useless if message is a response.
@@ -161,6 +167,7 @@ void Resource::dispatch(Message* message)
 			else if(message->to_destination()) //If message is not at destination.
 			{
 				message->next(); //Increment to the next resource in the url.
+
 				//Get that resource's name.
 				const char* name = message->current();
 
@@ -171,6 +178,12 @@ void Resource::dispatch(Message* message)
 					//If name is ".."
 					if(name[1] == '.' && name[2] == '\0' )
 					{
+						// If the message was relative.
+						if(!message->get_to_url()->is_absolute())
+						{
+							message->get_from_url()->get_resources()->insert(_parent->get_name(this), 0);
+						}
+
 						next = _parent; //It is a parent dispatch.
 					}
 					//Else if name is "." it is an in-place dispatch.
@@ -180,6 +193,12 @@ void Resource::dispatch(Message* message)
 				 * has children.*/
 				if(!next && _children)
 				{
+					// If the message was relative.
+					if(!message->get_to_url()->is_absolute())
+					{
+						message->get_from_url()->get_resources()->insert("..", 0);
+					}
+
 					//Look within the children if the next resource is there.
 					next = _children->find( name );
 				}
@@ -201,6 +220,14 @@ void Resource::dispatch(Message* message)
 			{
 				response->set_status_code(sc);
 				response->set_request((Request*)message);
+
+				// If the dispatching for the request was relative.
+				if(!response->get_from_url()->is_absolute())
+				{
+					// Indicate we passed through this resource.
+					response->get_to_url()->get_resources()->insert(".", 0);
+				}
+
 				dispatch(response); //Dispatch it.
 				return; //Done.
 			}
@@ -209,7 +236,7 @@ void Resource::dispatch(Message* message)
 	}
 }
 
-const char* Resource::get_name(const Resource* resource)
+const char* Resource::get_name(const Resource* resource) const
 {
     if(_children) //If this resource has children.
     {
@@ -251,7 +278,7 @@ int8_t Resource::add_child(const char* name, Resource* child )
 
 uint8_t Resource::get_number_of_children()
 {
-	return !_children ? 0 : _children->items;
+	return !_children ? 0 : _children->get_item_count();
 }
 
 ///Removes a child resource.
@@ -292,7 +319,7 @@ Response::status_code Resource::process(const Request* request, Response* respon
 {
 	if(!request->to_destination()) //If the message is at destination.
 	{
-		print_transaction(request); //Print it to the console.
+		//print_transaction(request); //Print it to the console.
 		//Whatever was request is not implemented.
 		return NOT_IMPLEMENTED_501;
 	}
@@ -303,7 +330,7 @@ Response::status_code Resource::process(const Response* response)
 {
 	if(!response->to_destination()) //If the message is at destination.
 	{
-		print_transaction(response); //Print it to the console.
+		//print_transaction(response); //Print it to the console.
 		//Nothing is done with the message, it will be deleted by dispatch.
 		return DONE_207; //Done with processing.
 	}
@@ -377,7 +404,7 @@ Resource* Resource::_get_next_child_to_visit(void)
 			/* An internal index of the last Resource visited is kept so all
 			 * get a chance for processing. */
 			//If we have reached the end of the children list.
-			if(_child_to_visit == _children->items)
+			if(_child_to_visit == _children->get_item_count())
 			{
 				_child_to_visit = 0; //Reset the internal counter.
 				_children_sleep_clock = MAX_UPTIME; //Reset the sleep clock.
@@ -386,7 +413,7 @@ Resource* Resource::_get_next_child_to_visit(void)
 				 * other children updated their sleep clock (through an
 				 * interrupt or another instance of Processing). Loop trough
 				 * all of them to update our children sleep clock. */
-				for(uint8_t i = 0; i < _children->items; i++)
+				for(uint8_t i = 0; i < _children->get_item_count(); i++)
 				{
 					uptime_t sleep_clock = (*_children)[i]->value->get_sleep_clock();
 					//If that child's sleep_clock is lower than ours.

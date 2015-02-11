@@ -46,15 +46,15 @@ class GenericList
 		uint8_t capacity;
 #endif
 
-	public:
-
-		/// Class destructor.
-		~GenericList();
-
 		/**
 		 * The number of items in the list.
 		 * */
 		uint8_t items;
+
+	public:
+
+		/// Class destructor.
+		~GenericList();
 
 		/**
 		 * Appends an item to the end of the list.
@@ -92,6 +92,9 @@ class GenericList
 		 *  Index operator method for retrieving items based on their indexes.
 		 * */
 		void* operator[]( uint8_t i ) const;
+
+		/** @return the number of items in the list. */
+		inline uint8_t get_item_count(void) const { return items; }
 
 	protected:
 
@@ -223,12 +226,12 @@ class GenericDictionary
 		 * */
 		key_value_pair<void*> list[CAPACITY];
 
-	public:
-
 		/**
 		 * The number of items in the dictionary.
 		 * */
 		uint8_t items;
+
+	public:
 
 		/**
 		 * Adds an entry in the dictionary.
@@ -257,13 +260,16 @@ class GenericDictionary
 		 * @param value the value to find.
 		 * @return the key of the value or NULL if the value does not exist.
 		 * */
-        const char* find_val( void* value );
+        const char* find_val( const void* value ) const;
 
         /**
          * Indexing operator method.
          * todo make the returned key_value_pair const.
          * */
 		key_value_pair<void*>* operator[](uint8_t i);
+
+		/** @return the number of items in the dictionary. */
+		inline uint8_t get_item_count(void) const { return items; }
 
 	protected:
 
@@ -316,7 +322,7 @@ template< class T> class Dictionary: public GenericDictionary
 		 * @param value the value to find.
 		 * @return the key of the value or NULL if the value does not exist.
 		 * */
-        const char* find_val( T value );
+        const char* find_val(const T value) const;
 
         /**
          * Indexing operator method.
@@ -348,9 +354,9 @@ T Dictionary< T >::find( const char* key )
 
 ///todo move to class definition.
 template< class T>
-const char* Dictionary< T >::find_val( T value )
+const char* Dictionary< T >::find_val(const T value) const
 {
-	return GenericDictionary::find_val((void*)value);
+	return GenericDictionary::find_val((const void*)value);
 }
 
 ///todo move to class definition.
@@ -430,7 +436,7 @@ class GenericLinkedList
 		/**
 		 * @return the number of items in the list.
 		 * */
-		uint8_t items(void);
+		uint8_t get_item_count(void);
 
 		/**
 		 * Adds an item to the end of the list.

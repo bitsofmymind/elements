@@ -21,7 +21,9 @@
 #include <stdlib.h>
 #include "string.h"
 #include "test_request_parsing.h"
+#include "test_response_parsing.h"
 #include "test_file_manipulation.h"
+#include "test_message_passing.h"
 
 // Platform function implementations.
 void processing_wake(){}
@@ -38,7 +40,9 @@ int main()
 	std::cout << "Starting unit tests..." << std::endl;
 
 	error |= test_request_parsing();
+	error |= test_response_parsing();
 	error |= test_file_manipulation();
+	error |= test_message_passing();
 
 	std::cout << (error ? "Failed": "Done") << std::endl;
 

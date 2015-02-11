@@ -36,7 +36,7 @@ Template::Template(File* file):
 
 Template::~Template()
 {
-	while(args.items) // For each argument in the list.
+	while(args.get_item_count()) // For each argument in the list.
 	{
 		ts_free(args.remove(0)); // Free the argument.
 	}
@@ -163,7 +163,7 @@ size_t Template::read(char* buffer, size_t length)
 			if(*buffer == '~') // If a marker has been found.
 			{
 				 // If there are still arguments left to replace.
-				if(arg_index < args.items)
+				if(arg_index < args.get_item_count())
 				{
 					current = args[arg_index]; // Set the current argument.
 					state = ARG; // Now reading an argument.

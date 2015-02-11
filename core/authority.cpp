@@ -40,9 +40,9 @@ Authority::Authority(void):
 #if RESOURCE_DESTRUCTION
 Authority::~Authority(void)
 {
-	while(_message_queue.items) // While there are message in the queue.
+	while(message_queue.get_item_count()) // While there are message in the queue.
 	{
-		delete _message_queue.dequeue(); // Delete the message.
+		delete message_queue.dequeue(); // Delete the message.
 	}
 }
 #endif
@@ -53,11 +53,11 @@ Response::status_code Authority::process(const Request* request, Response* respo
 	 * it is possible to identify if the request being dispatched had been
 	 * queued before or not. */
 	///TODO No need to peek if the process function from Resource is called instead.
-	if(request != _message_queue.peek())
+	if(request != message_queue.peek())
 	{
 		//This request was not part of the queue.
 		///@todo should check if the queue is not full.
-		_message_queue.queue(request); //Queue it.
+		message_queue.queue(request); //Queue it.
 		schedule(ASAP); //Schedule the resource to be run ASAP.
 		return RESPONSE_DELAYED_102; //Inform the framework that we are keeping the message.
 	}
@@ -83,11 +83,11 @@ Response::status_code Authority::process(const Response* response)
 	/* Since a call to dispatch will cause this method to be called, we
 	 * it is possible to identify if the response being dispatched had been
 	 * queued before or not. */
-	if(response != _message_queue.peek())
+	if(response != message_queue.peek())
 	{
 		//This response was not part of the queue.
 		///@todo should check if the queue is not full.
-		_message_queue.queue(response); //Queue it.
+		message_queue.queue(response); //Queue it.
 		schedule(ASAP); //Schedule the resource to be run ASAP.
 		return RESPONSE_DELAYED_102; //Inform the framework that we are keeping the message.
 	}
@@ -105,14 +105,14 @@ void Authority::run(void)
 {
 	///@todo checking if queue is full here is useless.
 	// While there are messages in the queue.
-	while(_message_queue.items && _message_queue.items < CAPACITY)
+	while(message_queue.get_item_count() && message_queue.get_item_count() < CAPACITY)
 	{
 		/*Dispatch the first message in the queue. Use peek because the
 		 * processing functions should be able to tell where the message it
 		 * from. */
 		///TODO No need to peek if the process function from Resource is called instead.
-		dispatch((Message*)_message_queue.peek());
+		dispatch((Message*)message_queue.peek());
 		//Message has been dispatched so it can be dequeued.
-		_message_queue.dequeue();
+		message_queue.dequeue();
 	}
 }

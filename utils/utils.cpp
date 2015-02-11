@@ -279,7 +279,7 @@ void* GenericDictionary::find( const char* key )
 	return kv->value; // Return the value.
 }
 
-const char* GenericDictionary::find_val( void* value )
+const char* GenericDictionary::find_val(const void* value) const
 {
     for(uint8_t i = 0; i < items; i++) // For each entry.
     {
@@ -337,7 +337,7 @@ GenericLinkedList::GenericLinkedList():
 	start(NULL)
 {}
 
-uint8_t GenericLinkedList::items( void )
+uint8_t GenericLinkedList::get_item_count( void )
 {
 	uint8_t items = 0;
 	entry* current = start;

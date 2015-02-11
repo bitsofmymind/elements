@@ -41,12 +41,12 @@
  */
 class Authority: public Resource
 {
-	private:
+	protected:
 
 		/** The queue the authority uses to buffer its messages.
 		 * Defined inline so the cost of memory allocation is saved.
 		 * */
-		Queue<const Message*> _message_queue;
+		Queue<const Message*> message_queue;
 
 	public:
 

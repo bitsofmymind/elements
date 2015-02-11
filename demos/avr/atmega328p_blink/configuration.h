@@ -57,7 +57,7 @@
  * If urls do not need to be serialized, set URL_SERIALIZATION to 0 to save on
  * code space.
  */
-#define URL_SERIALIZATION 0
+#define URL_SERIALIZATION 1
 
 /// Whether an internal clock should be kept.
 /**

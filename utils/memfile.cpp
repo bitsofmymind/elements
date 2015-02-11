@@ -68,6 +68,8 @@ size_t MemFile::read(char* buffer, size_t length)
 
 	memcpy(buffer, data, length);
 
+	increment_cursor(length);
+
 	return length;
 }
 
@@ -83,6 +85,8 @@ size_t MemFile::write(const char* buffer, size_t length)
 	length = length < get_size() - get_cursor() ? length : get_size() - get_cursor();
 
 	memcpy(data, buffer, length);
+
+	increment_cursor(length);
 
 	return length;
 }

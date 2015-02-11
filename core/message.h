@@ -88,6 +88,8 @@ class Message
 		static const char CONTENT_TYPE[];
 		//static const char EXPIRES[];
 		//static const char LAST_MODIFIED[];
+		static const char TO_URL[];
+		static const char FROM_URL[];
 
 	private:
 
@@ -132,7 +134,7 @@ class Message
 
 		/** The cursor for the origin url. The cursor is used to point
 		 * to the current resource we are at within the origin url.*/
-		uint8_t from_url_cursor;
+		uint8_t from_url_cursor; //todo delete, not used.
 
 		/** The url this message is going to.*/
 		URL* to_url;

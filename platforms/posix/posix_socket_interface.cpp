@@ -88,7 +88,7 @@ void* PosixSocketInterface::receive( void* args )
 			Connection* current = NULL;
 
 			// For each opened connection.
-			for(int i = 0; i < interface->connections.items; i++)
+			for(int i = 0; i < interface->connections.get_item_count(); i++)
 			{
 				// If this connection is receiving new data.
 				if(c.file_descriptor == interface->connections[i]->file_descriptor)
@@ -193,7 +193,7 @@ PosixSocketInterface::~PosixSocketInterface()
 	pthread_mutex_unlock(&_receive_mutex);
 
 	// For each current connection.
-	for(int i = 0; i < connections.items; i++)
+	for(int i = 0; i < connections.get_item_count(); i++)
 	{
 		// Close the connection.
 		close(connections[i]->file_descriptor);
@@ -213,7 +213,7 @@ void PosixSocketInterface::run()
 	// This call needs to be protected by a mutex.
 	pthread_mutex_lock(&_receive_mutex);
 		// For each connection currently open.
-		for(int i = 0; i < connections.items; i++)
+		for(int i = 0; i < connections.get_item_count(); i++)
 		{
 			 // If there is a response pending for this connection.
 			if(connections[i]->response != NULL)
@@ -236,7 +236,7 @@ Response::status_code PosixSocketInterface::process(const Response* response)
 	// This call needs to be protected by a mutex.
 	pthread_mutex_lock(&_receive_mutex);
 		// For each connection currently open.
-		for(int i = 0; i < connections.items; i++)
+		for(int i = 0; i < connections.get_item_count(); i++)
 		{
 			// If the received response is for this connection.
 			if(connections[i]->request == response->get_request())

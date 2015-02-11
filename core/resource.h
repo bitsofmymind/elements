@@ -53,7 +53,7 @@ class Resource
 		 * */
 		volatile uptime_t _children_sleep_clock;
 
-		///This resource's parent. NULL if the resource has not parent.
+		///This resource's parent. NULL if the resource has no parent.
 		Resource* _parent;
 
 		/**
@@ -98,6 +98,15 @@ class Resource
 		 * */
 		uint8_t get_number_of_children(void);
 
+		/// Gets the name of child resource.
+		/** @param resource the child resource we want the name of.
+		 * @return the name of the child resource. NULL if the resource was not found.
+		 */
+        const char* get_name(const Resource* resource) const;
+
+        /** @return the parent of this resource. */
+        inline const Resource* get_parent(void) const { return _parent; };
+
 	protected:
 
 		/// Dispatches a message up or down the resource tree.
@@ -137,12 +146,6 @@ class Resource
 		 * */
 		uptime_t get_sleep_clock(void);
 
-		/// Gets the name of child resource.
-		/** @param resource the child resource we want the name of.
-		 * @return the name of the child resource. NULL if the resource was not found.
-		 */
-        const char* get_name(const Resource* resource);
-
         /// Process a request message.
         /**
          * YOU SHOULD NOT DELETE OR FREE THE REQUEST ARGUMENT!
@@ -153,7 +156,6 @@ class Resource
          * @param response the response to fill if a response should be returned (which
          * depends on the status code).
          * @return the status_code produced while processing the request.
-         * @todo make the request object const so it will not be deleted.
          */
         virtual Response::status_code process(const Request* request, Response* response);
 

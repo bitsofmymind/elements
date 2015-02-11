@@ -54,14 +54,11 @@ bool read_from_file(File* file)
 	return true;
 }
 
-/** File manipulation testing function.
-* @return if the test passed.
-*/
 bool test_file_manipulation(void)
 {
 	bool error = false;
 
-	std::cout << "*** testing file_manipulation..." << std::endl;
+	std::cout << "*** testing file manipulation..." << std::endl;
 
 	const char* const_data = "1234567891011121314151617181920";
 	char* data;

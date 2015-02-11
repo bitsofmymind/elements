@@ -90,7 +90,7 @@ size_t Message::serialize(char* buffer, bool write) const
 
 	if(body && body->get_size()) // If there is a message body.
 	{
-		//CONTENT-LENGTH FIELD SERIALIZING
+		//CONTENT-LENGTH FIELD SERIALIZATION
 		if( write ){ strcpy( buffer, CONTENT_LENGTH ); }
 		buffer += 14; //Equivalent to strlen(CONTENT_LENGTH);
 		if( write )
@@ -133,20 +133,42 @@ size_t Message::serialize(char* buffer, bool write) const
 		}
 		buffer += 2;
 	}
-	//CONTENT-TYPE FIELD SERIALIZING
-	if(content_type) //If the message has a Content-type.
+	//CONTENT-TYPE FIELD SERIALIZATION
+	if(content_type) //If the message has a Content-Type.
 	{
-		if( write ) { strcpy(buffer, CONTENT_TYPE); }
-		buffer += 12; //Equivalent to strlen(CONTENT_TYPE);
-		if( write )
+		if(write) { strcpy(buffer, CONTENT_TYPE); }
+		buffer += 12; // Equivalent to strlen(CONTENT_TYPE);
+		if(write)
 		{
 			*buffer = ':';
 			*( buffer + 1 ) = ' ';
 		}
 		buffer += 2;
-		if( write ) { strcpy(buffer, content_type); }
+		if(write) { strcpy(buffer, content_type); }
 		buffer += strlen(content_type);
-		if( write )
+		if(write)
+		{
+			*buffer = '\r';
+			*( buffer + 1 ) = '\n';
+		}
+		buffer += 2;
+	}
+
+	//FROM-URL FIELD SERIALIZATION
+	if(from_url) // If the message came from another url.
+	{
+		if(write) { strcpy(buffer, FROM_URL); }
+		buffer += 8; // Equivalent to strlen(FROM_URL);
+		if(write)
+		{
+			*buffer = ':';
+			*( buffer + 1 ) = ' ';
+		}
+		buffer += 2;
+
+		buffer += from_url->serialize(buffer, write);
+
+		if(write)
 		{
 			*buffer = '\r';
 			*( buffer + 1 ) = '\n';
@@ -312,7 +334,7 @@ Message::PARSER_RESULT Message::parse(const char* buffer)
 			{
 				break; //Exit the loop.
 			}
-			if(res == PARSING_SUCESSFUL) //If parsing the line was sucessful.
+			if(res == PARSING_SUCESSFUL) //If parsing the line was successful.
 			{
 				line_size = 0; //Reset line_size (should it not be set to 1?)
 				continue; //Continue with the rest of the buffer.
@@ -352,16 +374,23 @@ uint8_t Message::to_destination(void) const
 		return 255; //Return the maximum depth a message may be at.
 	}
 
-	/*Else return the depth. It is computed using the cursor. 1 is substracted
+	// If there are not resources in the url.
+	if(to_url->get_resources()->get_item_count() == 0)
+	{
+		// The url is assumed to be ".".
+		return 0;
+	}
+
+	/*Else return the depth. It is computed using the cursor. 1 is subtracted
 	 * from the total because a message always has at least one resource
 	 * in its url.*/
-	return to_url->get_resources()->items - to_url_cursor - 1;
+	return to_url->get_resources()->get_item_count() - to_url_cursor - 1;
 }
 
 void Message::next(void)
 {
 	//Check if there is a next resource.
-	if(to_url_cursor < to_url->get_resources()->items - 1)
+	if(to_url_cursor < to_url->get_resources()->get_item_count() - 1)
 	{
 		to_url_cursor++; //Increment the cursor.
 	}
@@ -391,7 +420,7 @@ Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 	 * size of the body, for the rest of the fields, we should proceed normally
 	 * and store them in their structure.*/
 	//If the header line is "content-length".
-	if(!strncmp(CONTENT_LENGTH, line, 14)) /// TODO Could use memcmp.
+	if(!strncmp(CONTENT_LENGTH, line, 14) && !body) /// TODO Could use strcmp.
 	{
 		/*Get the content length by converting from its textual representation.
 		 * 14 is strlen(CONTENT_LENGTH) and 2 is ": ". */
@@ -404,6 +433,48 @@ Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 		{
 			ts_free(_current_line); //Free the line buffer.
 			return OUT_OF_MEMORY; //Return the appropriate error.
+		}
+	}
+
+	/* If the From-Url is present, this means the message comes from another
+	 * resource.*/
+	else if(!strncmp(FROM_URL, line, 8))
+	{
+		///todo what if a previous "From-Url" has been parsed?
+
+		line += 10; // Move past the "From-Url: ".
+
+		const char* end = strchr(line, '\r');
+		if(!end) // If the header end character was not found.
+		{
+			return HEADER_MALFORMED;
+		}
+
+		char* url = (char*)malloc(end - line + 1);
+
+		if(!url) // If no memory could be allocated.
+		{
+			ts_free(_current_line); //Free the line buffer.
+			return OUT_OF_MEMORY;
+		}
+
+		url[end-line] = '\0'; // Add termination to the URL string.
+
+		strncpy(url, line, end - line);
+
+		from_url = new URL();
+
+		if(!from_url) // If no memory could be allocated.
+		{
+			ts_free(_current_line); //Free the line buffer.
+			ts_free(url);
+			return OUT_OF_MEMORY;
+		}
+
+		if(from_url->parse(url) != URL::VALID)
+		{
+			// Do not delete the allocated url string, it is now owned by the URL.
+			return LINE_MALFORMED;
 		}
 	}
 
@@ -491,4 +562,5 @@ const char Message::CONTENT_LENGTH[] = "Content-Length";
 const char Message::CONTENT_TYPE[] = "Content-Type";
 //const char* Message::EXPIRES = {"expires", 17 };
 //const char* Message::LAST_MODIFIED = "Last-Modified";
-//const char* Message::FROM_URL = {"from-url", 48 };
+const char Message::TO_URL[] = "To-Url";
+const char Message::FROM_URL[] = "From-Url";
