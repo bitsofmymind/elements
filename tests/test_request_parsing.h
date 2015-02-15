@@ -18,9 +18,18 @@
 #ifndef TEST_REQUEST_PARSING_H_
 #define TEST_REQUEST_PARSING_H_
 
+#include <core/message.h>
+
 /** Request parsing testing function.
 * @return if the test passed.
 */
 bool test_request_parsing(void);
+
+/** Test the parsing of data.
+ * @param message the object that will parse the data.
+ * @param data the data to parse.
+ * @param expected_result the expected result of the parsing.
+ * @return if there were errors.*/
+bool test_parsing(Message* message, const char* data, Message::PARSER_RESULT expected_result);
 
 #endif //TEST_REQUEST_PARSING_H_

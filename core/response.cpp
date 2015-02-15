@@ -133,7 +133,7 @@ Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 
 	/* If the To-Url is present, this means the message comes from another
 	 * resource.*/
-	else if(!strncmp(TO_URL, line, 6))
+	else if(!strncmp("To-Url", line, 6))
 	{
 		///todo what if a previous "To-Url" has been parsed?
 
@@ -188,7 +188,7 @@ size_t Response::serialize(char* buffer, bool write) const
 		*buffer++ = ' ';
 
 #if ITOA
-		itoa(rc, buffer, _response_code_int); //Write the response code.
+		itoa(_response_code_int, buffer, _response_code_int); //Write the response code.
 
 #else
 		sprintf(buffer, "%d", _response_code_int); //Write the response code.
@@ -207,8 +207,8 @@ size_t Response::serialize(char* buffer, bool write) const
 #if LOCATION
 	if(location) //If location header is present.
 	{
-		if( write ) { strcpy(buffer, LOCATION_STR); } //Write the header name.
-		buffer += 8; //strlen(LOCATION); //Moves the pointer after "Location".
+		if( write ) { strcpy(buffer, "Location"); } //Write the header name.
+		buffer += 8; //strlen("Location"); //Moves the pointer after "Location".
 		if( write ) //If we should write the data.
 		{
 			*buffer = ':';
@@ -231,8 +231,8 @@ size_t Response::serialize(char* buffer, bool write) const
 	//To-URL FIELD SERIALIZATION
 	if(to_url) // If the message came from another url.
 	{
-		if(write) { strcpy(buffer, TO_URL); }
-		buffer += 6; // Equivalent to strlen(TO_URL);
+		if(write) { strcpy(buffer, "To-Url"); }
+		buffer += 6; // Equivalent to strlen("To-Url");
 		if(write)
 		{
 			*buffer = ':';
@@ -361,18 +361,3 @@ void Response::set_request(Request* request)
 //const string<uint8_t> Response::GATEWAY_TIMEOUT_CODE = { "504", 3 };
 //const string<uint8_t> Response::HTTP_VERSION_NOT_SUPPORTED_REASON_PHRASE = { "HTTP Version Not Supported", 505 };
 //const string<uint8_t> Response::HTTP_VERSION_NOT_SUPPORTED_CODE = { "505", 3 };
-
-
-//Response header fields
-//static const char ACCEPT_RANGES[];
-//static const char AGE[];
-//static const char ALLOW[];
-//static const char ETAG[];
-#if LOCATION
-	const char Response::LOCATION_STR[] = "Location";
-#endif
-//static const char PROXY_AUTHENTICATE[];
-//static const char RETRY_AFTER[];
-//static const char SERVER[];
-//static const char VARY[];
-//static const char WWW_AUTHENTICATE[];

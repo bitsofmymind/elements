@@ -673,7 +673,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 
 	if(!request->to_destination()) // If the request is at destination.
 	{
-		if(request->is_method(Request::DELETE)) // If the request is a DELETE.
+		if(request->is_method("delete")) // If the request is a DELETE.
 		{
 			/* TOO DANGEROUS;
 			format_file_system();
@@ -686,7 +686,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 		}
 
 #if UPLOAD_FROM_WEB
-		if(request->is_method(Request::GET)) // If the request is a get.
+		if(request->is_method("get")) // If the request is a get.
 		{
 			get:
 			File* body = http_get(request); // Get the body of the response.
@@ -718,7 +718,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 
 		request->next(); // Move the request to get the name of the file.
 
-		if(request->is_method(Request::GET)) // If this is an HTTP GET.
+		if(request->is_method("get")) // If this is an HTTP GET.
 		{
 			// If the request is for the special "stats" resource.
 			if(!strcmp(request->current(), "stats"))

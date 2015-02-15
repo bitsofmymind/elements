@@ -28,11 +28,6 @@
 #include "resource.h"
 #include "url.h"
 
-/**When something needs to point to a null char, this one is used instead of
- * having to allocate one.
- * @todo check this seems unelegant. */
-static const char null_chr = '\0';
-
 Resource::Resource(void):
 	/* Children is initialized as needed (lazy) in order to save on memory. */
 	_children(NULL),
@@ -145,7 +140,7 @@ void Resource::dispatch(Message* message)
 					{
 						/*Add a blank resource to from_url to indicate that
 						 the message went trough root (/).*/
-						message->get_from_url()->get_resources()->insert(&null_chr, 0);
+						message->get_from_url()->get_resources()->insert("", 0);
 					}
 				}
 				else //This resource has a parent.

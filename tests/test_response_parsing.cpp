@@ -21,6 +21,7 @@
 #include <core/response.h>
 #include <utils/utils.h>
 #include <utils/memfile.h>
+#include "test_request_parsing.h"
 
 bool test_response_parsing(void)
 {
@@ -32,96 +33,50 @@ bool test_response_parsing(void)
 
 	std::cout << "   > normal response ... ";
 
-	Response* response = new Response(Response::OK_200, NULL);
-
-	const char* msg = "HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123456";
-
-	// If parsing the message failed.
-	if(response->parse(msg, strlen(msg)) != Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123456",
+		Message::PARSING_COMPLETE
+	);
 
 	//######################################################
 
 	std::cout << "   > short response header ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "HTTP/1.1 200 \r\n\r\n";
-
-	// If parsing the message failed.
-	if(response->parse(msg, strlen(msg)) != Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"HTTP/1.1 200 \r\n\r\n",
+		Message::PARSING_COMPLETE
+	);
 
 	//######################################################
 
 	std::cout << "   > partial response ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "HTTP/1.1 500 SERVER ERROR\r\nConten";
-
-	// If parsing the message indicated success.
-	if(response->parse(msg, strlen(msg)) == Message::PARSING_SUCESSFUL)
-	{
-		std::cout << "(done)" << std::endl;
-	}
-	else
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-
-	// Deleting a partially parsed message could expose memory leaks.
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"HTTP/1.1 500 SERVER ERROR\r\nConten",
+		Message::PARSING_SUCESSFUL
+	);
 
 	//######################################################
 
 	std::cout << "   > partial response header ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "HTTP/1.1 50";
-
-	// If parsing the message indicated success.
-	if(response->parse(msg, strlen(msg)) == Message::PARSING_SUCESSFUL)
-	{
-		std::cout << "(done)" << std::endl;
-	}
-	else
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-
-	// Deleting a partially parsed message could expose memory leaks.
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"HTTP/1.1 50",
+		Message::PARSING_SUCESSFUL
+	);
 
 	//######################################################
 
 	std::cout << "   > normal message in parts ... ";
 
-	response = new Response(Response::OK_200, NULL);
+	Response* response = new Response(Response::OK_200, NULL);
 
 	// Correctly formed message.
-	msg = "HTTP/1.1 400 BAD REQUEST \r\nPragma: cache\r\nFrom-Url: /client/127.0.0.1/port/6523\r\nContent-Length: 6\r\n\r\n123456";
+	const char* msg = "HTTP/1.1 400 BAD REQUEST \r\nPragma: cache\r\nFrom-Url: /client/127.0.0.1/port/6523\r\nContent-Length: 6\r\n\r\n123456";
 
 	// The length of message to parse, the 400 gets the remainder.
 	size_t lengths[] = {1, 1, 1, 1, 1, 1, 6, 1, 1, 1, 1, 2, 10, 5, 400};
@@ -167,194 +122,81 @@ bool test_response_parsing(void)
 
 	std::cout << "   > response code missing ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "HTTP/1.1 SERVER ERROR\r\n\r\n";
-
-	// If parsing the message indicated success.
-	if(response->parse(msg, strlen(msg)) == Message::HEADER_MALFORMED)
-	{
-		std::cout << "(done)" << std::endl;
-	}
-	else
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-
-	// Deleting a partially parsed message could expose memory leaks.
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"HTTP/1.1 SERVER ERROR\r\n\r\n",
+		Message::HEADER_MALFORMED
+	);
 
 	//######################################################
 
 	std::cout << "   > response code invalid ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "HTTP/1.1 5 SERVER ERROR\r\n\r\n";
-
-	// If parsing the message indicated success.
-	if(response->parse(msg, strlen(msg)) == Message::HEADER_MALFORMED)
-	{
-		std::cout << "(done)" << std::endl;
-	}
-	else
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-
-	// Deleting a partially parsed message could expose memory leaks.
-	delete response;
-
-	//######################################################
-
-	std::cout << "   > response code too long ... ";
-
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "HTTP/1.1 500000 SERVER ERROR\r\n\r\n";
-
-	// If parsing the message indicated success.
-	if(response->parse(msg, strlen(msg)) == Message::HEADER_MALFORMED)
-	{
-		std::cout << "(done)" << std::endl;
-	}
-	else
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-
-	// Deleting a partially parsed message could expose memory leaks.
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"HTTP/1.1 5 SERVER ERROR\r\n\r\n",
+		Message::HEADER_MALFORMED
+	);
 
 	//######################################################
 
 	std::cout << "   > response code int32_t overflow ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "HTTP/1.1 5000000000000 SERVER ERROR\r\n\r\n";
-
-	// If parsing the message indicated success.
-	if(response->parse(msg, strlen(msg)) == Message::HEADER_MALFORMED)
-	{
-		std::cout << "(done)" << std::endl;
-	}
-	else
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-
-	// Deleting a partially parsed message could expose memory leaks.
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"HTTP/1.1 5000000000000 SERVER ERROR\r\n\r\n",
+		Message::HEADER_MALFORMED
+	);
 
 	//######################################################
 
 	std::cout << "   > HTTP version missing ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "500 SERVER ERROR\r\n\r\n";
-
-	// If parsing the message indicated success.
-	if(response->parse(msg, strlen(msg)) == Message::HEADER_MALFORMED)
-	{
-		std::cout << "(done)" << std::endl;
-	}
-	else
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-
-	// Deleting a partially parsed message could expose memory leaks.
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"500 SERVER ERROR\r\n\r\n",
+		Message::HEADER_MALFORMED
+	);
 
 	//######################################################
 
 	std::cout << "   > Content-Length too large ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "HTTP/1.0 200 OK\r\nContent-Length: 8\r\n\r\n123456";
-
-	// If parsing the message worked.
-	if(response->parse(msg, strlen(msg)) == Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else // It was supposed to give use a PARSING_SUCCESSFUL.
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"HTTP/1.0 200 OK\r\nContent-Length: 8\r\n\r\n123456",
+		Message::PARSING_SUCESSFUL
+	);
 
 	//######################################################
 
 	std::cout << "   > Content-Length too small ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "HTTP/1.0 200 OK\r\nContent-Length: 4\r\n\r\n123456";
-
-	if(response->parse(msg, strlen(msg)) == Message::BODY_OVERFLOW)
-	{
-		std::cout << "(done)" << std::endl;
-	}
-	else // Wrong error code.
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"HTTP/1.0 200 OK\r\nContent-Length: 4\r\n\r\n123456",
+		Message::BODY_OVERFLOW
+	);
 
 	//######################################################
 
 	std::cout << "   > parsing a request ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "POST /res2/echo2/#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456";
-
-	// If parsing the message failed.
-	if(response->parse(msg, strlen(msg)) != Message::HEADER_MALFORMED)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"POST /res2/echo2/#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
+		Message::HEADER_MALFORMED
+	);
 
 	//######################################################
 
 	std::cout << "   > parsing a malicious request ... ";
 
-	response = new Response(Response::OK_200, NULL);
-
-	msg = "HTTP/1.0 /res2/echo2/#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456";
-
-	// If parsing the message failed.
-	if(response->parse(msg, strlen(msg)) != Message::HEADER_MALFORMED)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete response;
+	error |= test_parsing(
+		new Response(Response::OK_200, NULL),
+		"HTTP/1.0 /res2/echo2/#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
+		Message::HEADER_MALFORMED
+	);
 
 	std::cout << "*** tested response parsing" << std::endl;
 

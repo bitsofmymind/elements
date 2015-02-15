@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef URI_H_
-#define URI_H_
+#ifndef URL_H_
+#define URL_H_
 
 //INCLUDES
 #include <stdint.h>
@@ -148,4 +148,4 @@ class URL
 		bool is_absolute(void) const;
 };
 
-#endif /* URI_H_ */
+#endif /* URL_H_ */

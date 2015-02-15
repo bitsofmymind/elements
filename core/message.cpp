@@ -70,7 +70,7 @@ Message::~Message()
 void Message::print() const
 {
 	//Content-Length printing.
-	DEBUG_PRINT(Message::CONTENT_LENGTH);
+	DEBUG_PRINT("Content-Length");
 	DEBUG_PRINT(": ");
 	if(body) //If a message body is set.
 	{
@@ -91,8 +91,8 @@ size_t Message::serialize(char* buffer, bool write) const
 	if(body && body->get_size()) // If there is a message body.
 	{
 		//CONTENT-LENGTH FIELD SERIALIZATION
-		if( write ){ strcpy( buffer, CONTENT_LENGTH ); }
-		buffer += 14; //Equivalent to strlen(CONTENT_LENGTH);
+		if( write ){ strcpy(buffer, "Content-Length"); }
+		buffer += 14; //Equivalent to strlen("Content-Length");
 		if( write )
 		{
 			*buffer = ':';
@@ -136,8 +136,8 @@ size_t Message::serialize(char* buffer, bool write) const
 	//CONTENT-TYPE FIELD SERIALIZATION
 	if(content_type) //If the message has a Content-Type.
 	{
-		if(write) { strcpy(buffer, CONTENT_TYPE); }
-		buffer += 12; // Equivalent to strlen(CONTENT_TYPE);
+		if(write) { strcpy(buffer, "Content-Type"); }
+		buffer += 12; // Equivalent to strlen("Content-Type");
 		if(write)
 		{
 			*buffer = ':';
@@ -157,8 +157,8 @@ size_t Message::serialize(char* buffer, bool write) const
 	//FROM-URL FIELD SERIALIZATION
 	if(from_url) // If the message came from another url.
 	{
-		if(write) { strcpy(buffer, FROM_URL); }
-		buffer += 8; // Equivalent to strlen(FROM_URL);
+		if(write) { strcpy(buffer, "From-Url"); }
+		buffer += 8; // Equivalent to strlen("From-Url");
 		if(write)
 		{
 			*buffer = ':';
@@ -420,7 +420,7 @@ Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 	 * size of the body, for the rest of the fields, we should proceed normally
 	 * and store them in their structure.*/
 	//If the header line is "content-length".
-	if(!strncmp(CONTENT_LENGTH, line, 14) && !body) /// TODO Could use strcmp.
+	if(!strncmp("Content-Length", line, 14) && !body) /// TODO Could use strcmp.
 	{
 		/*Get the content length by converting from its textual representation.
 		 * 14 is strlen(CONTENT_LENGTH) and 2 is ": ". */
@@ -438,7 +438,7 @@ Message::PARSER_RESULT Message::parse_header(const char* line, size_t size)
 
 	/* If the From-Url is present, this means the message comes from another
 	 * resource.*/
-	else if(!strncmp(FROM_URL, line, 8))
+	else if(!strncmp("From-Url", line, 8))
 	{
 		///todo what if a previous "From-Url" has been parsed?
 
@@ -538,29 +538,3 @@ Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)
 	 //We are still expecting parts of the body but everything is good so far.
 	return PARSING_SUCESSFUL;
 }
-
-//MESSAGE FIELD DEFINITIONS
-
-//const char* Message::CACHE_CONTROL = {"cache-control", 1};
-//const char* Message::CONNECTION = {"connection", 2 };
-//const char* Message::DATE = {"date", 3 };
-//const char* Message::PRAGMA = {"pragma", 4 };
-//const char* Message::TRAILER = {"trailer", 5 };
-//const char* Message::TRANSFER_ENCODING = {"transfer-encoding", 6 };
-//const char* Message::UPGRADE = {"upgrade", 7 };
-//const char* Message::VIA = {"via", 8 };
-//const char* Message::WARNING = {"warning", 9 };
-
-//const char* Message::CONTENT_ENCODING = {"content-encoding", 10 };
-//const char* Message::CONTENT_LANGUAGE = {"content-language", 11 };
-/** The Content-Length header field definition.*/
-const char Message::CONTENT_LENGTH[] = "Content-Length";
-//const char* Message::CONTENT_LOCATION = {"content-location", 13 };
-//const char* Message::CONTENT_MD5 = {"content-md5", 14 };
-//const char* Message::CONTENT_RANGE = {"content-range", 15 };
-/** The Content-Type header field definition.*/
-const char Message::CONTENT_TYPE[] = "Content-Type";
-//const char* Message::EXPIRES = {"expires", 17 };
-//const char* Message::LAST_MODIFIED = "Last-Modified";
-const char Message::TO_URL[] = "To-Url";
-const char Message::FROM_URL[] = "From-Url";

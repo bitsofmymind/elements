@@ -115,7 +115,7 @@ File* Blinker::http_get(void)
 
 Response::status_code Blinker::process(const Request* request, Response* response)
 {
-	if(request->is_method(Request::POST)) // If this is a post request.
+	if(request->is_method("post")) // If this is a post request.
 	{
 		char buffer[8]; // Allocate a buffer to contain the form data.
 
@@ -145,7 +145,7 @@ Response::status_code Blinker::process(const Request* request, Response* respons
 
 		goto get; // Return the form.
 	}
-	else if(request->is_method(Request::GET)) // If this is a get request.
+	else if(request->is_method("get")) // If this is a get request.
 	{
 		get:
 		File* f = http_get(); // Create a file to contain the body of the response.
@@ -155,7 +155,7 @@ Response::status_code Blinker::process(const Request* request, Response* respons
 		}
 
 		// Set the body of the response.
-		response->set_body(f, MIME::TEXT_HTML);
+		response->set_body(f, "text/html");
 
 		return Response::OK_200; // Done.
 	}

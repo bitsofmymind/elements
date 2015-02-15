@@ -43,7 +43,7 @@ Response::status_code SDMMC::process(Request* request, Response* response)
 	 * whatever resource is requested will necessarily have to be on the file
 	 * system and accessed using a path.*/
 
-	if(!request->is_method(Request::GET)) // If this is not GET request.
+	if(!request->is_method("get")) // If this is not GET request.
 	{
 		return Response::NOT_IMPLEMENTED_501; // Method not implemented.
 	}

@@ -291,6 +291,46 @@ void run_framework(uint32_t steps, Processing* processing1, Processing* processi
 	}
 }
 
+/**
+ * Test message passing.
+ * @param tr the test resource.
+ * @param p1 first processing resource.
+ * @param p2 second processing resource (for another framework isntance)
+ * @param message the message to send.
+ * @param expected_code the expected response status code.
+ * @return if there were errors.
+ * */
+bool test_passing(TestResource* tr, Processing* p1, Processing* p2, const char* message, Response::STATUS_CODE expected_code)
+{
+	bool error = false;
+
+	if(tr->send_request(message))
+	{
+		run_framework(100, p1, p2);
+
+		if(tr->last_response &&
+			tr->last_response->get_status_code() == expected_code)
+		{
+			std::cout << "(done)" << std::endl;
+		}
+		else
+		{
+			error = true;
+			std::cout << "(error)" << std::endl;
+		}
+
+		delete tr->last_response;
+		tr->last_response = NULL;
+	}
+	else
+	{
+		error = true;
+		std::cout << "(message not valid)" << std::endl;
+	}
+
+	return error;
+}
+
 bool test_message_passing(void)
 {
 	bool error = false;
@@ -315,139 +355,61 @@ bool test_message_passing(void)
 
 	std::cout << "   > request to relative url ... ";
 
-	if(test1->send_request("PUT ./../resource1_0/../resource1_0/././resource1_1 HTTP/1.1\r\n\r\n"))
-	{
-		run_framework(100, processing1, NULL);
-
-		if(test1->last_response &&
-			test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501)
-		{
-			std::cout << "(done)" << std::endl;
-		}
-		else
-		{
-			error = true;
-			std::cout << "(error)" << std::endl;
-		}
-
-		delete test1->last_response;
-		test1->last_response = NULL;
-	}
-	else
-	{
-		error = true;
-		std::cout << "(message not valid)" << std::endl;
-	}
+	error |= test_passing(
+		test1,
+		processing1,
+		NULL,
+		"PUT ./../resource1_0/../resource1_0/././resource1_1 HTTP/1.1\r\n\r\n",
+		Response::NOT_IMPLEMENTED_501
+	);
 
 	//######################################################
 
 	std::cout << "   > request to non existing resource ... ";
 
-	if(test1->send_request("DELETE /resource1_0/resource1_1/resource1_2 HTTP/1.1\r\n\r\n"))
-	{
-		run_framework(100, processing1, NULL);
-
-		if(test1->last_response &&
-			test1->last_response->get_status_code() == Response::NOT_FOUND_404)
-		{
-			std::cout << "(done)" << std::endl;
-		}
-		else
-		{
-			error = true;
-			std::cout << "(error)" << std::endl;
-		}
-
-		delete test1->last_response;
-		test1->last_response = NULL;
-	}
-	else
-	{
-		error = true;
-		std::cout << "(message not valid)" << std::endl;
-	}
+	error |= test_passing(
+		test1,
+		processing1,
+		NULL,
+		"DELETE /resource1_0/resource1_1/resource1_2 HTTP/1.1\r\n\r\n",
+		Response::NOT_FOUND_404
+	);
 
 	//######################################################
 
 	std::cout << "   > request to wrong resource name ... ";
 
-	if(test1->send_request("DELETE /resource1_0/resource1_4 HTTP/1.1\r\n\r\n"))
-	{
-		run_framework(100, processing1, NULL);
-
-		if(test1->last_response &&
-			test1->last_response->get_status_code() == Response::NOT_FOUND_404)
-		{
-			std::cout << "(done)" << std::endl;
-		}
-		else
-		{
-			error = true;
-			std::cout << "(error)" << std::endl;
-		}
-
-		delete test1->last_response;
-		test1->last_response = NULL;
-	}
-	else
-	{
-		error = true;
-		std::cout << "(message not valid)" << std::endl;
-	}
+	error |= test_passing(
+		test1,
+		processing1,
+		NULL,
+		"DELETE /resource1_0/resource1_4 HTTP/1.1\r\n\r\n",
+		Response::NOT_FOUND_404
+	);
 
 	//######################################################
 
 	std::cout << "   > request to existing resource ... ";
 
-	if(test1->send_request("DELETE /resource1_0 HTTP/1.1\r\n\r\n"))
-	{
-		run_framework(100, processing1, NULL);
-
-		if(test1->last_response &&
-			test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501)
-		{
-			std::cout << "(done)" << std::endl;
-		}
-		else
-		{
-			error = true;
-			std::cout << "(error)" << std::endl;
-		}
-
-		delete test1->last_response;
-		test1->last_response = NULL;
-	}
-	else
-	{
-		error = true;
-		std::cout << "(message not valid)" << std::endl;
-	}
+	error |= test_passing(
+		test1,
+		processing1,
+		NULL,
+		"DELETE /resource1_0 HTTP/1.1\r\n\r\n",
+		Response::NOT_IMPLEMENTED_501
+	);
 
 	//######################################################
 
 	std::cout << "   > request to self ... ";
 
-	if(test1->send_request("POST . HTTP/1.1\r\n\r\n"))
-	{
-		if(test1->last_response &&
-			test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501)
-		{
-			std::cout << "(done)" << std::endl;
-		}
-		else
-		{
-			error = true;
-			std::cout << "(error)" << std::endl;
-		}
-
-		delete test1->last_response;
-		test1->last_response = NULL;
-	}
-	else
-	{
-		error = true;
-		std::cout << "(message not valid)" << std::endl;
-	}
+	error |= test_passing(
+		test1,
+		processing1,
+		NULL,
+		"POST . HTTP/1.1\r\n\r\n",
+		Response::NOT_IMPLEMENTED_501
+	);
 
 	// Build another resource tree to communicate with.
 	Authority* root2 = new Authority();
@@ -467,29 +429,13 @@ bool test_message_passing(void)
 
 	std::cout << "   > request through a disconnected interface ... ";
 
-	if(test1->send_request("POST /interface1/resource2_0 HTTP/1.1\r\n\r\n"))
-	{
-		run_framework(100, processing1, NULL);
-
-		if(test1->last_response &&
-			test1->last_response->get_status_code() == Response::NOT_FOUND_404)
-		{
-			std::cout << "(done)" << std::endl;
-		}
-		else
-		{
-			error = true;
-			std::cout << "(error)" << std::endl;
-		}
-
-		delete test1->last_response;
-		test1->last_response = NULL;
-	}
-	else
-	{
-		error = true;
-		std::cout << "(message not valid)" << std::endl;
-	}
+	error |= test_passing(
+		test1,
+		processing1,
+		NULL,
+		"POST /interface1/resource2_0 HTTP/1.1\r\n\r\n",
+		Response::NOT_FOUND_404
+	);
 
 	//######################################################
 
@@ -499,57 +445,25 @@ bool test_message_passing(void)
 	interface1->set_interface(interface2);
 	interface2->set_interface(interface1);
 
-	if(test1->send_request("GET /interface1/resource2_0 HTTP/1.1\r\n\r\n"))
-	{
-		run_framework(100, processing1, processing2);
-
-		if(test1->last_response &&
-			test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501)
-		{
-			std::cout << "(done)" << std::endl;
-		}
-		else
-		{
-			error = true;
-			std::cout << "(error)" << std::endl;
-		}
-
-		delete test1->last_response;
-		test1->last_response = NULL;
-	}
-	else
-	{
-		error = true;
-		std::cout << "(message not valid)" << std::endl;
-	}
+	error |= test_passing(
+		test1,
+		processing1,
+		processing2,
+		"GET /interface1/resource2_0 HTTP/1.1\r\n\r\n",
+		Response::NOT_IMPLEMENTED_501
+	);
 
 	//######################################################
 
 	std::cout << "   > request through a connected interface #2 ... ";
 
-	if(test1->send_request("GET /interface1/resource2_0/resource2_1 HTTP/1.1\r\n\r\n"))
-	{
-		run_framework(100, processing1, processing2);
-
-		if(test1->last_response &&
-			test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501)
-		{
-			std::cout << "(done)" << std::endl;
-		}
-		else
-		{
-			error = true;
-			std::cout << "(error)" << std::endl;
-		}
-
-		delete test1->last_response;
-		test1->last_response = NULL;
-	}
-	else
-	{
-		error = true;
-		std::cout << "(message not valid)" << std::endl;
-	}
+	error |= test_passing(
+		test1,
+		processing1,
+		processing2,
+		"GET /interface1/resource2_0/resource2_1 HTTP/1.1\r\n\r\n",
+		Response::NOT_IMPLEMENTED_501
+	);
 
 	//######################################################
 

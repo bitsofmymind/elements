@@ -33,7 +33,7 @@ class Response: public Message
 
 		//STATUS CODES DEFINITIONS
 
-		enum STATUS_CODES
+		enum STATUS_CODE
 		{
 			//Informational: 1xx
 
@@ -111,22 +111,10 @@ class Response: public Message
 			 HTTP_VERSION_NOT_SUPPORTED_505 = 505,
 		};
 
-		//Response header fields
-		//static const char ACCEPT_RANGES[];
-		//static const char AGE[];
-		//static const char ALLOW[];
-		//static const char ETAG[];
 #if LOCATION
-		///Location header field.
-		static const char LOCATION_STR[];
 		///The content of the location header field.
 		const char* location;
 #endif
-		//static const char PROXY_AUTHENTICATE[];
-		//static const char RETRY_AFTER[];
-		//static const char SERVER[];
-		//static const char VARY[];
-		//static const char WWW_AUTHENTICATE[];
 
 	private:
 

@@ -149,7 +149,7 @@ Response::status_code HelloWorld::process( Request* request, Response* response 
 		}
 
 		// Sets the body of the response.
-		response->set_body(t, MIME::TEXT_HTML);
+		response->set_body(t, "text/html");
 
 		return Response::OK_200; // Done.
 	}

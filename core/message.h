@@ -23,7 +23,6 @@
 #include <configuration.h>
 #include <utils/utils.h>
 #include <utils/file.h>
-#include "mime.h"
 #include "url.h"
 #include <pal/pal.h>
 
@@ -65,31 +64,6 @@ class Message
 		 * always transit trough the root resource while relative messages
 		 * are routed directly to their destination.*/
 		enum DISPATCHING_TYPE { ABSOLUTE, RELATIVE, UNDETERMINED };
-
-
-		//General header fields
-		//static const char CACHE_CONTROL[];
-		//static const char CONNECTION[];
-		//static const char DATE[];
-		//static const char PRAGMA[];
-		//static const char TRAILER[];
-		//static const char TRANSFER_ENCODING[];
-		//static const char UPGRADE[];
-		//static const char VIA[];
-		//static const char WARNING[];
-
-		//Entity header fields
-		//static const char CONTENT_ENCODING[];
-		//static const char CONTENT_LANGUAGE[];
-		static const char CONTENT_LENGTH[];
-		//static const char CONTENT_LOCATION[];
-		//static const char CONTENT_MD5[];
-		//static const char CONTENT_RANGE[];
-		static const char CONTENT_TYPE[];
-		//static const char EXPIRES[];
-		//static const char LAST_MODIFIED[];
-		static const char TO_URL[];
-		static const char FROM_URL[];
 
 	private:
 

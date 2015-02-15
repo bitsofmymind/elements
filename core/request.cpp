@@ -254,28 +254,3 @@ bool Request::is_method(const char* m) const
 {
 	return !strcmp(method, m);
 }
-
-//const string< uint8_t > Request::ACCEPT = {"accept", 19};
-//const string< uint8_t > Request::ACCEPT_CHARSET = {"accept-string< uint8_t >set", 20};
-//const string< uint8_t > Request::ACCEPT_ENCODING = {"accept-encoding", 21};
-//const string< uint8_t > Request::ACCEPT_LANGUAGE = {"accept-language", 22};
-//const string< uint8_t > Request::AUTHORIZATION = {"authorization", 23};
-//const string< uint8_t > Request::EXPECT = {"except", 24};
-//const string< uint8_t > Request::FROM = {"from", 25};
-//const string< uint8_t > Request::HOST = {"host", 26};
-//const string< uint8_t > Request::IF_MATCH = {"if-match", 27};
-//const string< uint8_t > Request::IF_MODIFIED_SINCE = {"if-modified-since", 28};
-//const string< uint8_t > Request::IF_NONE_MATCH = {"if-none-match", 29};
-//const string< uint8_t > Request::IF_UNMODIFIED_SINCE = {"if-unmodified-since", 30};
-//const string< uint8_t > Request::MAX_FORWARDS = {"max-forwards", 31};
-//const string< uint8_t > Request::PROXY_AUTHORIZATION = {"proxy-authorization", 32};
-//const string< uint8_t > Request::RANGE = {"range", 33};
-//const string< uint8_t > Request::REFERER = {"referer", 34};
-//const string< uint8_t > Request::TE = {"te", 35};
-//const string< uint8_t > Request::USER_AGENT = {"user-agent", 36};
-
-//METHODS
-// Methods are defined as static class constants to save on memory.
-const char Request::GET[] = "get";
-const char Request::POST[] = "post";
-const char Request::DELETE[] = "delete";

@@ -22,6 +22,26 @@
 #include <utils/utils.h>
 #include <utils/memfile.h>
 
+bool test_parsing(Message* message, const char* data, Message::PARSER_RESULT expected_result)
+{
+	bool error = false;
+
+	// If parsing the message failed.
+	if(message->parse(data, strlen(data)) != expected_result)
+	{
+		std::cout << "(error)" << std::endl;
+		error = true;
+	}
+	else
+	{
+		std::cout << "(done)" << std::endl;
+	}
+
+	delete message;
+
+	return error;
+}
+
 bool test_request_parsing(void)
 {
 	bool error = false;
@@ -32,158 +52,80 @@ bool test_request_parsing(void)
 
 	std::cout << "   > normal message ... ";
 
-	Request* request = new Request();
-
-	const char* msg = "GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456";
-
-	// If parsing the message failed.
-	if(request->parse(msg, strlen(msg)) != Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
+		Message::PARSING_COMPLETE
+	);
 
 	//######################################################
 
 	std::cout << "   > simplest message ... ";
 
-	request = new Request();
-
-	msg = "GET / HTTP/1.1\r\n\r\n";
-
-	// If parsing the message failed.
-	if(request->parse(msg, strlen(msg)) != Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"GET / HTTP/1.1\r\n\r\n",
+		Message::PARSING_COMPLETE
+	);
 
 	//######################################################
 
 	std::cout << "   > simple message #1 ... ";
 
-	request = new Request();
-
-	msg = "GET /resource HTTP/1.1\r\n\r\n";
-
-	// If parsing the message failed.
-	if(request->parse(msg, strlen(msg)) != Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"GET /resource HTTP/1.1\r\n\r\n",
+		Message::PARSING_COMPLETE
+	);
 
 	//######################################################
 
 	std::cout << "   > simple message with ending slash ... ";
 
-	request = new Request();
-
-	msg = "GET /resource/ HTTP/1.1\r\n\r\n";
-
-	// If parsing the message failed.
-	if(request->parse(msg, strlen(msg)) != Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"GET /resource/ HTTP/1.1\r\n\r\n",
+		Message::PARSING_COMPLETE
+	);
 
 	//######################################################
 
 	std::cout << "   > relative URL ... ";
 
-	request = new Request();
-
-	msg = "GET ./res0/../res1/..#23 HTTP/1.1\r\n\r\n";
-
-	// If parsing the message failed.
-	if(request->parse(msg, strlen(msg)) != Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"GET ./res0/../res1/..#23 HTTP/1.1\r\n\r\n",
+		Message::PARSING_COMPLETE
+	);
 
 	//######################################################
 
 	std::cout << "   > message to self ... ";
 
-	request = new Request();
-
-	msg = "GET . HTTP/1.1\r\n\r\n";
-
-	// If parsing the message failed.
-	if(request->parse(msg, strlen(msg)) != Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"GET . HTTP/1.1\r\n\r\n",
+		Message::PARSING_COMPLETE
+	);
 
 	//######################################################
 
 	std::cout << "   > partial message ... ";
 
-	request = new Request();
-
-	msg = "POST /res2/echo2/#asd HTTP/1.1\r\nConten";
-
-	// If parsing the message indicated success.
-	if(request->parse(msg, strlen(msg)) == Message::PARSING_SUCESSFUL)
-	{
-		std::cout << "(done)" << std::endl;
-	}
-	else
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-
-	// Deleting a partially parsed message could expose memory leaks.
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"POST /res2/echo2/#asd HTTP/1.1\r\nConten",
+		Message::PARSING_SUCESSFUL
+	);
 
 	//######################################################
 
 	std::cout << "   > normal message in parts ... ";
 
-	request = new Request();
+	Request* request = new Request();
 
 	// Correctly formed message.
-	msg = "DELETE http://foo.com:7888/res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nPragma: cache\r\nFrom-Url: /client/127.0.0.1/port/6523\r\nContent-Length: 6\r\n\r\n123456";
+	const char* msg = "DELETE http://foo.com:7888/res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nPragma: cache\r\nFrom-Url: /client/127.0.0.1/port/6523\r\nContent-Length: 6\r\n\r\n123456";
 
 	// The length of message to parse, the 400 gets the remainder.
 	size_t lengths[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 10, 5, 400};
@@ -229,105 +171,51 @@ bool test_request_parsing(void)
 
 	std::cout << "   > malformed url arguments ... ";
 
-	request = new Request();
-
-	msg = "GET .?v=4&#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456";
-
-	// If parsing the message worked.
-	if(request->parse(msg, strlen(msg)) == Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else // It was supposed to fail.
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"GET .?v=4&#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
+		Message::HEADER_MALFORMED
+	);
 
 	//######################################################
 
 	std::cout << "   > malformed header ... ";
 
-	request = new Request();
-
-	msg = "GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent \r\nLength: 6\r\n\r\n123456";
-
-	// If parsing the message worked.
-	if(request->parse(msg, strlen(msg)) != Message::HEADER_MALFORMED)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else // It was supposed to fail.
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent \r\nLength: 6\r\n\r\n123456",
+		Message::HEADER_MALFORMED
+	);
 
 	//######################################################
 
 	std::cout << "   > Content-Length too large ... ";
 
-	request = new Request();
-
-	msg = "GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 8\r\n\r\n123456";
-
-	// If parsing the message worked.
-	if(request->parse(msg, strlen(msg)) == Message::PARSING_COMPLETE)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else // It was supposed to give us a PARSING_SUCCESSFUL.
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 8\r\n\r\n123456",
+		Message::PARSING_SUCESSFUL
+	);
 
 	//######################################################
 
 	std::cout << "   > Content-Length too small ... ";
 
-	request = new Request();
-
-	msg = "GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 4\r\n\r\n123456";
-
-	if(request->parse(msg, strlen(msg)) == Message::BODY_OVERFLOW)
-	{
-		std::cout << "(done)" << std::endl;
-	}
-	else // Wrong error code.
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 4\r\n\r\n123456",
+		Message::BODY_OVERFLOW
+	);
 
 	//######################################################
 
 	std::cout << "   > parsing a response ... ";
 
-	request = new Request();
-
-	msg = "HTTP/1.1 200 OK\r\nContent \r\nLength: 6\r\n\r\n123456";
-
-	// If parsing the message worked.
-	if(request->parse(msg, strlen(msg)) != Message::HEADER_MALFORMED)
-	{
-		std::cout << "(error)" << std::endl;
-		error = true;
-	}
-	else // It was supposed to fail.
-	{
-		std::cout << "(done)" << std::endl;
-	}
-
-	delete request;
+	error |= test_parsing(
+		new Request(),
+		"HTTP/1.1 200 OK\r\nContent \r\nLength: 6\r\n\r\n123456",
+		Message::HEADER_MALFORMED
+	);
 
 	std::cout << "*** tested request parsing" << std::endl;
 
