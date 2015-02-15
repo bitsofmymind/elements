@@ -58,7 +58,7 @@ class TestResource: public Resource
 			last_response = response;
 
 			// Normally, we would return a DONE_207, but this gets the resource deleted.
-			return OK_200;
+			return Response::OK_200;
 		}
 
 		/**
@@ -123,7 +123,7 @@ class TestInterface: public Authority
 		uint8_t receive(char* data)
 		{
 			// Message is assumed to be response first.
-			Message* message = new Response(OK_200, NULL);
+			Message* message = new Response(Response::OK_200, NULL);
 
 			// If the message could not be parsed.
 			if(message->parse(data) != Message::PARSING_COMPLETE)
@@ -136,7 +136,7 @@ class TestInterface: public Authority
 				if(message->parse(data) != Message::PARSING_COMPLETE)
 				{
 					free(data);
-					delete(message);
+					delete message;
 					return 1; // Error.
 				}
 			}
@@ -205,7 +205,7 @@ class TestInterface: public Authority
 						if(message->get_type() == Message::REQUEST)
 						{
 							// Inform the sending resource that sending failed.
-							Response* response = new Response(BAD_REQUEST_400, (Request*)message);
+							Response* response = new Response(Response::BAD_REQUEST_400, (Request*)message);
 
 							dispatch(response);
 						}
@@ -319,7 +319,8 @@ bool test_message_passing(void)
 	{
 		run_framework(100, processing1, NULL);
 
-		if(test1->last_response && test1->last_response->get_status_code() == NOT_IMPLEMENTED_501)
+		if(test1->last_response &&
+			test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501)
 		{
 			std::cout << "(done)" << std::endl;
 		}
@@ -346,7 +347,8 @@ bool test_message_passing(void)
 	{
 		run_framework(100, processing1, NULL);
 
-		if(test1->last_response && test1->last_response->get_status_code() == NOT_FOUND_404)
+		if(test1->last_response &&
+			test1->last_response->get_status_code() == Response::NOT_FOUND_404)
 		{
 			std::cout << "(done)" << std::endl;
 		}
@@ -373,7 +375,8 @@ bool test_message_passing(void)
 	{
 		run_framework(100, processing1, NULL);
 
-		if(test1->last_response && test1->last_response->get_status_code() == NOT_FOUND_404)
+		if(test1->last_response &&
+			test1->last_response->get_status_code() == Response::NOT_FOUND_404)
 		{
 			std::cout << "(done)" << std::endl;
 		}
@@ -400,7 +403,8 @@ bool test_message_passing(void)
 	{
 		run_framework(100, processing1, NULL);
 
-		if(test1->last_response && test1->last_response->get_status_code() == NOT_IMPLEMENTED_501)
+		if(test1->last_response &&
+			test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501)
 		{
 			std::cout << "(done)" << std::endl;
 		}
@@ -425,7 +429,8 @@ bool test_message_passing(void)
 
 	if(test1->send_request("POST . HTTP/1.1\r\n\r\n"))
 	{
-		if(test1->last_response && test1->last_response->get_status_code() == NOT_IMPLEMENTED_501)
+		if(test1->last_response &&
+			test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501)
 		{
 			std::cout << "(done)" << std::endl;
 		}
@@ -466,7 +471,8 @@ bool test_message_passing(void)
 	{
 		run_framework(100, processing1, NULL);
 
-		if(test1->last_response && test1->last_response->get_status_code() == NOT_FOUND_404)
+		if(test1->last_response &&
+			test1->last_response->get_status_code() == Response::NOT_FOUND_404)
 		{
 			std::cout << "(done)" << std::endl;
 		}
@@ -497,7 +503,8 @@ bool test_message_passing(void)
 	{
 		run_framework(100, processing1, processing2);
 
-		if(test1->last_response && test1->last_response->get_status_code() == NOT_IMPLEMENTED_501)
+		if(test1->last_response &&
+			test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501)
 		{
 			std::cout << "(done)" << std::endl;
 		}
@@ -524,7 +531,8 @@ bool test_message_passing(void)
 	{
 		run_framework(100, processing1, processing2);
 
-		if(test1->last_response && test1->last_response->get_status_code() == NOT_IMPLEMENTED_501)
+		if(test1->last_response &&
+			test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501)
 		{
 			std::cout << "(done)" << std::endl;
 		}
@@ -553,9 +561,9 @@ bool test_message_passing(void)
 	run_framework(100, processing1, processing2);
 
 	if(test1->last_response &&
-		test1->last_response->get_status_code() == NOT_IMPLEMENTED_501 &&
+		test1->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501 &&
 		test2->last_response &&
-		test2->last_response->get_status_code() == NOT_IMPLEMENTED_501
+		test2->last_response->get_status_code() == Response::NOT_IMPLEMENTED_501
 	)
 	{
 		std::cout << "(done)" << std::endl;

@@ -32,7 +32,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > normal response ... ";
 
-	Response* response = new Response(OK_200, NULL);
+	Response* response = new Response(Response::OK_200, NULL);
 
 	const char* msg = "HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123456";
 
@@ -53,7 +53,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > short response header ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "HTTP/1.1 200 \r\n\r\n";
 
@@ -74,7 +74,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > partial response ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "HTTP/1.1 500 SERVER ERROR\r\nConten";
 
@@ -96,7 +96,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > partial response header ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "HTTP/1.1 50";
 
@@ -118,7 +118,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > normal message in parts ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	// Correctly formed message.
 	msg = "HTTP/1.1 400 BAD REQUEST \r\nPragma: cache\r\nFrom-Url: /client/127.0.0.1/port/6523\r\nContent-Length: 6\r\n\r\n123456";
@@ -167,7 +167,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > response code missing ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "HTTP/1.1 SERVER ERROR\r\n\r\n";
 
@@ -189,7 +189,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > response code invalid ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "HTTP/1.1 5 SERVER ERROR\r\n\r\n";
 
@@ -211,7 +211,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > response code too long ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "HTTP/1.1 500000 SERVER ERROR\r\n\r\n";
 
@@ -233,7 +233,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > response code int32_t overflow ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "HTTP/1.1 5000000000000 SERVER ERROR\r\n\r\n";
 
@@ -255,7 +255,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > HTTP version missing ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "500 SERVER ERROR\r\n\r\n";
 
@@ -277,7 +277,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > Content-Length too large ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "HTTP/1.0 200 OK\r\nContent-Length: 8\r\n\r\n123456";
 
@@ -298,7 +298,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > Content-Length too small ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "HTTP/1.0 200 OK\r\nContent-Length: 4\r\n\r\n123456";
 
@@ -318,7 +318,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > parsing a request ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "POST /res2/echo2/#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456";
 
@@ -339,7 +339,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > parsing a malicious request ... ";
 
-	response = new Response(OK_200, NULL);
+	response = new Response(Response::OK_200, NULL);
 
 	msg = "HTTP/1.0 /res2/echo2/#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456";
 

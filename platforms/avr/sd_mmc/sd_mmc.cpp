@@ -45,7 +45,7 @@ Response::status_code SDMMC::process(Request* request, Response* response)
 
 	if(!request->is_method(Request::GET)) // If this is not GET request.
 	{
-		return NOT_IMPLEMENTED_501; // Method not implemented.
+		return Response::NOT_IMPLEMENTED_501; // Method not implemented.
 	}
 
 	/** TODO when this is the destination of the request, return an OK to indicate
@@ -78,7 +78,7 @@ Response::status_code SDMMC::process(Request* request, Response* response)
 	if(!path) // If the string could not be allocated.
 	{
 		// Critical error, there is no memory left.
-		return SERVICE_UNAVAILABLE_503;
+		return Response::SERVICE_UNAVAILABLE_503;
 	}
 
 	// Build the path string.
@@ -109,7 +109,7 @@ Response::status_code SDMMC::process(Request* request, Response* response)
 
 		/* The path requested was not found because there is no accessible disk.
 		 * However, it might become available in the future. */
-		sc = NOT_FOUND_404;
+		sc = Response::NOT_FOUND_404;
 	}
 	else
 	{
@@ -122,28 +122,29 @@ Response::status_code SDMMC::process(Request* request, Response* response)
 
 		if(!file) // If a file object could not be created.
 		{
-			sc = SERVICE_UNAVAILABLE_503; // Not enough resources to process the request.
+			// Not enough resources to process the request.
+			sc = Response::SERVICE_UNAVAILABLE_503;
 			ts_free(path);
 		}
 		// If the file was successfully fetched.
 		else if(file->last_op_result == FR_OK)
 		{
 			response->set_body(file, NULL);
-			sc = OK_200;
+			sc = Response::OK_200;
 		}
 		else // There was an issue with the file.
 		{
 			// If the file or path is invalid.
 			if(file->last_op_result == FR_NO_FILE || file->last_op_result == FR_NO_PATH)
 			{
-				sc = NOT_FOUND_404;
+				sc =Response:: NOT_FOUND_404;
 			}
 			else // There was an error opening the file.
 			{
 				ERROR_PRINT_P("error opening file ");
 				ERROR_TPRINTLN((uint8_t)file->last_op_result, DEC);
 
-				sc = INTERNAL_SERVER_ERROR_500;
+				sc = Response::INTERNAL_SERVER_ERROR_500;
 			}
 
 			delete file;

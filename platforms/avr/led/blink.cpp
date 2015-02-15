@@ -151,16 +151,16 @@ Response::status_code Blinker::process(const Request* request, Response* respons
 		File* f = http_get(); // Create a file to contain the body of the response.
 		if(!f) // If the body could not be allocated.
 		{
-			return INTERNAL_SERVER_ERROR_500; // Error 500.
+			return Response::INTERNAL_SERVER_ERROR_500; // Error 500.
 		}
 
 		// Set the body of the response.
 		response->set_body(f, MIME::TEXT_HTML);
 
-		return OK_200; // Done.
+		return Response::OK_200; // Done.
 	}
 
-	return NOT_IMPLEMENTED_501; // The method was not implemented.
+	return Response::NOT_IMPLEMENTED_501; // The method was not implemented.
 }
 
 

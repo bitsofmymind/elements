@@ -669,7 +669,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 	print_transaction(request); // Print the transaction for debugging.
 
 	// Files are assumed as being non existent.
-	Response::status_code sc = NOT_FOUND_404;
+	Response::status_code sc = Response::NOT_FOUND_404;
 
 	if(!request->to_destination()) // If the request is at destination.
 	{
@@ -682,7 +682,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 #else
 			sc = OK_200;
 #endif*/
-			sc = NOT_IMPLEMENTED_501;
+			sc = Response::NOT_IMPLEMENTED_501;
 		}
 
 #if UPLOAD_FROM_WEB
@@ -697,7 +697,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 			}
 			else
 			{
-				sc = OK_200; // The request was processed.
+				sc = Response::OK_200; // The request was processed.
 			}
 
 			// Set the body of the response.
@@ -707,7 +707,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 
 		else
 		{
-			sc = NOT_IMPLEMENTED_501; // Method is not implemented.
+			sc = Response::NOT_IMPLEMENTED_501; // Method is not implemented.
 		}
 	}
 	/* If the request is one resource before its destination, a file is
@@ -727,13 +727,13 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 
 				if(!f) // If the response string could not be allocated.
 				{
-					sc = INTERNAL_SERVER_ERROR_500;
+					sc = Response::INTERNAL_SERVER_ERROR_500;
 					/* No return here, the response can be sent anyway with the
 					 * correct MIME type. */
 				}
 				else
 				{
-					sc = OK_200;
+					sc = Response::OK_200;
 				}
 
 				// Set the response body.
@@ -748,7 +748,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 
 			if(!addr) // If the file could not be found.
 			{
-				return NOT_FOUND_404; // Request failed.
+				return Response::NOT_FOUND_404; // Request failed.
 			}
 			else
 			{
@@ -757,13 +757,13 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 
 				if(!file) // IF the file could not be allocated.
 				{
-					sc = INTERNAL_SERVER_ERROR_500;
+					sc = Response::INTERNAL_SERVER_ERROR_500;
 					/* No return here, the response can be sent anyway with the
 					 * correct MIME type. */
 				}
 				else
 				{
-					sc = OK_200;
+					sc = Response::OK_200;
 				}
 
 				/* Set the response body but do not set a mime type,
@@ -780,7 +780,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 			// If the file does not exist, create it.
 			if(!addr && create_file(request->current()))
 			{
-				sc = INTERNAL_SERVER_ERROR_500;
+				sc = Response::INTERNAL_SERVER_ERROR_500;
 			}
 			else
 			{
@@ -805,7 +805,7 @@ Response::status_code EEPROM_24LCXX::process( Request* request, Response* respon
 			if(addr) // If the file exists.
 			{
 				delete_file(addr); // Delete the file.
-				sc = GONE_410; // Return a GONE status code.
+				sc = Response::GONE_410; // Return a GONE status code.
 			}
 		}
 #endif

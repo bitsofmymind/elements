@@ -59,7 +59,9 @@ Response::status_code Authority::process(const Request* request, Response* respo
 		///@todo should check if the queue is not full.
 		message_queue.queue(request); //Queue it.
 		schedule(ASAP); //Schedule the resource to be run ASAP.
-		return RESPONSE_DELAYED_102; //Inform the framework that we are keeping the message.
+
+		//Inform the framework that we are keeping the message.
+		return Response::RESPONSE_DELAYED_102;
 	}
 	//Else process it normally.
 
@@ -69,13 +71,13 @@ Response::status_code Authority::process(const Request* request, Response* respo
 		if(redirect_url) //If redirection is active.
 		{
 			response->location = redirect_url; //Write the location header.
-			return TEMPORARY_REDIRECT_307; //Redirect the client's browser.
+			return Response::TEMPORARY_REDIRECT_307; //Redirect the client's browser.
 		}
 #endif
-		return NOT_IMPLEMENTED_501; //We cannot process this request.
+		return Response::NOT_IMPLEMENTED_501; //We cannot process this request.
 	}
 
-	return PASS_308; //The message it not at destination so pass it.
+	return Response::PASS_308; //The message it not at destination so pass it.
 }
 
 Response::status_code Authority::process(const Response* response)
@@ -89,16 +91,18 @@ Response::status_code Authority::process(const Response* response)
 		///@todo should check if the queue is not full.
 		message_queue.queue(response); //Queue it.
 		schedule(ASAP); //Schedule the resource to be run ASAP.
-		return RESPONSE_DELAYED_102; //Inform the framework that we are keeping the message.
+
+		//Inform the framework that we are keeping the message.
+		return Response::RESPONSE_DELAYED_102;
 	}
 	//Else process it normally.
 
 	//If the response has arrived at destination.
 	if(!response->to_destination())
 	{
-		return NOT_IMPLEMENTED_501; //We cannot process this request.
+		return Response::NOT_IMPLEMENTED_501; //We cannot process this request.
 	}
-	return PASS_308; //The message it not at destination so pass it.
+	return Response::PASS_308; //The message it not at destination so pass it.
 }
 
 void Authority::run(void)

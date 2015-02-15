@@ -87,7 +87,7 @@ void Resource::dispatch(Message* message)
 		 * and given to the process method.
 		 * TODO: find a better way to manage this because this is inducing a lot
 		 * 	of useless allocations.*/
-		response = new Response(OK_200, NULL);
+		response = new Response(Response::OK_200, NULL);
 		if(!response) //If allocating a response failed.
 		{
 			//That message is lost since it cannot have a response.
@@ -114,20 +114,20 @@ void Resource::dispatch(Message* message)
 	 * processed in the default case. */
 	switch(sc)
 	{
-		case DONE_207: //Processing consumed the message.
+		case Response::DONE_207: //Processing consumed the message.
 			/* The message is freed by dispatch() to save on program memory,
 			 * however this introduces the added risk of the processing
 			 * methods having already freed the message.*/
 			delete message; //Free the message to avoid memory leakage.
 			//No break.
-		case RESPONSE_DELAYED_102: //The resource will answer this message later.
+		case Response::RESPONSE_DELAYED_102: //The resource will answer this message later.
 			/*TODO I should probably replace RESPONSE_DELAYED_102 with KEEP_102 to indicate the
 			* framework a resource is keeping the message within its control.*/
 			delete response; //We do not need the response, delete it.
 			break;
 		/*The resource is not processing this message, probably because it is
 		not the destination.*/
-		case PASS_308:
+		case Response::PASS_308:
 			/*If the message is going to an absolute URL, it is just sent
 			 to the root because it has to transit trough there before
 			 finding its destination.*/
@@ -211,7 +211,7 @@ void Resource::dispatch(Message* message)
 				next->dispatch(message);
 				return; //Done.
 			}
-			sc = NOT_FOUND_404; //Else no resource was found, return a 404.
+			sc = Response::NOT_FOUND_404; //Else no resource was found, return a 404.
 			//No break here
 		default:
 			/*If message was a request and a response code was not found
@@ -321,9 +321,9 @@ Response::status_code Resource::process(const Request* request, Response* respon
 	{
 		//print_transaction(request); //Print it to the console.
 		//Whatever was request is not implemented.
-		return NOT_IMPLEMENTED_501;
+		return Response::NOT_IMPLEMENTED_501;
 	}
-	return PASS_308; //Pass the message.
+	return Response::PASS_308; //Pass the message.
 }
 
 Response::status_code Resource::process(const Response* response)
@@ -332,9 +332,9 @@ Response::status_code Resource::process(const Response* response)
 	{
 		//print_transaction(response); //Print it to the console.
 		//Nothing is done with the message, it will be deleted by dispatch.
-		return DONE_207; //Done with processing.
+		return Response::DONE_207; //Done with processing.
 	}
-	return PASS_308; //Pass the message.
+	return Response::PASS_308; //Pass the message.
 }
 
 void Resource::run(void)

@@ -58,7 +58,7 @@ Response::status_code HelloWorld::process( Request* request, Response* response 
 	Response::status_code sc = Resource::process(request, response);
 
 	 // If the parent class could not handle the message.
-	if(sc == NOT_IMPLEMENTED_501)
+	if(sc == Response::NOT_IMPLEMENTED_501)
 	{
 		if(request->is_method("post")) // If this is a post request.
 		{
@@ -93,7 +93,7 @@ Response::status_code HelloWorld::process( Request* request, Response* response 
 		}
 		else if(!request->is_method("get")) // If the request is not a get.
 		{
-			return NOT_IMPLEMENTED_501;
+			return Response::NOT_IMPLEMENTED_501;
 		}
 
 		const char* html = \
@@ -117,7 +117,7 @@ Response::status_code HelloWorld::process( Request* request, Response* response 
 
 		if(!f) // If the file could not be created.
 		{
-			return INTERNAL_SERVER_ERROR_500;
+			return Response::INTERNAL_SERVER_ERROR_500;
 		}
 
 		Template* t = new Template(f); // Create a template to hold the file.
@@ -125,7 +125,7 @@ Response::status_code HelloWorld::process( Request* request, Response* response 
 		if(!t) // If the template could not be created.
 		{
 			delete f; // Delete the allocated file.
-			return INTERNAL_SERVER_ERROR_500;
+			return Response::INTERNAL_SERVER_ERROR_500;
 		}
 
 		// Create a checked string for the input tag.
@@ -151,7 +151,7 @@ Response::status_code HelloWorld::process( Request* request, Response* response 
 		// Sets the body of the response.
 		response->set_body(t, MIME::TEXT_HTML);
 
-		return OK_200; // Done.
+		return Response::OK_200; // Done.
 	}
 
 	return sc; // If the parent resource processed the request.

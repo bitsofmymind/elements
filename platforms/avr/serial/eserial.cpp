@@ -190,7 +190,7 @@ Response::status_code ESerial::process(const Response* response)
 
 	delete response; // Done with the response.
 
-	return OK_200; // Response was successfully processed.
+	return Response::OK_200; // Response was successfully processed.
 }
 
 /// Interrupt service routine for the USART.

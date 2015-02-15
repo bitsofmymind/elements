@@ -46,6 +46,11 @@ Response::~Response()
 	{
 		delete _original_request;
 	}
+	else
+	{
+		delete from_url;
+		delete to_url;
+	}
 }
 
 void Response::print(void)
@@ -101,27 +106,22 @@ Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
 		/*We do not really care about the HTTP version here, in fact, we
 		 * can avoid saving it entirely.*/
 
-		while(true) //Attempt to find the response code.
+		while(true) // Attempt to find the response code.
 		{
-			if( *index == ' ' ) //If a space is detected.
+			if( *index == ' ' ) // If a space is detected.
 			{
-				/* The response code appears at the end of the first space.
-				 * The response code is compressed to fit in a byte.
-				 * Save the first part of the response code.*/
-				_response_code_int = (*(++index) - 48) << 5;
-
 				//Save the second part of the response code.
-				_response_code_int += atoi(++index);
+				_response_code_int = atoi(++index);
+
 				break; //Done with finding the response code.
 			}
 			//If we have reached the end of the header buffer.
-			else if (index > (header + header_length))
+			else if(index > (header + header_length))
 			{
 				return HEADER_MALFORMED; //No response code was present.
 			}
 			index++;
 		}
-		Message::PARSER_RESULT res = PARSING_SUCESSFUL;
 
 		/*We do not really care about the reason phrase here, in fact, we could avoid
 		 *  saving it entirely.*/
@@ -186,13 +186,12 @@ size_t Response::serialize(char* buffer, bool write) const
 		*buffer++ = 'H'; *buffer++ = 'T'; *buffer++ = 'T'; *buffer++ = 'P'; *buffer++ = '/';
 		*buffer++ = '1'; *buffer++ = '.'; *buffer++ = '0';
 		*buffer++ = ' ';
-		//Convert the response code to a a uint16_t.
-		uint16_t rc = ( _response_code_int >> 5 ) * 100 + ( _response_code_int & 0b00011111 );
+
 #if ITOA
-		itoa(rc, buffer, 10); //Write the response code.
+		itoa(rc, buffer, _response_code_int); //Write the response code.
 
 #else
-		sprintf(buffer, "%d", rc); //Write the response code.
+		sprintf(buffer, "%d", _response_code_int); //Write the response code.
 #endif
 	}
 	else { buffer += 9; }
