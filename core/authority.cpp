@@ -40,10 +40,7 @@ Authority::Authority(void):
 #if RESOURCE_DESTRUCTION
 Authority::~Authority(void)
 {
-	while(message_queue.get_item_count()) // While there are message in the queue.
-	{
-		delete message_queue.dequeue(); // Delete the message.
-	}
+	message_queue.delete_all();
 }
 #endif
 

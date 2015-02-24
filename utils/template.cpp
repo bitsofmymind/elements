@@ -36,10 +36,7 @@ Template::Template(File* file):
 
 Template::~Template()
 {
-	while(args.get_item_count()) // For each argument in the list.
-	{
-		ts_free(args.remove(0)); // Free the argument.
-	}
+	args.free_all(); // Free all template arguments.
 
 	delete file; // The file is no longer needed.
 }
@@ -114,7 +111,7 @@ void Template::add_narg(uint32_t arg)
 	///todo simplify this method using by making the size of the argument configurable.
 
 	// Allocate a buffer to contain the string representation of the argument.
-	char* string = (char*)ts_malloc(4);
+	char* string = (char*)ts_malloc(11);
 
 	if(string) // If allocation was successful.
 	{
@@ -208,10 +205,8 @@ void Template::set_cursor(size_t val)
 	}
 }
 
-#if !READ_ONLY
 size_t Template::write(const char* buffer, size_t length)
 {
 	return 0; // A template cannot be written to.
 }
-#endif
 

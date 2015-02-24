@@ -28,7 +28,7 @@ class Request: public Message
 	protected:
 
 		///The HTTP method of this request.
-		const char* method;
+		char* method;
 
 	public:
 
@@ -44,7 +44,7 @@ class Request: public Message
 		Request();
 
 		/// Class destructor.
-		~Request();
+		virtual ~Request();
 
 		/// Prints the content of a request to the output.
 		virtual void print();
@@ -94,10 +94,9 @@ class Request: public Message
 		 * Parses the first line of an HTTP request header and if that line has
 		 * already been parsed, hand off parsing to the parent method.
 		 * @param line a pointer to a complete line.
-		 * @param size the size of the line (including CRLF).
 		 * @return the result of the parsing.
 		 */
-		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
+		virtual Message::PARSER_RESULT parse_header(char* line);
 };
 
 #endif /* REQUEST_H_ */

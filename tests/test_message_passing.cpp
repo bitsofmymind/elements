@@ -123,7 +123,7 @@ class TestInterface: public Authority
 		uint8_t receive(char* data)
 		{
 			// Message is assumed to be response first.
-			Message* message = new Response(Response::OK_200, NULL);
+			Message* message = new Response(Response::NONE_0, NULL);
 
 			// If the message could not be parsed.
 			if(message->parse(data) != Message::PARSING_COMPLETE)
@@ -184,7 +184,9 @@ class TestInterface: public Authority
 				if(!message->to_destination())
 				{
 					// It is directed to this resource.
-					dispatch((Message*)message_queue.dequeue());
+					dispatch((Message*)message_queue.peek());
+
+					message_queue.dequeue();
 
 					continue;
 				}
@@ -240,7 +242,7 @@ class TestInterface: public Authority
 			// Remove all the resources that precede the interface (except root).
 			for(uint8_t i = 1 ; i < to_interface; i++)
 			{
-				message->get_to_url()->get_resources()->remove(1);
+				free((void*)message->get_to_url()->get_resources()->remove(1));
 			}
 
 			// Remove all the / that have added up.
@@ -249,18 +251,21 @@ class TestInterface: public Authority
 			{
 				if(*((*message->get_to_url()->get_resources())[0]) == '\0')
 				{
-					message->get_to_url()->get_resources()->remove(0);
+					free((void*)message->get_to_url()->get_resources()->remove(0));
 				}
 			}
 
-			message->get_to_url()->get_resources()->insert("", 0);
+			message->get_to_url()->insert_resource("", 0, 0);
 
+			size_t message_size = message->serialize(NULL, false);
 
 			// Allocate a buffer to hold the message.
-			char* data = (char*)malloc(message->serialize(NULL, false));
+			char* data = (char*)malloc(message_size + 1);
 
 			// Serialize the message as a string.
 			message->serialize(data, true);
+
+			data[message_size] = '\0'; // Terminate the message.
 
 			_interface->receive(data); // Send the message to the other interface.
 

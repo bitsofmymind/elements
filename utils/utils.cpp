@@ -58,7 +58,7 @@ int8_t GenericList::append(void* item)
 #ifdef STATIC_LIST
 		return 1; // Error;
 #else
-		if(grow()) // Grow the list.
+		if(_grow()) // Grow the list.
 		{
 			return 1; // Error.
 		}
@@ -88,7 +88,7 @@ int8_t GenericList::insert(void* item, uint8_t position)
 #ifdef STATIC_LIST
 		return 1; // Error;
 #else
-		if(grow()) // Grow the list.
+		if(_grow()) // Grow the list.
 		{
 			return 1; // Error.
 		}
@@ -142,7 +142,7 @@ void* GenericList::remove( uint8_t index )
 	compact(); // Compact the list.
 	items--; // An item was removed.
 
-	return item; // Success/
+	return item; // Success!
 }
 
 
@@ -164,7 +164,6 @@ void GenericList::compact(void)
 
 #ifndef STATIC_LIST
 
-
 	// If there is more than 2 * CAPACITY of free space after the last item.
 	if(capacity > 2 * CAPACITY && items < capacity - (2 * CAPACITY))
 	{
@@ -173,7 +172,7 @@ void GenericList::compact(void)
 		uint8_t previous_capacity = capacity; // Save the old capacity.
 
 		capacity -= 3 * CAPACITY; // Trick grow into thinking we are growing.
-		if(grow())
+		if(_grow())
 		{
 			// Not enough memory to copy the list.
 			capacity = previous_capacity; // Restore the capacity;
@@ -186,7 +185,7 @@ void GenericList::compact(void)
 
 #ifndef STATIC_LIST
 
-int8_t GenericList::grow(void)
+int8_t GenericList::_grow(void)
 {
 	void** new_list = (void**)realloc(list, (capacity + CAPACITY) * sizeof(void**));
 
@@ -222,7 +221,7 @@ GenericDictionary::GenericDictionary(void)
 }
 
 
-int8_t GenericDictionary::add( const char* key, void* value )
+int8_t GenericDictionary::add(const char* key, void* value)
 {
 	if(items >= CAPACITY) // If there is no more space in the dictionary.
 	{
@@ -267,7 +266,7 @@ void* GenericDictionary::remove( const char* key )
 	return value; // Success
 }
 
-void* GenericDictionary::find( const char* key )
+void* GenericDictionary::find(const char* key)
 {
 	key_value_pair<void*>* kv = get(key); // Finds the entry.
 
@@ -292,7 +291,7 @@ const char* GenericDictionary::find_val(const void* value) const
     return NULL; // The value was not found.
 }
 
-key_value_pair<void*>* GenericDictionary::get( const char* key )
+key_value_pair<void*>* GenericDictionary::get(const char* key)
 {
 	for(uint8_t i = 0; i < items; i++) // For each entry in the dictionary.
 	{

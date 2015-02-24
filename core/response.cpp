@@ -61,11 +61,10 @@ void Response::print(void)
 	DEBUG_PRINT("% Response: ");
 	DEBUG_PRINT(" HTTP/1.0");
 	DEBUG_PRINT(' ');
-	uint16_t rc = ( _response_code_int >> 5 ) * 100 + ( _response_code_int & 0b00011111 );
-	DEBUG_TPRINTLN(rc, DEC);
+	DEBUG_TPRINTLN(_response_code_int, DEC);
 	if(content_type) //If there is a content type header field.
 	{
-		DEBUG_PRINT("Content-Type: ");
+		DEBUG_PRINT("content-type: ");
 		DEBUG_PRINTLN(content_type);
 	}
 	Message::print();
@@ -73,106 +72,57 @@ void Response::print(void)
 
 //Since response deserialization is not always needed, it can be deactivated.
 #if RESPONSE_DESERIALIZATION
-Message::PARSER_RESULT Response::parse_header(const char* line, size_t size)
+Message::PARSER_RESULT Response::parse_header(char* line)
 {
-	//If the end of the line is not a CRLF.
-	if(line[size - 2] != '\r' && line[size - 1] != '\n')
+	char* field_value;
+
+	if(!_response_code_int) //If this is the first time we received a header line.
 	{
-		return LINE_INCOMPLETE;
-	}
-
-	if(!header) //If this is the first time we received a header line.
-	{
-		/*Allocate  a buffer for the line. Two is subtracted because the
-		 * CRLF is implicit but a null char needs to be added.*/
-		header = (char*)ts_malloc(size - 2 + 1);
-		if(!header) //If memory allocation failed.
-		{
-			return Message::OUT_OF_MEMORY;
-		}
-		header_length = size - 2; //Compute the header length.
-		memcpy(header, line , size - 2); //Copy the line to the buffer.
-
-		header[size - 2] = '\0'; // Terminate the header.
-
-		char* index = header; //Index for the header line.
+		char* space = strchr(line, ' '); // Find the first space.
 
 		// If the first two letters of the response header are not HT (for HTTP/1.x).
-		if(index[0] != 'H' || index[1] != 'T')
+		if(line[0] != 'H' || line[1] != 'T' || !space)
 		{
 			return HEADER_MALFORMED; // Wrong message type.
 		}
 
-		/*We do not really care about the HTTP version here, in fact, we
-		 * can avoid saving it entirely.*/
+		// The HTTP version is not saved yet.
 
-		while(true) // Attempt to find the response code.
-		{
-			if( *index == ' ' ) // If a space is detected.
-			{
-				//Save the second part of the response code.
-				_response_code_int = atoi(++index);
+		// Save the response code.
+		_response_code_int = atoi(space + 1);
 
-				break; //Done with finding the response code.
-			}
-			//If we have reached the end of the header buffer.
-			else if(index > (header + header_length))
-			{
-				return HEADER_MALFORMED; //No response code was present.
-			}
-			index++;
-		}
-
-		/*We do not really care about the reason phrase here, in fact, we could avoid
-		 *  saving it entirely.*/
-
-		return PARSING_SUCESSFUL;
-	}
-
-	//Here we would parse for headers we want to keep
-
-	/* If the To-Url is present, this means the message comes from another
-	 * resource.*/
-	else if(!strncmp("To-Url", line, 6))
-	{
-		///todo what if a previous "To-Url" has been parsed?
-
-		line += 8; // Move past the "To-Url: ".
-
-		const char* end = strchr(line, '\r');
-		if(!end) // If the header end character was not found.
+		// If there was no response code or the response code overflowed.
+		if(_response_code_int == NONE_0 || _response_code_int == MAXIMUM_65535)
 		{
 			return HEADER_MALFORMED;
 		}
 
-		char* url = (char*)malloc(end - line + 1);
+		// The reason phrase is not important.
 
-		if(!url) // If no memory could be allocated.
-		{
-			return OUT_OF_MEMORY;
-		}
+		return PARSING_SUCESSFUL;
+	}
 
-		url[end-line] = '\0'; // Add termination to the URL string.
+	//Here we parse for headers we want to keep.
 
-		strncpy(url, line, end - line);
-
+	/* If the To-Url is present, this means the message comes from another
+	 * resource.*/
+	else if(!to_url && (field_value = extract_field_value("to-url", line)))
+	{
 		to_url = new URL();
 
 		if(!to_url) // If no memory could be allocated.
 		{
-			ts_free(url);
 			return OUT_OF_MEMORY;
 		}
 
-		if(to_url->parse(url) != URL::VALID)
+		if(to_url->parse(field_value) != URL::VALID)
 		{
-			// Do not delete the allocated url string, it is now owned by the URL.
 			return LINE_MALFORMED;
 		}
 	}
 
-	 //Calls the parent to parse other headers.
-	return Message::parse_header(line, size);
+	 // Calls the parent to parse other headers.
+	return Message::parse_header(line);
 }
 #endif
 
@@ -207,7 +157,7 @@ size_t Response::serialize(char* buffer, bool write) const
 #if LOCATION
 	if(location) //If location header is present.
 	{
-		if( write ) { strcpy(buffer, "Location"); } //Write the header name.
+		if( write ) { strcpy(buffer, "location"); } //Write the header name.
 		buffer += 8; //strlen("Location"); //Moves the pointer after "Location".
 		if( write ) //If we should write the data.
 		{
@@ -231,7 +181,7 @@ size_t Response::serialize(char* buffer, bool write) const
 	//To-URL FIELD SERIALIZATION
 	if(to_url) // If the message came from another url.
 	{
-		if(write) { strcpy(buffer, "To-Url"); }
+		if(write) { strcpy(buffer, "to-url"); }
 		buffer += 6; // Equivalent to strlen("To-Url");
 		if(write)
 		{

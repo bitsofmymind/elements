@@ -74,9 +74,6 @@ class Message
 		/** Pointer to the current line we are parsing.*/
 		char* _current_line; ///TODO rename current_line to line_buffer.
 
-		/** The length of the line we are currently parsing.*/
-		size_t _current_line_length; ///TODO rename current_line_buffer to line_buffer_length
-
 		/** The type this message is of. Implements a crude form of
 		 * reflection.*/
 		TYPE _type;
@@ -90,14 +87,6 @@ class Message
 #endif
 
 	protected:
-
-		/** Points to the first line of the message header (the line specific
-		 * to requests or responses).*/
-		char*  header;
-
-		/** The length of the message header first line (the line specific
-		 * to requests or responses).*/
-		size_t header_length; /// TODO useless, the size can be known with a strlen().
 
 		/** Pointer to the body of the message.*/
 		File* body;
@@ -171,7 +160,7 @@ class Message
 		 * @return if write is true, the number of bytes written to the buffer, if
 		 * 		write is false, the length of the serialized message.
 		 * */
-		virtual size_t serialize( char* buffer, bool write) const;
+		virtual size_t serialize(char* buffer, bool write) const;
 
 		/// Parse the content of a buffer with a known size into a message.
 		/**
@@ -245,11 +234,10 @@ class Message
 		 * should override this method to parse their specific header lines and hand off
 		 * generic parsing to this method. Hence, this method should not be called
 		 * directly.
-		 * @param line a pointer to a complete line.
-		 * @param size the size of the line (including CRLF).
+		 * @param line a null terminated complete line.
 		 * @return the result of the parsing.
 		 */
-		virtual Message::PARSER_RESULT parse_header(const char* line, size_t size);
+		virtual Message::PARSER_RESULT parse_header(char* line);
 
 		/// Store a message body from a buffer.
 		/**
@@ -262,6 +250,13 @@ class Message
 		 * @return the result of the parsing.
 		 */
 		Message::PARSER_RESULT store_body(const char* buffer, size_t size);
+
+		/** Extract the field value from a header.
+		 * @param name the name of the field (MUST BE LOWER CASE).
+		 * @param line the line
+		 * @return the field.
+		 * */
+		char* extract_field_value(const char* name, char* line) const;
 };
 
 #endif /* MESSAGE_H_ */

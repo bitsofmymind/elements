@@ -24,9 +24,6 @@
 
 URL::URL( )
 {
-	///todo move all the values below to the initialization list.
-	_url_str = NULL;
-	_url_length = 0;
 #if URL_PROTOCOL
 	protocol = NULL;
 #endif
@@ -47,22 +44,71 @@ URL::URL( )
 
 URL::~URL()
 {
+#if URL_PROTOCOL //If the framework is configured to parse protocols.
+	free(protocol);
+#endif
+
+#if URL_AUTHORITY //If the framework is configured to parse authorities.
+	free(authority);
+#endif
+
+#if URL_PORT //If the framework is configured to parse the port.
+	free(port);
+#endif
+
+	resources.free_all(); // Remove and free all resources.
+
 #if URL_ARGUMENTS
 	if(arguments) //If the arguments dictionary has been allocated.
 	{
+		arguments->free_all(true);
 		delete arguments; //Delete it.
 	}
 #endif
+
+#if URL_FRAGMENT //If the framework is configured to parse the fragment.
+	free(fragment);
+#endif
+
 }
 
-URL::PARSING_RESULT URL::parse(char* str)
+bool URL::append_resource(const char* name, int8_t length = -1)
 {
-	 ///todo check if we have reached the end of the URL.
+	return insert_resource(name, resources.get_item_count(), length);
+}
 
-	_url_str = str; //Save the string.
+bool URL::insert_resource(const char* name, uint8_t position, int8_t length = -1)
+{
+	// If the length of the string is not specified, get it.
+	length = length != -1 ? length: strlen(name);
 
-	//Holds the start of the part of the URL that is currently being parsed.
-	char* start = str;
+	// Allocate memory for the name (add 1 for the terminating null character).
+	char* buffer = (char*)malloc(length + 1);
+
+	if(!buffer) // If there is not enough memory.
+	{
+		return false;
+	}
+
+	memcpy(buffer, name, length); // Copy the name into the buffer.
+
+	buffer[length] = '\0'; // Terminate the string;
+
+	// If there is not enough memory to append the name to the list.
+	if(resources.insert(buffer, position) != 0)
+	{
+		free(buffer);
+		return false;
+	}
+
+	return true; // Done.
+}
+
+URL::PARSING_RESULT URL::parse(const char* str)
+{
+	// Holds the start of the part of the URL that is currently being parsed.
+	const char* start = str;
+
 #if URL_PROTOCOL //If the framework is configured to parse protocols.
 
 	//PROTOCOL PART
@@ -72,9 +118,21 @@ URL::PARSING_RESULT URL::parse(char* str)
 		 * as not to confuse the protocol with the port*/
 		if(*str == ':' && *(str + 1) == '/' && *(str + 2) == '/')
 		{
-			*str = '\0'; //Replace the separator by a NULL character.
-			protocol = start; //Set the start of the protocol part.
+			// Allocate space to hold the protocol.
+			protocol = (char*)malloc(str - start + 1);
+
+			if(!protocol) // If memory allocation failed.
+			{
+				return OUT_OF_MEMORY;
+			}
+
+			// Copy the protocol string.
+			memcpy(protocol, start, str - start);
+
+			protocol[str - start] = '\0'; // Terminate the protocol.
+
 			str += 3; //jumps the '//'
+
 			break; //Done parsing the protocol.
 		}
 		//If there is no protocol.
@@ -112,17 +170,28 @@ URL::PARSING_RESULT URL::parse(char* str)
 			}
 		}
 
-		authority = start; //Save the start.
+		// Allocate space to hold the authority.
+		authority = (char*)malloc(str - start + 1);
+
+		if(!authority) // If memory allocation failed.
+		{
+			return OUT_OF_MEMORY;
+		}
+
+		// Copy the protocol string.
+		memcpy(authority, start, str - start);
+
+		authority[str - start] = '\0'; // Terminate the string.
+
 		next_part = *str; //Save the beginning character of the next part.
-		*str++ = '\0'; //Replace the separator by a NULL character.
 
 #if URL_PORT //If the framework is configured to parse the port.
 		//PORT PART
 
 		if(next_part == ':') //If the next part starts with a : then there is a port.
 		{
-			//TODO Bug! the : is included with the port.
-			port = start = str; //Save the next part.
+			start = str; //Save the next part.
+
 			//Go to the beginning of the next part.
 			while(*str != '/' && *str != ':' && *str != '#' && *str != '?' && *str != ' ')
 			{
@@ -131,8 +200,21 @@ URL::PARSING_RESULT URL::parse(char* str)
 					return INVALID; // The URL is invalid.
 				}
 			}
+
+			// Allocate space to hold the port.
+			port = (char*)malloc(str - start + 1);
+
+			if(!port) // If memory allocation failed.
+			{
+				return OUT_OF_MEMORY;
+			}
+
+			// Copy the port string.
+			memcpy(port, start, str - start);
+
+			port[str - start] = '\0'; // Terminate the string.
+
 			next_part = *str; //Save the beginning character of the next part.
-			*str++ = '\0'; //Replace the separator by a NULL character.
 		}
 
 #endif
@@ -150,9 +232,13 @@ URL::PARSING_RESULT URL::parse(char* str)
 		{
 			if(*str == '/') //If we have found the end of a resource.
 			{
-				*str = '\0'; //Replace the separator by a NULL character.
-				resources.append(start); //Save that resource.
+				if(!append_resource(start, str - start)) // If memory allocation failed.
+				{
+					return OUT_OF_MEMORY;
+				}
+
 				start = ++str; //Move the start pointer after that resource.
+
 				continue; //Keep looking for other resources.
 			}
 			//If we have reached the end of the resource part.
@@ -160,9 +246,12 @@ URL::PARSING_RESULT URL::parse(char* str)
 			{
 				next_part = *str; //Save the beginning character.
 				//If the previous resource did not finish with a "/".
-				if( *(str - 1) != '\0' )
+				if( *(str - 1) != '/' )
 				{
-					resources.append(start); //It has not been saved yet.
+					if(!append_resource(start, str - start)) // If memory allocation failed.
+					{
+						return OUT_OF_MEMORY;
+					}
 				}
 
 				if(*str == '\0') // If we have reached a null character.
@@ -172,7 +261,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 
 				/*If the resource did finish with a "/", it has been accounted
 				 * for previously. */
-				*str++ = '\0'; //Replace the separator by a NULL character.
+
 				break; //Done parsing resources.
 			}
 
@@ -191,54 +280,90 @@ URL::PARSING_RESULT URL::parse(char* str)
 	//If the next part starts with a ? then there are arguments.
 	if(next_part == '?')
 	{
-		start = str; //Save the start of the arguments.
+		start = ++str; //Save the start of the arguments.
 		bool is_key = true; //True if we are parsing a key.
 		const char* key; //Pointer to the key.
+
 		//Initialize the arguments dictionary.
 		arguments = new Dictionary< const char* >();
+
+		if(!arguments) // If no memory could be allocated.
+		{
+			return OUT_OF_MEMORY;
+		}
+
 		while(true)
 		{
-			if(*str == '\0') // If we have reached a null character.
-			{
-				return INVALID; // The URL is invalid.
-			}
-
 			if(is_key) //If we are parsing for a key.
 			{
 				if( *str == '=' ) //If we have reached the key=value delimiter.
 				{
-					*str = '\0'; //Replace the separator by a NULL character.
 					is_key = false; //We will be parsing for a value.
 					key = start; //Save the key.
 					start = ++str; //Move the start pointer.
 					continue; //Keep going.
 				}
+				// If the end of the url or the fragment has been reached.
+				else if(*str == '\0' || *str == '#')
+				{
+					return INVALID; // A key is incomplete.
+				}
 			}
 			else //We are parsing a value.
 			{
-				if(*str == '&') //If we have reached the end of an argument.
+				//If we have reached the end of an argument or the url.
+				if(*str == '&' || *str == '#' || *str == ' ' || *str == '\0')
 				{
-					*str = '\0'; //Replace the separator by a NULL character.
 					is_key = true; //We will be parsing for a key.
-					arguments->add( key, start ); //Save the key=value pair.
+
+					// Allocate space to hold the key.
+					char* k = (char*)malloc(start - key);
+
+					// Allocate space to hold the value.
+					char* v = (char*)malloc(str - start + 1);
+
+					if(!k || !v) // If memory allocation failed.
+					{
+						if(v) // If a value was allocated.
+						{
+							free(v);
+						}
+						else if(k) // If a key was allocated.
+						{
+							free(k);
+						}
+
+						return OUT_OF_MEMORY;
+					}
+
+					// Copy the key string.
+					memcpy(k, key, start - key - 1);
+
+					// Copy the value string.
+					memcpy(v, start, str - start);
+
+					k[start - key - 1] = '\0'; // Terminate the string.
+					v[str - start] = '\0'; // Terminate the string.
+
+					arguments->add(k, v); //Save the key=value pair.
+
+					//If we have reached the end of the arguments part.
+					if(*str == '#' || *str == ' ' || *str == '\0')
+					{
+						next_part = *str; //Save the beginning character.
+						break; //Done parsing arguments.
+					}
+
 					start = ++str; //Move the start pointer.
+
 					continue; //Keep going.
 				}
-				//If we have reached the end of the arguments part.
-				else if(*str == '#' || *str == ' ')
-				{
-					arguments->add(key, start); //Save the last argument.
-					next_part = *str; //Save the beginning character.
-					*str++ = '\0'; //Replace the separator by a NULL character.
-					break; //Done parsing arguments.
-				}
-
 			}
 			str++;
 		}
 	}
 	// If the next part is not a fragment or the end.
-	else if(next_part != ' ' && next_part != '#' )
+	else if((next_part != ' ' && next_part != '#') || next_part == '\0')
 	{
 		return VALID; // What comes next is not part of the URL.
 	}
@@ -250,22 +375,30 @@ URL::PARSING_RESULT URL::parse(char* str)
 	//FRAGMENT PART
 	if(next_part == '#') //If there is a fragment part.
 	{
-		//TODO bug! the # will be saved with the fragment.
-		fragment = str; //Save the start of the fragment.
+		start = ++str; //Save the start of the fragment.
 
 		while(true)
 		{
-			if(*str++ == ' ') // If a space has been reached.
+			// If a space or the end of the string has been reached.
+			if(*str == ' ' || *str == '\0')
 			{
 				break; // The end of the fragment has been found.
 			}
-			else if(*str == '\0') // If we have reached a null character.
-			{
-				return INVALID; // The URL is invalid.
-			}
+			str++;
 		}
 
-		*(str - 1) = '\0'; //Replace the separator by a NULL character.
+		// Allocate space to hold the fragment.
+		fragment = (char*)malloc(str - start + 1);
+
+		if(!fragment) // If memory allocation failed.
+		{
+			return OUT_OF_MEMORY;
+		}
+
+		// Copy the fragment string.
+		memcpy(fragment, start, str - start);
+
+		fragment[str - start] = '\0'; // Terminate the string.
 	}
 
 #endif
@@ -287,10 +420,7 @@ URL::PARSING_RESULT URL::parse(char* str)
 		return INVALID; // Invalid URL.
 	}
 
-	///TODO the url_length is most likely useless.
-	_url_length = str - _url_str - 1; //Save the length of the url.
-
-	return VALID; //URL is valid.
+	return VALID; // URL is valid.
 }
 
 #if URL_SERIALIZATION

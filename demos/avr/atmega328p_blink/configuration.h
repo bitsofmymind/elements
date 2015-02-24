@@ -213,13 +213,6 @@
  */
 #define REVERSIBLE 1
 
-/// If the file class should be read only.
-/**
- * If writing to files is not necessary, set READ_ONLY to 1 to save on
- * code space.
- */
-#define READ_ONLY 1
-
 /// Define the HTTP location header.
 /**
  * Set LOCATION to 1 if the Location http header is needed.

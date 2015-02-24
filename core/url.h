@@ -37,37 +37,29 @@ class URL
 	public:
 
 		///The parsing result for a URL.
-		enum PARSING_RESULT { VALID, INVALID };
-
-	private:
-
-		///The string containing the URL.
-		const char* _url_str;
-
-		///The length of the string containing the URL.
-		size_t _url_length;
+		enum PARSING_RESULT { VALID = 0, INVALID, OUT_OF_MEMORY };
 
 	protected:
 
 #if URL_PROTOCOL
 		///The protocol part of the URL.
-		const char* protocol;
+		char* protocol;
 #endif
 
 #if URL_AUTHORITY
 		///The authority part of the URL.
-		const char* authority;
+		char* authority;
 #endif
 
 #if URL_PORT && URL_AUTHORITY
 		///The port part of the URL.
-		const char* port;
+		char* port;
 #endif
 
 #if URL_FRAGMENT
 		/**The fragment part of the URL. Normally, browsers don't provide this
 		 * part to the server.*/
-		const char* fragment;
+		char* fragment;
 #endif
 
 		///All the resource names contained in the URL.
@@ -109,22 +101,35 @@ class URL
 		/** @return the resource list of the URL. */
 		inline List<const char*> * get_resources(void) { return &resources; }
 
-		#if URL_ARGUMENTS
+#if URL_ARGUMENTS
 		/** @return the argument list of the URL. */
 		inline Dictionary<const char*>* get_arguments(void) const { return arguments; }
 #endif
+
+		/** Append a resource to the url by copying the name into the internal
+		 * resources list.
+		 * @param name the resource to add.
+		 * @param length the length of the name.
+		 * @return boolean if there was enough memory to complete the operation.*/
+		bool append_resource(const char* name, int8_t length);
+
+		/** Append a resource to the url by copying the name into the internal
+		 * resources list.
+		 * @param name the resource to add.
+		 * @param position the position at which the resource should be inserted.
+		 * @param length the length of the name.
+		 * @return boolean if there was enough memory to complete the operation.*/
+		bool insert_resource(const char* name, uint8_t position, int8_t length);
 
 		///Parses a URL string.
 		/**
 		 * This method will decompose an URL into its many parts:
 		 * protocol://authority:port/resource/resource/?argument=argument#fragment
 		 * If the framework is configured to ignore a part, it will not be parsed.
-		 * The parser does copy string but keeps them in place and instead isolates
-		 * them by replacing their separators with null characters.
 		 * @param str the url string.
 		 * @return the result of the parsing.
 		 * */
-		URL::PARSING_RESULT parse(char* str);
+		URL::PARSING_RESULT parse(const char* str);
 
 #if URL_SERIALIZATION
 		/// Serializes and url into a string.

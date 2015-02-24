@@ -62,9 +62,7 @@ class MemFile: public File
 
 		virtual size_t read(char* buffer, size_t length);
 
-#if !READ_ONLY
 		virtual size_t write(const char* buffer, size_t length);
-#endif
 };
 
 #endif //MEMFILE_H_

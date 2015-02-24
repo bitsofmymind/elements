@@ -189,6 +189,17 @@ bool test_request_parsing(void)
 
 	//######################################################
 
+	std::cout << "   > duplicate header ... ";
+
+	// The duplicated header should be ignored.
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/ HTTP/1.1\r\nFrom-Url: /url1\r\nFrom-Url: /url2\r\nContent-Length: 6\r\n\r\n123456",
+		Message::PARSING_COMPLETE
+	);
+
+	//######################################################
+
 	std::cout << "   > Content-Length too large ... ";
 
 	error |= test_parsing(

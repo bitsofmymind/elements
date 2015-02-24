@@ -19,6 +19,7 @@
 #define UTILS_H_
 
 #include <stdint.h>
+#include <stdlib.h>
 
 /** Defines the capacity of the list and dictionary.*/
 #define CAPACITY 5
@@ -59,7 +60,7 @@ class GenericList
 		/**
 		 * Appends an item to the end of the list.
 		 * @param item the item to append.
-		 * @return 0 if appending was sucessful, 1 if the list is full and 2
+		 * @return 0 if appending was successful, 1 if the list is full and 2
 		 * 	if the item is invalid.
 		 * */
 		int8_t append( void* item );
@@ -116,9 +117,8 @@ class GenericList
 		 * Grow the list.
 		 * @return 0 if the growing the list succeeded.
 		 * */
-		int8_t grow(void);
+		int8_t _grow(void);
 #endif
-
 };
 
 /** A templated version of the generic list. */
@@ -161,6 +161,21 @@ template<class T> class List: public GenericList
 		 *  Index operator method for retrieving items based on their indexes.
 		 * */
 		T operator[](uint8_t i) const;
+
+		/** Remove all items from the list and delete them. Only call this method
+		 * if the list contains objects created using the new operator.*/
+		inline void delete_all(void) { _purge(false); }
+
+		/** Remove all items from the list and free them. Only call this method
+		 * if the list contains data allocated using the malloc operator.*/
+		inline void free_all(void) { _purge(true); }
+
+	private:
+
+		/** Remove all items and delete/free them.
+		 * @param use_free true if free should be used, false if delete should be
+		 * used. */
+		void _purge(bool use_free);
 };
 
 ///todo move to class definition.
@@ -196,6 +211,24 @@ template< class T >
 T List<T>::operator[](uint8_t i) const
 {
 	return (T)GenericList::operator[](i);
+}
+
+///todo move to class definition.
+template< class T >
+void List<T>::_purge(bool use_free)
+{
+	// Do not use remove(0) because it is slower.
+
+	// free or delete each item.
+	for(uint8_t i = 0; i < items; i++)
+	{
+		T item = operator[](i);
+
+		use_free ? free((void*)item): delete item;
+		list[i] = NULL;
+	}
+
+	items = 0; // The list is now empty.
 }
 
 /**
@@ -246,14 +279,14 @@ class GenericDictionary
 		 * @param key the key of the entry.
 		 * @return the value of the entry or NULL if it was not found.
 		 * */
-		void* remove( const char* key);
+		void* remove(const char* key);
 
 		/**
 		 * Finds an entry.
 		 * @param key the key to the entry.
 		 * @return the value of the entry or NULL if it was not found.
 		 * */
-		void* find( const char* key );
+		void* find(const char* key);
 
 		/**
 		 * Finds a value.
@@ -283,7 +316,7 @@ class GenericDictionary
 		 * @param key the key of the pair.
 		 * @return the found key/.value pair or NULL if it does not exist.
 		 * */
-		key_value_pair<void*>* get( const char* key );
+		key_value_pair<void*>* get(const char* key);
 
 		/**
 		 * Compacts the dictionary.
@@ -308,53 +341,73 @@ template< class T> class Dictionary: public GenericDictionary
 		 * @param key the key of the entry.
 		 * @return the value of the entry or NULL if it was not found.
 		 * */
-		T remove( const char* key);
+		T remove(const char* key);
 
 		/**
 		 * Finds an entry.
 		 * @param key the key to the entry.
 		 * @return the value of the entry or NULL if it was not found.
 		 * */
-		T find( const char* key );
+		T find(const char* key);
 
 		/**
 		 * Finds a value.
 		 * @param value the value to find.
 		 * @return the key of the value or NULL if the value does not exist.
 		 * */
-        const char* find_val(const T value) const;
+        const char* find_val(const T value);
 
         /**
          * Indexing operator method.
          * todo make the returned key_value_pair const.
          * */
 		key_value_pair<T>* operator[](uint8_t i);
+
+		/** Remove all items from the dictionary and delete them.
+		 * Only call this method if the dictionary contains values
+		 * allocated using the malloc operator.
+		 * @param free_keys, if keys should be freed as well. */
+		inline void delete_all(bool free_keys) { _purge(false, free_keys); }
+
+		/** Remove all items from the dictionary and free them.
+		 * Only call this method if the dictionary contains values
+		 * allocated using the malloc operator.
+		 * @param free_keys, if keys should be freed as well. */
+		inline void free_all(bool free_keys) { _purge(true, free_keys); }
+
+	private:
+
+		/** Remove all values and delete/free them.
+		 * @param use_free true if free should be used, false if delete should be
+		 * used.
+		 * @param free_keys, if keys should be freed as well.*/
+		void _purge(bool use_free, bool free_keys);
 };
 
 ///todo move to class definition.
 template< class T>
-int8_t Dictionary<T>::add( const char* key, T value)
+int8_t Dictionary<T>::add(const char* key, T value)
 {
-	return GenericDictionary::add( key, (void*)value);
+	return GenericDictionary::add(key, (void*)value);
 }
 
 ///todo move to class definition.
 template< class T>
-T Dictionary< T >::remove( const char* key )
+T Dictionary< T >::remove(const char* key)
 {
 	return (T)GenericDictionary::remove(key);
 }
 
 ///todo move to class definition.
 template< class T>
-T Dictionary< T >::find( const char* key )
+T Dictionary< T >::find(const char* key)
 {
 	return (T)GenericDictionary::find(key);
 }
 
 ///todo move to class definition.
 template< class T>
-const char* Dictionary< T >::find_val(const T value) const
+const char* Dictionary< T >::find_val(const T value)
 {
 	return GenericDictionary::find_val((const void*)value);
 }
@@ -365,6 +418,31 @@ key_value_pair<T>* Dictionary<T>::operator[](uint8_t i)
 {
 	return (key_value_pair<T>*)GenericDictionary::operator[](i);
 }
+
+///todo move to class definition.
+template< class T>
+void Dictionary<T>::_purge(bool use_free, bool free_keys)
+{
+	// Do not use remove() because it is slower.
+
+	// free or delete each item.
+	for(uint8_t i = 0; i < items; i++)
+	{
+		if(free_keys)
+		{
+			free((void*)list[i].key);
+		}
+
+		T value = operator[](i)->value;
+
+		use_free ? free((void*)value): delete value;
+		list[i].key = NULL;
+		list[i].value = NULL;
+	}
+
+	items = 0; // The dictionary is now empty.
+}
+
 
 /**
  * A list that has been adapted to be used as a queue.

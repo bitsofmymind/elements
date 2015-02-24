@@ -39,6 +39,7 @@ Request::~Request()
 {
 	delete to_url;
 	delete from_url;
+	free(method);
 }
 
 void Request::print(void)
@@ -99,71 +100,61 @@ size_t Request::serialize(char* buffer, bool write) const
 }
 #endif
 
-Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
+Message::PARSER_RESULT Request::parse_header(char* line)
 {
-	//If the received line does not end with CRLF.
-	if(line[size - 2] != '\r' && line[size - 1] != '\n')
+	if(!method) //If we are parsing the first line of the header.
 	{
-		return LINE_INCOMPLETE; //Return the appropriate error.
-	}
-
-	if(!header) //If we are parsing the first line of the header.
-	{
-		/* Allocates space for the request header line. 1 is subtracted to that
-		because the CRLF is implicit but a terminating null character is needed.*/
-		header = (char*)ts_malloc(size - 1);
-		if(!header) // If allocating memory failed.
-		{
-			return Message::OUT_OF_MEMORY; //Return the appropriate error.
-		}
-
-		header_length = size - 2; //Set the header length.
-
-		header[header_length] = '\0'; // Terminate the string.
-
-		//Copy the content of the buffer to the header buffer.
-		memcpy(header, line , size - 2);
-
-		char* index = header; //Index for the header buffer.
-
 		// HTTP REQUEST METHOD PARSING
 
-		while(true)
-		{
-			if(*index == ' ') // If a space is found.
-			{
-				//This means we have reached the end of the method part.
-				method = header; //Save the location of the method.
-				/*Replace the space with a null character so the method can
-				 * be used like a normal string.*/
-				*index = '\0';
-				break; //Done parsing the method.
-			}
-			//If the index has incremented past the header.
-			else if(index > (header + header_length))
-			{
-				//The HTTP method was not found so the header is malformed.
-				return HEADER_MALFORMED;
-			}
-			//If a letter in the header is upper case.
-			if(*index >= 'A' && *index <= 'Z')
-			{
-				/*TODO this should be done when parts of the header are saved.
-				 * Should save a bit of program memory.*/
-				*index += 32; //change it to lower case.
-			}
-			index++; //Increment the index to the next character.
-		}
+		// Find the first space.
+		char* space = strchr(line, ' ');
 
-		//HTTP REQUEST URL PARSING
-
-		if(to_url->parse(++index) == URL::INVALID) // Parse the url.
+		if(!space) // If no space could be found.
 		{
 			return HEADER_MALFORMED;
 		}
 
-		/* We do not really care about the HTTP version for now,
-		 * everything that comes next is assumed to be valid.*/
+		// Allocate space to store the method.
+		method = (char*)malloc(space - line + 1);
+
+		if(!method) // If there is no memory left.
+		{
+			return OUT_OF_MEMORY;
+		}
+
+		memcpy(method, line, space - line); // Copy the method string.
+
+		method[space - line] = '\0'; // Terminate the method.
+
+		// Make the method string lower case.
+		for(uint8_t i = 0; i < space - line; i++)
+		{
+			// If a letter in the method is upper case.
+			if(method[i] >= 'A' && method[i] <= 'Z')
+			{
+				method[i] += 32; // Change it to lower case.
+			}
+		}
+
+		// URL PARSING
+
+		line = space + 1; // Move to the next part of the header.
+
+		space = strchr(line, ' '); // Move to the next space.
+
+		if(!space) // If no space could be found.
+		{
+			return HEADER_MALFORMED; // There is no URL.
+		}
+
+		*space = '\0'; // Terminate the url.
+
+		if(to_url->parse(line) == URL::INVALID) // Parse the url.
+		{
+			return HEADER_MALFORMED;
+		}
+
+		// We don't care about the HTTP version (yet).
 
 		return PARSING_SUCESSFUL;
 	}
@@ -173,7 +164,7 @@ Message::PARSER_RESULT Request::parse_header(const char* line, size_t size)
 	//Here we would parse for request specific headers we want to keep.
 
 	//Hand generic parsing to the parent method.
-	return Message::parse_header(line, size);
+	return Message::parse_header(line);
 }
 
 #if BODY_ARGS_PARSING

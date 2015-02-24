@@ -84,7 +84,7 @@ bool test_file_manipulation(void)
 
 	//######################################################
 
-	std::cout << "   > memfile with char data ... ";
+	std::cout << "   > memfile with null terminated char data ... ";
 
 	data = (char*)malloc(strlen(const_data) + 1);
 
@@ -106,7 +106,7 @@ bool test_file_manipulation(void)
 
 	//######################################################
 
-	std::cout << "   > memfile with char data ... ";
+	std::cout << "   > memfile with fixed char data ... ";
 
 	data = (char*)malloc(10);
 

@@ -43,11 +43,7 @@ Resource::~Resource(void)
 {
 	if(_children) // If a children dictionary was created.
 	{
-		// For each children of this resource.
-		for(uint8_t i = 0; i < _children->get_item_count(); i++)
-		{
-			delete (*_children)[i]->value; // Delete the children.
-		}
+		_children->delete_all(false);
 
 		delete _children;
 	}
@@ -140,7 +136,12 @@ void Resource::dispatch(Message* message)
 					{
 						/*Add a blank resource to from_url to indicate that
 						 the message went trough root (/).*/
-						message->get_from_url()->get_resources()->insert("", 0);
+						if(!message->get_from_url()->insert_resource("", 0, 0))
+						{
+							// Not enough memory to complete the request.
+							sc = Response::INTERNAL_SERVER_ERROR_500;
+							goto error;
+						}
 					}
 				}
 				else //This resource has a parent.
@@ -154,7 +155,12 @@ void Resource::dispatch(Message* message)
 						/*Save this resource's name to the from_url so the
 						 * message can be properly routed back to its origin.*/
 						//todo error checking.
-						message->get_from_url()->get_resources()->insert(_parent->get_name(this), 0);
+						if(!message->get_from_url()->insert_resource(_parent->get_name(this), 0, -1))
+						{
+							// Not enough memory to complete the request.
+							sc = Response::INTERNAL_SERVER_ERROR_500;
+							goto error;
+						}
 					}
 					//Useless if message is a response.
 				}
@@ -176,7 +182,12 @@ void Resource::dispatch(Message* message)
 						// If the message was relative.
 						if(!message->get_to_url()->is_absolute())
 						{
-							message->get_from_url()->get_resources()->insert(_parent->get_name(this), 0);
+							if(!message->get_from_url()->insert_resource(_parent->get_name(this), 0, -1))
+							{
+								// Not enough memory to complete the request.
+								sc = Response::INTERNAL_SERVER_ERROR_500;
+								goto error;
+							}
 						}
 
 						next = _parent; //It is a parent dispatch.
@@ -191,7 +202,12 @@ void Resource::dispatch(Message* message)
 					// If the message was relative.
 					if(!message->get_to_url()->is_absolute())
 					{
-						message->get_from_url()->get_resources()->insert("..", 0);
+						if(!message->get_from_url()->insert_resource("..", 0, 2))
+						{
+							// Not enough memory to complete the request.
+							sc = Response::INTERNAL_SERVER_ERROR_500;
+							goto error;
+						}
 					}
 
 					//Look within the children if the next resource is there.
@@ -209,6 +225,7 @@ void Resource::dispatch(Message* message)
 			sc = Response::NOT_FOUND_404; //Else no resource was found, return a 404.
 			//No break here
 		default:
+			error:
 			/*If message was a request and a response code was not found
 			in the above cases, this means it is an HTTP response code.*/
 			if(message->get_type() == Message::REQUEST)
@@ -220,7 +237,13 @@ void Resource::dispatch(Message* message)
 				if(!response->get_from_url()->is_absolute())
 				{
 					// Indicate we passed through this resource.
-					response->get_to_url()->get_resources()->insert(".", 0);
+					///todo useful?
+					if(!response->get_to_url()->insert_resource(".", 0, 1))
+					{
+						// Not even enough memory to return an error.
+						delete response;
+						return;
+					}
 				}
 
 				dispatch(response); //Dispatch it.

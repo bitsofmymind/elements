@@ -33,14 +33,14 @@ class Template: public File
 		File* file;
 
 		/** The arguments that will substitute the markers. */
-		List<char*> args;
+		List<const char*> args;
 		///todo change to a linked list.
 
 		/** The index of argument that is currently being substituted.*/
 		uint8_t arg_index;
 
 		/** The content of the argument currently being substituted. */
-		char* current;
+		const char* current;
 
 		/** The internal state of the templated renderer.*/
 		enum STATE {ARG, TEXT, SKIP} state;
@@ -56,9 +56,7 @@ class Template: public File
 
 		virtual size_t read(char* buffer, size_t length);
 
-#if !READ_ONLY
 		virtual size_t write(const char* buffer, size_t length);
-#endif
 
 		virtual void set_cursor(size_t val);
 

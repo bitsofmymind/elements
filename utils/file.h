@@ -61,13 +61,11 @@ class File
 		 * @return the number of bytes that have been transfered. */
 		size_t extract(char* buffer);
 
-#if !READ_ONLY
 		/// Writes bytes to the file.
 		/** @param buffer the bytes to write from.
 		 * @param length the number of bytes to write.
 		 * @return the number of bytes that have been written. */
 		virtual size_t write(const char* buffer, size_t length) = 0;
-#endif
 
 		/// Get the position of the cursor in the file.
 		/** @return the position of the cursor. */

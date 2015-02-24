@@ -34,7 +34,7 @@ bool test_response_parsing(void)
 	std::cout << "   > normal response ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123456",
 		Message::PARSING_COMPLETE
 	);
@@ -44,7 +44,7 @@ bool test_response_parsing(void)
 	std::cout << "   > short response header ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"HTTP/1.1 200 \r\n\r\n",
 		Message::PARSING_COMPLETE
 	);
@@ -54,7 +54,7 @@ bool test_response_parsing(void)
 	std::cout << "   > partial response ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"HTTP/1.1 500 SERVER ERROR\r\nConten",
 		Message::PARSING_SUCESSFUL
 	);
@@ -64,7 +64,7 @@ bool test_response_parsing(void)
 	std::cout << "   > partial response header ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"HTTP/1.1 50",
 		Message::PARSING_SUCESSFUL
 	);
@@ -73,7 +73,7 @@ bool test_response_parsing(void)
 
 	std::cout << "   > normal message in parts ... ";
 
-	Response* response = new Response(Response::OK_200, NULL);
+	Response* response = new Response(Response::NONE_0, NULL);
 
 	// Correctly formed message.
 	const char* msg = "HTTP/1.1 400 BAD REQUEST \r\nPragma: cache\r\nFrom-Url: /client/127.0.0.1/port/6523\r\nContent-Length: 6\r\n\r\n123456";
@@ -97,7 +97,7 @@ bool test_response_parsing(void)
 
 		Message::PARSER_RESULT result = response->parse(part, strlen(part));
 
-		free(part); // Message will have been copied the content of part.
+		free(part); // Message will have copied the content of part.
 
 		if(result == Message::PARSING_COMPLETE) // Done parsing.
 		{
@@ -123,19 +123,19 @@ bool test_response_parsing(void)
 	std::cout << "   > response code missing ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"HTTP/1.1 SERVER ERROR\r\n\r\n",
 		Message::HEADER_MALFORMED
 	);
 
 	//######################################################
 
-	std::cout << "   > response code invalid ... ";
+	std::cout << "   > Incomplete line ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
-		"HTTP/1.1 5 SERVER ERROR\r\n\r\n",
-		Message::HEADER_MALFORMED
+		new Response(Response::NONE_0, NULL),
+		"HTTP/1.1 SERVER ERROR\r\nTo-Url\r\n\r\n",
+		Message::LINE_MALFORMED
 	);
 
 	//######################################################
@@ -143,7 +143,7 @@ bool test_response_parsing(void)
 	std::cout << "   > response code int32_t overflow ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"HTTP/1.1 5000000000000 SERVER ERROR\r\n\r\n",
 		Message::HEADER_MALFORMED
 	);
@@ -153,7 +153,7 @@ bool test_response_parsing(void)
 	std::cout << "   > HTTP version missing ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"500 SERVER ERROR\r\n\r\n",
 		Message::HEADER_MALFORMED
 	);
@@ -163,7 +163,7 @@ bool test_response_parsing(void)
 	std::cout << "   > Content-Length too large ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"HTTP/1.0 200 OK\r\nContent-Length: 8\r\n\r\n123456",
 		Message::PARSING_SUCESSFUL
 	);
@@ -173,7 +173,7 @@ bool test_response_parsing(void)
 	std::cout << "   > Content-Length too small ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"HTTP/1.0 200 OK\r\nContent-Length: 4\r\n\r\n123456",
 		Message::BODY_OVERFLOW
 	);
@@ -183,7 +183,7 @@ bool test_response_parsing(void)
 	std::cout << "   > parsing a request ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"POST /res2/echo2/#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
 		Message::HEADER_MALFORMED
 	);
@@ -193,7 +193,7 @@ bool test_response_parsing(void)
 	std::cout << "   > parsing a malicious request ... ";
 
 	error |= test_parsing(
-		new Response(Response::OK_200, NULL),
+		new Response(Response::NONE_0, NULL),
 		"HTTP/1.0 /res2/echo2/#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
 		Message::HEADER_MALFORMED
 	);
