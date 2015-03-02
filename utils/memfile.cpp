@@ -66,7 +66,7 @@ size_t MemFile::read(char* buffer, size_t length)
 	// Check which is longest, the remaining data of the length requested.
 	length = length < get_size() - get_cursor() ? length : get_size() - get_cursor();
 
-	memcpy(buffer, data, length);
+	memcpy(buffer, data + get_cursor(), length);
 
 	increment_cursor(length);
 
@@ -83,7 +83,7 @@ size_t MemFile::write(const char* buffer, size_t length)
 	// Check which is longest, the remaining data of the length requested.
 	length = length < get_size() - get_cursor() ? length : get_size() - get_cursor();
 
-	memcpy(data, buffer, length);
+	memcpy(data  + get_cursor(), buffer, length);
 
 	increment_cursor(length);
 

@@ -50,7 +50,7 @@ uptime_t get_uptime( void )
 	/* On 32 or 64 bit systems, retrieving the uptime is done in a singular
 	 * operation. However, one 16 bit and 8 bit architectures, it takes more
 	 * so in order to prevent the uptime from changing during the call
-	 * due to an interrupt updating it, its retrival is made atomic. */
+	 * due to an interrupt updating it, its retrieval is made atomic. */
 	ATOMIC
 	{
 		val = system_uptime;

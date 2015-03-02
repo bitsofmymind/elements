@@ -169,6 +169,76 @@ bool test_request_parsing(void)
 
 	//######################################################
 
+	std::cout << "   > request with body arguments ... ";
+
+	request = new Request();
+
+	// If parsing the message failed.
+	if(request->parse("POST /res2/echo2 HTTP/1.1\r\nContent-Length: 10\r\n\r\ni=500&st=1") != Message::PARSING_COMPLETE)
+	{
+		std::cout << "(error)" << std::endl;
+		error |= true;
+	}
+	else
+	{
+		std::cout << "(done)" << std::endl;
+	}
+
+	//######################################################
+
+	std::cout << "   > finding non existing body argument ... ";
+
+	char arg[10];
+
+	// If parsing the message failed.
+	if(request->find_arg("blah", arg, 4))
+	{
+		std::cout << "(error)" << std::endl;
+		error = true;
+	}
+	else
+	{
+		std::cout << "(done)" << std::endl;
+	}
+
+	//######################################################
+
+	std::cout << "   > finding existing body argument ... ";
+
+	request->find_arg("i", arg, 4);
+
+	if(strcmp(arg, "500"))
+	{
+		std::cout << "(error)" << std::endl;
+		error = true;
+	}
+	else
+	{
+		std::cout << "(done)" << std::endl;
+	}
+
+	//######################################################
+
+	std::cout << "   > finding part of a body argument ... ";
+
+	request->find_arg("i", arg, 2);
+
+	arg[2] = '\0';
+
+	if(strcmp(arg, "50"))
+	{
+		std::cout << "(error)" << std::endl;
+		error = true;
+	}
+	else
+	{
+		std::cout << "(done)" << std::endl;
+	}
+
+	delete request;
+
+	//######################################################
+
 	std::cout << "   > malformed url arguments ... ";
 
 	error |= test_parsing(

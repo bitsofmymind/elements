@@ -75,12 +75,66 @@
 		 * then getting the Resource that should be run next.
 		 * @todo this method sould be protected.
 		 * */
-		void step(void);
+		inline void step(void)
+		{
+			//If the current resource is scheduled to be run.
+			if(is_expired(_current->_own_sleep_clock))
+			{
+				_current->_own_sleep_clock = NEVER; //Reset its sleep clock.
+				_current->run(); //Run it.
+			}
+			//Get the next Resource to be run.
+			Resource* to_run = _current->_get_next_child_to_visit();
+
+			if(to_run) //If a Resource was returned.
+			{
+				_current = to_run; //Set to be run next.
+			}
+			/*Else no resource was returned. Go to the parent resource if it is not
+			 * the bound.*/
+			else if(_current->_parent != _bound)
+			{
+				_current = _current->_parent; //Set it to be run next.
+			}
+			//Else we are one resource below the bound. Stay there.
+		}
 
 		///Starts a processing object's activity.
 		/** This method does not return and can be considered the main program loop
 		 * for single processing application.*/
-		void start(void);
+		inline void start(void)
+		{
+			for(;;)
+			{
+				step(); //Step through a resource.
+
+				if(_current->_parent == _bound) //If the bound has been reached.
+				{
+					/*The sleep clock for the current resource gives us the next
+					 * time processing will be needed again.
+					 * Since the sleep clock is an uptime, is is substracted with
+					 * the uptime to get the actual amount of time.*/
+					uptime_t sleep_amount = _current->get_sleep_clock() - get_uptime();
+
+					/*TODO: Since uptime_t are unsigned int, sleep amount will
+					alway be positive. See #181. */
+					if(sleep_amount > 0) //If that amount is more than 0.
+					{
+						//Make that processing element sleep.
+						processing_sleep(sleep_amount);
+					}
+				}
+
+		#if HEARTBEAT //If heartbeat function is activated.
+				if(is_expired(_heartbeat)) //If the heart beat timer has expired.
+				{
+					heart_beat(); //Do a heart beat.
+					//Set the heartbeat timer to expire in 1 second.
+					expire(_heartbeat, 1000);
+				}
+		#endif
+			}
+		}
 };
 
 

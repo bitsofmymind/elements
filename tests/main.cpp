@@ -20,6 +20,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include "string.h"
+#include "test_data_structures.h"
 #include "test_request_parsing.h"
 #include "test_response_parsing.h"
 #include "test_file_manipulation.h"
@@ -39,6 +40,7 @@ int main()
 
 	std::cout << "Starting unit tests..." << std::endl;
 
+	error |= test_data_structures();
 	error |= test_request_parsing();
 	error |= test_response_parsing();
 	error |= test_file_manipulation();

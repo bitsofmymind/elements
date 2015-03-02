@@ -53,7 +53,7 @@ Response::~Response()
 	}
 }
 
-void Response::print(void)
+void Response::print(void) const
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
 	 * this method should be optimized away by the compiler.*/

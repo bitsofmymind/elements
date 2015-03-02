@@ -30,7 +30,7 @@ GenericList::GenericList(void):
 #ifndef STATIC_LIST
 	list = (void**)malloc(CAPACITY * sizeof(void**)); // Allocate space for the list.
 
-	if(!list) // If the list could not me allocated.
+	if(!list) // If the list could not be allocated.
 	{
 		capacity = 0;
 		return;
@@ -40,68 +40,53 @@ GenericList::GenericList(void):
 #endif
 
 	// Sets all the positions in the list to NULL.
-	memset(list, NULL, CAPACITY * sizeof(void*));
+	///TODO use calloc instead.
+	memset(list, 0, CAPACITY * sizeof(void*));
 }
 
 GenericList::~GenericList()
 {
+
 #ifndef STATIC_LIST
 	free(list);
 #endif
 
 }
 
-int8_t GenericList::append(void* item)
+OPERATION_RESULT GenericList::insert(void* item, list_type position)
 {
-	if(items >= capacity) // If there is no more space in the list.
-	{
-#ifdef STATIC_LIST
-		return 1; // Error;
-#else
-		if(_grow()) // Grow the list.
-		{
-			return 1; // Error.
-		}
-#endif;
-	}
-
-	if(item == NULL) // If a NULL value is being inserted.
-	{
-		return 2; // Return an error.
-	}
-
-	list[items] = item; // Inserts the item at the end of the list.
-	items++; // We have added an item.
-
-	return 0; // Success.
-}
-
-int8_t GenericList::insert(void* item, uint8_t position)
-{
-    if(position > items) // If position goes pas the number of items.
+    if(position > items) // If position goes past the number of items.
     {
-        return -1; // Return an error.
-    }
-
-    if(items >= capacity) // If the list is full.
-    {
-#ifdef STATIC_LIST
-		return 1; // Error;
-#else
-		if(_grow()) // Grow the list.
-		{
-			return 1; // Error.
-		}
-#endif;
+        return POSITION_INVALID; // Return an error.
     }
 
     if(item == NULL) // If a NULL value is being inserted.
     {
-    	return -3; // Item is illegal.
+    	return ITEM_INVALID; // Item is illegal.
     }
 
+    // If there is no more space in the list..
+    if(items >= capacity)
+    {
+#ifdef STATIC_LIST
+		return STRUCTURE_FULL; // Error;
+#else
+		OPERATION_RESULT result = _grow(); // Grow the list.
+
+		if(result)
+		{
+			return result; // Error.
+		}
+#endif
+    }
+
+	if(items == MAX_SIZE) // If the list is full.
+	{
+		return STRUCTURE_FULL;
+	}
+
     // For each item in the list from the end to the desired position..
-    for(uint8_t i = items; i > position; i--)
+    for(list_type i = items; i > position; i--)
     {
     	list[i] = list[i - 1]; // Shift the item to the right.
     }
@@ -109,13 +94,13 @@ int8_t GenericList::insert(void* item, uint8_t position)
     list[position] = item; // Inserts the item in the desired position.
     items++; // We have added an item to the list.
 
-    return 0; // Success.
+    return SUCCESS;
 }
 
-void* GenericList::remove_item( void* item )
+void* GenericList::remove_item(void* item)
 {
 	// For each item in the list.
-	for(uint8_t i = 0; i < items; i++)
+	for(list_type i = 0; i < items; i++)
 	{
 		if(list[i] == item) // If this is the item that is supposed to be removed.
 		{
@@ -130,7 +115,7 @@ void* GenericList::remove_item( void* item )
 	return NULL; // The item was not found.
 }
 
-void* GenericList::remove( uint8_t index )
+void* GenericList::remove(list_type index)
 {
 	if(index >= items ) // If the index is invalid.
 	{
@@ -149,7 +134,7 @@ void* GenericList::remove( uint8_t index )
 void GenericList::compact(void)
 {
 	// For each item in the list until the end.
-	for(uint8_t i = 0; i < capacity - 1; i++)
+	for(list_type i = 0; i < capacity - 1; i++)
 	{
 		if(list[i] != NULL) // If there is an item at this position.
 		{
@@ -165,13 +150,15 @@ void GenericList::compact(void)
 #ifndef STATIC_LIST
 
 	// If there is more than 2 * CAPACITY of free space after the last item.
+	// TODO This seems to require a lot of free space before shrinking.
 	if(capacity > 2 * CAPACITY && items < capacity - (2 * CAPACITY))
 	{
 		// Shrink the list.
 
-		uint8_t previous_capacity = capacity; // Save the old capacity.
+		list_type previous_capacity = capacity; // Save the old capacity.
 
 		capacity -= 3 * CAPACITY; // Trick grow into thinking we are growing.
+		// TODO the list is shrinking, realloc will always work.
 		if(_grow())
 		{
 			// Not enough memory to copy the list.
@@ -180,30 +167,35 @@ void GenericList::compact(void)
 		}
 	}
 
-#endif;
+#endif
 }
 
 #ifndef STATIC_LIST
 
-int8_t GenericList::_grow(void)
+OPERATION_RESULT GenericList::_grow(void)
 {
+	if(capacity == MAX_SIZE) // If the list has reached its maximum size.
+	{
+		return STRUCTURE_FULL;
+	}
+
 	void** new_list = (void**)realloc(list, (capacity + CAPACITY) * sizeof(void**));
 
 	if(!new_list) // If there was not enough space for the new list.
 	{
-		return 1; // Error.
+		return OUT_OF_MEMORY; // Error.
 	}
 
 	capacity += CAPACITY; // Increase the capacity of the list.
 
 	list = new_list;
 
-	return 0;
+	return SUCCESS;
 }
 
 #endif
 
-void* GenericList::operator[]( uint8_t i ) const
+void* GenericList::operator[](list_type i) const
 {
 	// If there are no items or an index greater that the amount of item is requested.
 	if(!items || i >= items)
@@ -214,29 +206,30 @@ void* GenericList::operator[]( uint8_t i ) const
 	return list[i]; // Return the item at the requested index.
 }
 
-
-GenericDictionary::GenericDictionary(void)
+OPERATION_RESULT GenericDictionary::add(const char* key, void* value)
 {
-	items = 0; ///todo move to initialization list.
-}
-
-
-int8_t GenericDictionary::add(const char* key, void* value)
-{
-	if(items >= CAPACITY) // If there is no more space in the dictionary.
+	if(items == MAX_SIZE) // If the dictionary is full.
 	{
-		return 1;
+		return STRUCTURE_FULL;
 	}
 
 	// Check if the entry already exists.
 	key_value_pair<void*>* kv = get(key);
 
-	if( kv == NULL) // If the entry does not exist.
+	if(kv == NULL) // If the entry does not exist.
 	{
+		kv = (key_value_pair<void*>*)malloc(sizeof(key_value_pair<void*>));
+
+		if(!kv)
+		{
+			return OUT_OF_MEMORY; // Not enough memory to complete the addition.
+		}
+
 		// Instantiate an entry.
-		list[items].key = key;
-		list[items].value = value;
-		items++; // An entry was added.
+		kv->key = key;
+		kv->value = value;
+
+		append(kv);
 	}
 	else // The entry already exists.
 	{
@@ -245,10 +238,10 @@ int8_t GenericDictionary::add(const char* key, void* value)
 		kv->value = value;
 	}
 
-	return 0; // Success.
+	return SUCCESS;
 }
 
-void* GenericDictionary::remove( const char* key )
+void* GenericDictionary::remove(const char* key, bool free_key = false)
 {
 	key_value_pair<void*>* kv = get(key); // Finds the entry.
 
@@ -258,15 +251,18 @@ void* GenericDictionary::remove( const char* key )
 	}
 
 	void* value = kv->value; // Saves the value of the entry.
-	kv->value = NULL; // Blank the value.
-	kv->key = NULL; // Blank the key.
-	items--; // An entry was removed.
-	compact(); // Compacts the storage array.
+
+	if(free_key) // If the key should be freed.
+	{
+		free((void*)kv->key);
+	}
+
+	free(remove_item(kv));
 
 	return value; // Success
 }
 
-void* GenericDictionary::find(const char* key)
+void* GenericDictionary::find(const char* key) const
 {
 	key_value_pair<void*>* kv = get(key); // Finds the entry.
 
@@ -280,65 +276,45 @@ void* GenericDictionary::find(const char* key)
 
 const char* GenericDictionary::find_val(const void* value) const
 {
-    for(uint8_t i = 0; i < items; i++) // For each entry.
-    {
-        if(list[i].value == value) // If the value matches.
-        {
-            return list[i].key; // Return the key.
-        }
-    }
+	key_value_pair<void*>* kv;
+
+	for(list_type i = 0; i < items; i++) // For each entry in the dictionary.
+	{
+		kv = (key_value_pair<void*>*)list[i];
+
+		if(kv->value == value) // If the two values match.
+		{
+			return kv->key; // Return the key_value pair.
+		}
+	}
 
     return NULL; // The value was not found.
 }
 
-key_value_pair<void*>* GenericDictionary::get(const char* key)
+key_value_pair<void*>* GenericDictionary::get(const char* key) const
 {
-	for(uint8_t i = 0; i < items; i++) // For each entry in the dictionary.
+	key_value_pair<void*>* kv;
+
+	for(list_type i = 0; i < items; i++) // For each entry in the dictionary.
 	{
-		if(!strcmp(list[i].key, key)) // If the two keys match.
+		kv = (key_value_pair<void*>*)list[i];
+
+		if(!strcmp(kv->key, key)) // If the two keys match.
 		{
-			return &list[i]; // Return the key_value pair.
+			return kv; // Return the key_value pair.
 		}
 	}
 
 	return NULL; // The entry was not found.
 }
 
-key_value_pair<void*>* GenericDictionary::operator[]( uint8_t i )
-{
-	if(i > items) // If the index is invald.
-	{
-		return NULL;
-	}
-
-	return &(list[i]);
-}
-
-void GenericDictionary::compact()
-{
-	// For each entry in the dictionary.
-	for(uint8_t i = 0; i < CAPACITY - 1; i++)
-	{
-		if(list[i].key != NULL) // If there is an item at this index.
-		{
-			continue;
-		}
-
-		// Shift the next item to the current index.
-		list[i].key = list[i + 1].key;
-		list[i].value = list[i + 1].value;
-		list[i + 1].key = NULL;
-		list[i + 1].value = NULL;
-	}
-}
-
 GenericLinkedList::GenericLinkedList():
 	start(NULL)
 {}
 
-uint8_t GenericLinkedList::get_item_count( void )
+list_type GenericLinkedList::get_item_count(void)
 {
-	uint8_t items = 0;
+	list_type items = 0;
 	entry* current = start;
 
 	while(current != NULL) // While there are items in the list.
@@ -350,7 +326,7 @@ uint8_t GenericLinkedList::get_item_count( void )
 	return items; // Returns the number of items.
 }
 
-int8_t GenericLinkedList::append( void* item )
+OPERATION_RESULT GenericLinkedList::append(void* item)
 {
 	///todo I don't think we need double pointers here.
 
@@ -363,30 +339,28 @@ int8_t GenericLinkedList::append( void* item )
 	}
 
 	// The end of the list has been reached, add a new entry.
-	///todo should be ts_malloc.
 	*next = (entry*)malloc(sizeof(entry));
 
 	if(!*next) // If no memory could be allocated for the new entry.
 	{
-		return 1; // Return an error.
+		return OUT_OF_MEMORY; // Return an error.
 	}
 
 	// Initialize the entry.
 	(*next)->item = item;
 	(*next)->next = NULL;
 
-	return 0; // Success.
+	return SUCCESS;
 }
 
-int8_t GenericLinkedList::insert( void* item, uint8_t position )
+OPERATION_RESULT GenericLinkedList::insert(void* item, list_type position)
 {
 	// Allocate a new entry.
-	///todo should be ts_malloc.
 	entry* ent = (entry*)malloc(sizeof(entry));
 
 	if(!ent) // If the new entry could not be allocated.
 	{
-		return 1; // Return an error.
+		return OUT_OF_MEMORY; // Return an error.
 	}
 
 	ent->item = item; // Sets the item on the new entry.
@@ -402,7 +376,7 @@ int8_t GenericLinkedList::insert( void* item, uint8_t position )
 
 		if(!temp) // If the position is invalid.
 		{
-			return 2; // Return an error.
+			return POSITION_INVALID; // Return an error.
 		}
 
 		// Adds the new entry at the requested position.
@@ -410,11 +384,10 @@ int8_t GenericLinkedList::insert( void* item, uint8_t position )
 		temp->next = ent;
 	}
 
-	return 0; // Success.
-
+	return SUCCESS;
 }
 
-void* GenericLinkedList::remove( uint8_t index )
+void* GenericLinkedList::remove(list_type index)
 {
 	entry* ent;
 	void* item;
@@ -450,13 +423,13 @@ void* GenericLinkedList::remove( uint8_t index )
 	}
 
 	item = ent->item; // Save the item.
-	///todo use ts_free.
+
 	free(ent); // Free the entry.
 
 	return item; // Success.
 }
 
-GenericLinkedList::entry* GenericLinkedList::get( uint8_t position )
+GenericLinkedList::entry* GenericLinkedList::get(list_type position)
 {
 	entry* current = start;
 
@@ -475,4 +448,3 @@ GenericLinkedList::entry* GenericLinkedList::get( uint8_t position )
 
 	return current;
 }
-

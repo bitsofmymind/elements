@@ -163,7 +163,7 @@ class Response: public Message
 
 
 		/// Prints the content of a Response to the output.
-		virtual void print();
+		virtual void print() const;
 
 		/// Serialize the response to a buffer.
 		/**

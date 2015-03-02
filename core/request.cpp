@@ -42,7 +42,7 @@ Request::~Request()
 	free(method);
 }
 
-void Request::print(void)
+void Request::print(void) const
 {
 	/*If VERBOSITY, OUTPUT_WARNINGS or OUTPUT_ERRORS is undefined,
 	 * this method should be optimized away by the compiler.*/
@@ -54,7 +54,7 @@ void Request::print(void)
 	to_url->print(); //Prints the url.
 	DEBUG_PRINTLN(" HTTP/1.0");
 
-	Message::print(); //Hands of printing to parent method.
+	Message::print(); // Hands off printing to parent method.
 }
 
 #if REQUEST_SERIALIZATION

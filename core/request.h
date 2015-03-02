@@ -47,7 +47,7 @@ class Request: public Message
 		virtual ~Request();
 
 		/// Prints the content of a request to the output.
-		virtual void print();
+		virtual void print() const;
 
 #if REQUEST_SERIALIZATION
 		/// Serialize the request to a buffer.

@@ -483,7 +483,7 @@ size_t URL::serialize(char* buffer, bool write) const
 #if URL_ARGUMENTS
 	if (arguments) // If the url has arguments.
 	{
-		key_value_pair<const char*>* kv; // Holds the current key value pair.
+		const key_value_pair<const char*>* kv; // Holds the current key value pair.
 
 		if( write ){ *buffer = '?'; } // Adds the arguments marker.
 		buffer++; // Increments the buffer pas the arguments marker.

@@ -1,4 +1,4 @@
-/* processing.cpp - Source file for the Processing class.
+/* test_data_structures.h - Header file for the data structures unit tests.
  * Copyright (C) 2015 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,19 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//INCLUDES
-#include <pal/pal.h>
-#include "processing.h"
+#ifndef TEST_DATA_STRUCTURES_H_
+#define TEST_DATA_STRUCTURES_H_
 
-#if PROCESSING_AS_AUTHORITY
-Processing::Processing(Resource* bound): Authority(),
-#else
-Processing::Processing(Resource* bound): Resource(),
-#endif
-		_bound(bound),
-		_current(this) //A Processing object starts by running itself.
-#if HEARTBEAT
-		,_heartbeat(1000)
-#endif
-{}
+/** Data structures testing function.
+* @return if the test passed.
+*/
+bool test_data_structures(void);
 
+#endif // TEST_DATA_STRUCTURES_H_

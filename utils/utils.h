@@ -24,6 +24,23 @@
 /** Defines the capacity of the list and dictionary.*/
 #define CAPACITY 5
 
+/** The type of the size of the list.*/
+typedef uint8_t list_type;
+
+/** The maximum size the list can have.*/
+#define MAX_SIZE 255
+
+/** A structure representing the different results an operation on a data
+ * structure can have.*/
+enum OPERATION_RESULT
+{
+	SUCCESS = 0,
+	POSITION_INVALID,
+	STRUCTURE_FULL,
+	ITEM_INVALID,
+	OUT_OF_MEMORY
+};
+
 /**
  * A generic list. Only to be used as a base class for a template class.
  * */
@@ -44,13 +61,13 @@ class GenericList
 		/// The capacity of the list.
 		const uint8_t capacity = CAPACITY;
 #else
-		uint8_t capacity;
+		list_type capacity;
 #endif
 
 		/**
 		 * The number of items in the list.
 		 * */
-		uint8_t items;
+		list_type items;
 
 	public:
 
@@ -60,42 +77,42 @@ class GenericList
 		/**
 		 * Appends an item to the end of the list.
 		 * @param item the item to append.
-		 * @return 0 if appending was successful, 1 if the list is full and 2
-		 * 	if the item is invalid.
+		 * @return the result of the operation.
 		 * */
-		int8_t append( void* item );
+		inline OPERATION_RESULT append(void* item)
+		{
+			return insert(item, get_item_count());
+		}
 
 		/**
 		 * Inserts an item at a given position in the list.
 		 * @param item the item to insert.
 		 * @param position the position to insert the item at.
-		 * @return 0 if the insertion was a success, -1 if the position was
-		 * 	invalid, -2 if there is no more space in the list and -3 if the
-		 * 	item is invalid.
+		 * @return the result of the operation.
 		 * */
-        int8_t insert( void* item, uint8_t position );
+		OPERATION_RESULT insert(void* item, list_type position);
 
         /**
          * Removes a given item from the list.
          * @param item the item to remove.
          * @return the item that was removed or NULL if it was not found.
          * */
-        void* remove_item( void* item );
+        void* remove_item(void* item);
 
         /**
          * Removes the item a given position in the list.
          * @param index the 0 based index of the item to remove.
          * @return the removed item or NULL if there was no item at this index.
          * */
-		void* remove( uint8_t index );
+		void* remove(list_type index);
 
 		/**
 		 *  Index operator method for retrieving items based on their indexes.
 		 * */
-		void* operator[]( uint8_t i ) const;
+		void* operator[](list_type i) const;
 
 		/** @return the number of items in the list. */
-		inline uint8_t get_item_count(void) const { return items; }
+		inline list_type get_item_count(void) const { return items; }
 
 	protected:
 
@@ -108,16 +125,16 @@ class GenericList
 		/**
 		 * Compacts the list.
 		 * */
-		void compact( void );
+		void compact(void);
 
 	private:
 
 #ifndef STATIC_LIST
 		/**
 		 * Grow the list.
-		 * @return 0 if the growing the list succeeded.
+		 * @return the result of the operation.
 		 * */
-		int8_t _grow(void);
+		OPERATION_RESULT _grow(void);
 #endif
 };
 
@@ -128,39 +145,51 @@ template<class T> class List: public GenericList
 		/**
 		 * Appends an item to the end of the list.
 		 * @param item the item to append.
-		 * @return 0 if appending was successful, 1 if the list is full and 2
-		 * 	if the item is invalid.
+		 * @return the result of the operation.
 		 * */
-		int8_t append( T item );
+		inline OPERATION_RESULT append(T item)
+		{
+			return GenericList::append((void*)item);
+		}
 
 		/**
 		 * Inserts an item at a given position in the list.
 		 * @param item the item to insert.
 		 * @param position the position to insert the item at.
-		 * @return 0 if the insertion was a success, -1 if the position was
-		 * 	invalid, -2 if there is no more space in the list and -3 if the
-		 * 	item is invalid.
+		 * @return the result of the operation.
 		 * */
-        int8_t insert(T item, uint8_t position);
+        inline OPERATION_RESULT insert(T item, list_type position)
+        {
+            return GenericList::insert((void*)item, position);
+        }
 
         /**
          * Removes a given item from the list.
          * @param item the item to remove.
          * @return the item that was removed or NULL if it was not found.
          * */
-        T remove_item( T item );
+        inline T remove_item(T item)
+        {
+        	return (T)GenericList::remove_item((void*)item);
+        }
 
         /**
          * Removes the item a given position in the list.
          * @param index the 0 based index of the item to remove.
          * @return the removed item or NULL if there was no item at this index.
          * */
-		T remove( uint8_t index );
+		inline T remove(list_type index)
+        {
+        	return (T)GenericList::remove(index);
+        }
 
 		/**
 		 *  Index operator method for retrieving items based on their indexes.
 		 * */
-		T operator[](uint8_t i) const;
+		inline T operator[](list_type i) const
+		{
+			return (T)GenericList::operator[](i);
+		}
 
 		/** Remove all items from the list and delete them. Only call this method
 		 * if the list contains objects created using the new operator.*/
@@ -175,61 +204,24 @@ template<class T> class List: public GenericList
 		/** Remove all items and delete/free them.
 		 * @param use_free true if free should be used, false if delete should be
 		 * used. */
-		void _purge(bool use_free);
+		void _purge(bool use_free)
+		{
+			// Do not use remove(0) because it is slower.
+
+			// free or delete each item.
+			for(uint8_t i = 0; i < items; i++)
+			{
+				void* item = list[i];
+
+				use_free ? free(item): delete (T)item;
+				list[i] = NULL;
+			}
+
+			items = 0; // The list is now empty.
+
+			compact(); // Compact the list to shrink it.
+		}
 };
-
-///todo move to class definition.
-template<class T>
-int8_t List<T>::append(T item)
-{
-	return GenericList::append((void*)item);
-}
-
-///todo move to class definition.
-template<class T>
-int8_t  List<T>::insert(T item, uint8_t position)
-{
-    return GenericList::insert((void*)item, position);
-}
-
-///todo move to class definition.
-template<class T>
-T List<T>::remove_item( T item )
-{
-	return (T)GenericList::remove_item( (void*)item );
-}
-
-///todo move to class definition.
-template< class T>
-T List<T>::remove( uint8_t index )
-{
-	return (T)GenericList::remove( index );
-}
-
-///todo move to class definition.
-template< class T >
-T List<T>::operator[](uint8_t i) const
-{
-	return (T)GenericList::operator[](i);
-}
-
-///todo move to class definition.
-template< class T >
-void List<T>::_purge(bool use_free)
-{
-	// Do not use remove(0) because it is slower.
-
-	// free or delete each item.
-	for(uint8_t i = 0; i < items; i++)
-	{
-		T item = operator[](i);
-
-		use_free ? free((void*)item): delete item;
-		list[i] = NULL;
-	}
-
-	items = 0; // The list is now empty.
-}
 
 /**
  * A structure to hold key value pairs in a dictionary.
@@ -250,56 +242,48 @@ template< class U > struct key_value_pair
 /**
  * A generic dictionary. Only to be used as a base class for a template class.
  * */
-class GenericDictionary
+class GenericDictionary: protected List<key_value_pair<void*>* >
 {
-	protected:
-
-		/**
-		 * The list that holds the key/value pairs of the dictionary.
-		 * */
-		key_value_pair<void*> list[CAPACITY];
-
-		/**
-		 * The number of items in the dictionary.
-		 * */
-		uint8_t items;
-
 	public:
 
 		/**
 		 * Adds an entry in the dictionary.
 		 * @param key the name or key of the entry.
 		 * @param value the value of the entry.
-		 * @return 0 if successful or 1 if the dictionary is full.
+		 * @return the result of the operation.
 		 * */
-		int8_t add(const char* key, void* value );
+		OPERATION_RESULT add(const char* key, void* value);
 
 		/**
 		 * Removes an entry.
 		 * @param key the key of the entry.
+		 * @param free_key if the key should be freed.
 		 * @return the value of the entry or NULL if it was not found.
 		 * */
-		void* remove(const char* key);
+		void* remove(const char* key, bool free_key);
 
 		/**
 		 * Finds an entry.
 		 * @param key the key to the entry.
 		 * @return the value of the entry or NULL if it was not found.
 		 * */
-		void* find(const char* key);
+		void* find(const char* key) const;
 
 		/**
 		 * Finds a value.
 		 * @param value the value to find.
 		 * @return the key of the value or NULL if the value does not exist.
 		 * */
-        const char* find_val( const void* value ) const;
+        const char* find_val(const void* value) const;
 
         /**
          * Indexing operator method.
          * todo make the returned key_value_pair const.
          * */
-		key_value_pair<void*>* operator[](uint8_t i);
+		inline const key_value_pair<void*>* operator[](list_type i) const
+		{
+			return List<key_value_pair<void*>* >::operator[](i);
+		}
 
 		/** @return the number of items in the dictionary. */
 		inline uint8_t get_item_count(void) const { return items; }
@@ -307,21 +291,11 @@ class GenericDictionary
 	protected:
 
 		/**
-		 * Class constructor. Protected to prevent instantiation of this class.
-		 * */
-		GenericDictionary();
-
-		/**
 		 * Internal method for retrieving a key/value pair.
 		 * @param key the key of the pair.
 		 * @return the found key/.value pair or NULL if it does not exist.
 		 * */
-		key_value_pair<void*>* get(const char* key);
-
-		/**
-		 * Compacts the dictionary.
-		 * */
-		void compact( void );
+		key_value_pair<void*>* get(const char* key) const;
 };
 
 template< class T> class Dictionary: public GenericDictionary
@@ -332,36 +306,52 @@ template< class T> class Dictionary: public GenericDictionary
 		 * Adds an entry in the dictionary.
 		 * @param key the name or key of the entry.
 		 * @param value the value of the entry.
-		 * @return 0 if successful or 1 if the dictionary is full.
+		 * @return the result of the operation.
 		 * */
-		int8_t add(const char*, T value );
+		inline OPERATION_RESULT add(const char* key, T value)
+		{
+			return GenericDictionary::add(key, (void*)value);
+		}
 
 		/**
 		 * Removes an entry.
 		 * @param key the key of the entry.
+		 * @param free_key if the key should be freed.
 		 * @return the value of the entry or NULL if it was not found.
 		 * */
-		T remove(const char* key);
+		inline T remove(const char* key, bool free_key = false)
+		{
+			return (T)GenericDictionary::remove(key, free_key);
+		}
 
 		/**
 		 * Finds an entry.
 		 * @param key the key to the entry.
 		 * @return the value of the entry or NULL if it was not found.
 		 * */
-		T find(const char* key);
+		inline T find(const char* key) const
+		{
+			return (T)GenericDictionary::find(key);
+		}
 
 		/**
 		 * Finds a value.
 		 * @param value the value to find.
 		 * @return the key of the value or NULL if the value does not exist.
 		 * */
-        const char* find_val(const T value);
+        inline const char* find_val(const T value) const
+        {
+        	return GenericDictionary::find_val((const void*)value);
+        }
 
         /**
          * Indexing operator method.
          * todo make the returned key_value_pair const.
          * */
-		key_value_pair<T>* operator[](uint8_t i);
+		inline const key_value_pair<T>* operator[](list_type i) const
+		{
+			return (key_value_pair<T>*)GenericDictionary::operator[](i);
+		}
 
 		/** Remove all items from the dictionary and delete them.
 		 * Only call this method if the dictionary contains values
@@ -381,68 +371,30 @@ template< class T> class Dictionary: public GenericDictionary
 		 * @param use_free true if free should be used, false if delete should be
 		 * used.
 		 * @param free_keys, if keys should be freed as well.*/
-		void _purge(bool use_free, bool free_keys);
-};
-
-///todo move to class definition.
-template< class T>
-int8_t Dictionary<T>::add(const char* key, T value)
-{
-	return GenericDictionary::add(key, (void*)value);
-}
-
-///todo move to class definition.
-template< class T>
-T Dictionary< T >::remove(const char* key)
-{
-	return (T)GenericDictionary::remove(key);
-}
-
-///todo move to class definition.
-template< class T>
-T Dictionary< T >::find(const char* key)
-{
-	return (T)GenericDictionary::find(key);
-}
-
-///todo move to class definition.
-template< class T>
-const char* Dictionary< T >::find_val(const T value)
-{
-	return GenericDictionary::find_val((const void*)value);
-}
-
-///todo move to class definition.
-template< class T>
-key_value_pair<T>* Dictionary<T>::operator[](uint8_t i)
-{
-	return (key_value_pair<T>*)GenericDictionary::operator[](i);
-}
-
-///todo move to class definition.
-template< class T>
-void Dictionary<T>::_purge(bool use_free, bool free_keys)
-{
-	// Do not use remove() because it is slower.
-
-	// free or delete each item.
-	for(uint8_t i = 0; i < items; i++)
-	{
-		if(free_keys)
+		void _purge(bool use_free, bool free_keys)
 		{
-			free((void*)list[i].key);
+			// Do not use remove() because it is slower.
+
+			// free or delete each item.
+			for(uint8_t i = 0; i < items; i++)
+			{
+				key_value_pair<void*>* kv = (key_value_pair<void*>*)list[i];
+
+				if(free_keys)
+				{
+					free((void*)kv->key);
+				}
+
+				use_free ? free((void*)kv->value): delete (T)kv->value;
+
+				free(kv); // Free the key_value_pair structure.
+
+				list[i] = NULL;
+			}
+
+			items = 0; // The dictionary is now empty.
 		}
-
-		T value = operator[](i)->value;
-
-		use_free ? free((void*)value): delete value;
-		list[i].key = NULL;
-		list[i].value = NULL;
-	}
-
-	items = 0; // The dictionary is now empty.
-}
-
+};
 
 /**
  * A list that has been adapted to be used as a queue.
@@ -454,42 +406,29 @@ template< class T > class Queue: public List<T>
 		/**
 		 * Adds an object to the end of the queue.
 		 * @param object the object.
-		 * @return 0 if queuing was successful, 1 if the list is full and 2
-		 * 	if the item is invalid.
+		 * @return the result of the operation.
 		 * */
-		int8_t queue( T object );
+		inline OPERATION_RESULT queue(T object)
+		{
+			return List<T>::append(object);
+		}
 
 		/**
 		 * Removes the object at the beginning of the queue.
 		 * @return the dequeued object or NULL if the queue was empty.
 		 * */
-		T dequeue( void );
+		inline T dequeue(void)
+		{
+			return (T)List<T>::remove(0);
+		}
 
 		/** Checks the object at the beginning of the queue.
 		 * @return the object or NULL if the queue is empty.*/
-		T peek( void ) const;
+		inline T peek(void) const
+		{
+			return (T)List<T>::operator[](0);
+		}
 };
-
-///todo move to class definition.
-template< class T>
-int8_t Queue<T>::queue(T object)
-{
-	return List<T>::append(object);
-}
-
-///todo move to class definition.
-template< class T>
-T Queue<T>::dequeue(void)
-{
-	return (T)List<T>::remove(0);
-}
-
-///todo move to class definition.
-template< class T>
-T Queue<T>::peek(void) const
-{
-	return (T)List<T>::operator[](0);
-}
 
 /**
  * A generic linked list.
@@ -519,19 +458,17 @@ class GenericLinkedList
 		/**
 		 * Adds an item to the end of the list.
 		 * @param item the item.
-		 * @return 0 if appending was successful or 1 if the memory a new
-		 * 	item could not be allocated.
+		 * @return the result of the operation.
 		 * */
-		int8_t append( void* item );
+		OPERATION_RESULT append( void* item );
 
 		/**
 		 * Adds an item a given position.
 		 * @param item the item.
 		 * @param position the position.
-		 * @return 0 if appending was successful, 1 if the memory a new
-		 * 	item could not be allocated and 2 if the position is invalid..
+		 * @return the result of the operation.
 		 * */
-        int8_t insert(void* item, uint8_t position);
+		OPERATION_RESULT insert(void* item, list_type position);
 
         /**
          * Removes the item at a given position.
@@ -539,7 +476,7 @@ class GenericLinkedList
          * @return the removed item of NULL if there was no item at the desired
          * 	position.
          * */
-		void* remove( uint8_t position );
+		void* remove(list_type position);
 
 	private:
 
@@ -547,7 +484,7 @@ class GenericLinkedList
 		 * @param position the position.
 		 * @return the linked list entry or null if the position is invalid.
 		 * */
-		entry* get(uint8_t position);
+		entry* get(list_type position);
 };
 
 /** A linked list.*/
@@ -556,19 +493,23 @@ template<class T> class LinkedList: public GenericLinkedList
 	/**
 	 * Adds an item to the end of the list.
 	 * @param item the item.
-	 * @return 0 if appending was successful or 1 if the memory a new
-	 * 	item could not be allocated.
+	 * @return the result of the operation.
 	 * */
-	int8_t append( T item );
+	inline OPERATION_RESULT append(T item)
+	{
+		return this->GenericLinkedList::append((void*)item);
+	}
 
 	/**
 	 * Adds an item a given position.
 	 * @param item the item.
 	 * @param position the position.
-	 * @return 0 if appending was successful, 1 if the memory a new
-	 * 	item could not be allocated and 2 if the position is invalid..
+	 * @return the result of the operation.
 	 * */
-    int8_t insert(T item, uint8_t position);
+	inline OPERATION_RESULT insert(T item, list_type position)
+	{
+		return this->GenericLinkedList::insert( (void*)item, position );
+	}
 
     /**
      * Removes the item at a given position.
@@ -576,25 +517,11 @@ template<class T> class LinkedList: public GenericLinkedList
      * @return the removed item of NULL if there was no item at the desired
      * 	position.
      * */
-	T remove( uint8_t index );
+	T remove(uint8_t index)
+	{
+		return this->GenericLinkedList::remove(index);
+	}
 };
 
-///todo move to class definition.
-template<class T> int8_t LinkedList<T>::append(T item)
-{
-	return this->GenericLinkedList::append( (void*)item );
-}
-
-///todo move to class definition.
-template<class T> int8_t LinkedList<T>::insert(T item, uint8_t position)
-{
-	return this->GenericLinkedList::insert( (void*)item, position );
-}
-
-///todo move to class definition.
-template<class T> T LinkedList<T>::remove(uint8_t position)
-{
-	return this->GenericLinkedList::remove( position );
-}
 
 #endif /* UTILS_H_ */
