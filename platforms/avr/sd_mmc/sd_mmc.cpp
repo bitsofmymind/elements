@@ -45,7 +45,7 @@ Response::status_code SDMMC::process(Request* request, Response* response)
 
 	if(!request->is_method("get")) // If this is not GET request.
 	{
-		return Response::NOT_IMPLEMENTED_501; // Method not implemented.
+		return Resource::process(request, response);
 	}
 
 	/** TODO when this is the destination of the request, return an OK to indicate

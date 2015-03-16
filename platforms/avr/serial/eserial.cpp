@@ -163,7 +163,7 @@ void ESerial::run(void)
 Response::status_code ESerial::process(const Response* response)
 {
 	File* body = response->get_body(); // Will print the body of the response.
-	print_transaction(response); // Print the transaction.
+	print_transaction(response);
 
 	char buffer[10]; // Will hold part of the body while we read it.
 
@@ -176,7 +176,7 @@ Response::status_code ESerial::process(const Response* response)
 			 // Attempt to read ten bytes from the body.
 			read = body->read(buffer, 10);
 
-			for(uint8_t i = 0; i< read; i++) // Output the bytes read.
+			for(uint8_t i = 0; i < read; i++) // Output the bytes read.
 			{
 				DEBUG_PRINT(buffer[i]);
 			}

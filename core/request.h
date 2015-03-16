@@ -49,7 +49,7 @@ class Request: public Message
 		/// Prints the content of a request to the output.
 		virtual void print() const;
 
-#if REQUEST_SERIALIZATION
+#if REQUEST_SERIALIZATION || ENABLE_HTTP_TRACE
 		/// Serialize the request to a buffer.
 		/** Serialize the request to a buffer and/or returns the length in bytes of the
 		 * serialized request. Simply returning the length is useful for allocating a

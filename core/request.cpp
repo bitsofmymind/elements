@@ -57,7 +57,7 @@ void Request::print(void) const
 	Message::print(); // Hands off printing to parent method.
 }
 
-#if REQUEST_SERIALIZATION
+#if REQUEST_SERIALIZATION || ENABLE_HTTP_TRACE
 size_t Request::serialize(char* buffer, bool write) const
 {
 	char* start = buffer; //The start of the buffer.

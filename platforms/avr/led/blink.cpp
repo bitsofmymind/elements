@@ -160,7 +160,7 @@ Response::status_code Blinker::process(const Request* request, Response* respons
 		return Response::OK_200; // Done.
 	}
 
-	return Response::NOT_IMPLEMENTED_501; // The method was not implemented.
+	return Resource::process(request, response);
 }
 
 

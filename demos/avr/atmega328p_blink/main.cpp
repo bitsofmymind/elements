@@ -35,7 +35,7 @@
  * has been replaced with two semicolons (;;).
  *
  * Examples:
- * GET /blinker HTTP/1.0;;;;
+ * TRACE /blinker HTTP/1.0;;;;
  * POST /blinker HTTP/1.0;;flab1: flab1;;flab2: blab2;;Content-Length: 10;;;;i=300&st=1
  *
  * */

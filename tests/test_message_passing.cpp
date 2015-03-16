@@ -358,6 +358,18 @@ bool test_message_passing(void)
 
 	//######################################################
 
+	std::cout << "   > HTTP TRACE request ... ";
+
+	error |= test_passing(
+		test1,
+		processing1,
+		NULL,
+		"TRACE /resource1_0/resource1_1 HTTP/1.1\r\n\r\n",
+		Response::OK_200
+	);
+
+	//######################################################
+
 	std::cout << "   > request to relative url ... ";
 
 	error |= test_passing(

@@ -27,6 +27,9 @@
 #include "request.h"
 #include "resource.h"
 #include "url.h"
+#if ENABLE_HTTP_TRACE
+	#include <utils/memfile.h>
+#endif
 
 Resource::Resource(void):
 	/* Children is initialized as needed (lazy) in order to save on memory. */
@@ -337,10 +340,47 @@ Response::status_code Resource::process(const Request* request, Response* respon
 {
 	if(!request->to_destination()) //If the message is at destination.
 	{
+
+#if ENABLE_HTTP_TRACE
+		/* The HTTP TRACE method echoes back the original request as it was
+		 * received by this resource. It is used for testing purposes. */
+		if(request->is_method("trace"))
+		{
+			// Compute the size of the serialized request.
+			size_t size = request->serialize(NULL, false);
+
+			char* buffer = (char*)malloc(size);
+
+			if(!buffer) // If there is not enough memory to allocate a buffer.
+			{
+				// Cannot proceed.
+				return Response::INTERNAL_SERVER_ERROR_500;
+			}
+
+			request->serialize(buffer, true);
+
+			// Create a file to hold the body.
+			MemFile* body = new MemFile(buffer, size, false);
+
+			if(!body) // If there is not enough memory for the file.
+			{
+				free(buffer); // No longer needed.
+
+				// Cannot proceed.
+				return Response::INTERNAL_SERVER_ERROR_500;
+			}
+
+			response->set_body(body, "message/http");
+
+			return Response::OK_200;
+		}
+#endif
+
 		//print_transaction(request); //Print it to the console.
 		//Whatever was request is not implemented.
 		return Response::NOT_IMPLEMENTED_501;
 	}
+
 	return Response::PASS_308; //Pass the message.
 }
 
