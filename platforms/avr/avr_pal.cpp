@@ -31,12 +31,12 @@ void __cxa_guard_abort (__guard *) {};
 
 void* operator new(size_t size)
 {
-	return ts_malloc(size);
+	return malloc(size);
 }
 
 void operator delete(void * ptr)
 {
-	ts_free(ptr);
+	free(ptr);
 }
 
 // Timer configuration.

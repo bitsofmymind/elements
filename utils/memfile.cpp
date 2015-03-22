@@ -33,7 +33,7 @@ MemFile::MemFile(const char* const_data):
 {
 	set_size(strlen(const_data) + 1); // Find the end of the buffer.
 
-	data = (char*)ts_malloc(get_size());
+	data = (char*)malloc(get_size());
 	if(!data) // If space for the data could not be allocated.
 	{
 		set_size(0);
@@ -57,7 +57,7 @@ MemFile::~MemFile(void)
 	if(!is_const) // If the file is not read-only.
 	{
 		// This means its data was allocated somehow, free it.
-		ts_free(data);
+		free(data);
 	}
 }
 

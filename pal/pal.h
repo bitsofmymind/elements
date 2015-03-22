@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <configuration.h>
+#include <stdlib.h>
 
 /**
  * @file
@@ -28,6 +29,82 @@
  * PAL stands for Platform Abstraction Layer so in effect, what is defined
  * here abstracts the platform.
  * */
+
+/**
+ * A thread safe version of malloc().
+ * This function can only be located in the header file, otherwise the
+ * program is not correctly compiled.
+ * @param __size the size of the block to allocate.
+ * @return a pointer to the memory block of 0 if there is not enough memory
+ * to complete the request.
+ * */
+static void* thread_safe_malloc(size_t __size)
+{
+	ATOMIC
+	{
+		return malloc(__size);
+	}
+}
+
+/**
+ * A thread safe version of free().
+ * This function can only be located in the header file, otherwise the
+ * program is not correctly compiled.
+ * @param __ptr the pointer to free.
+ * */
+static void thread_safe_free(void* __ptr)
+{
+	ATOMIC
+	{
+		free(__ptr);
+	}
+}
+
+/**
+ * A thread safe version of calloc().
+ * This function can only be located in the header file, otherwise the
+ * program is not correctly compiled.
+ * @param __nele the value to initialize the block to.
+ * @param __size the size of the block.
+ * @return a pointer to the allocated memory block or 0 if there is not enough
+ * memory to complete the request.
+ * */
+static void* thread_safe_calloc(size_t __nele, size_t __size)
+{
+	ATOMIC
+	{
+		return calloc(__nele, __size);
+	}
+}
+
+/**
+ * A thread safe version of realloc().
+ * This function can only be located in the header file, otherwise the
+ * program is not correctly compiled.
+ * @param __ptr a pointer to the block to reallocated.
+ * @param __size the new size of the block.
+ * @return a pointer to the reallocated memory block or 0 if there is not enough
+ * memory to complete the request.
+ * */
+static void* thread_safe_realloc(void* __ptr, size_t __size)
+{
+	ATOMIC
+	{
+		return realloc(__ptr, __size);
+	}
+}
+
+/** A redefine of free() that points to a thread safe version of the function.*/
+#define free(ptr) thread_safe_free(ptr)
+
+/** A redefine of malloc() that points to a thread safe version of the function.*/
+#define malloc(size) thread_safe_malloc(size)
+
+/** A redefine of calloc() that points to a thread safe version of the function.*/
+#define calloc(nele, size) thread_safe_calloc(nele, size)
+
+/** A redefine of realloc() that points to a thread safe version of the function.*/
+#define realloc(ptr, size) thread_safe_realloc(ptr, size)
 
 /**
  * Initializes the platform to make it ready for executing the
@@ -120,40 +197,12 @@ extern void processing_wake();
 extern void processing_sleep(uptime_t time);
 
 #if HEARTBEAT
-
 /**
  * Does a heart beat. A heart beat is any mean to let a user know that the
  * framework is not stalled. It can be a flashing led, a sound, etc.
  * */
 extern void heart_beat(void);
-
 #endif
-
-/**
- * Allocates contiguous bytes on the heap. Identical to ANSI C's malloc except
- * that it is thread safe (or reentrant).
- * @param size the number of byte to allocate.
- * @return a pointer to the allocated block or NULL if allocation failed.
- * */
-void* ts_malloc(size_t size);
-
-/**
- * Frees a block previously allocated with ts_malloc. Identical to ANSI C's free
- * except that it is thread safe (or reentrant).
- * @param block the pointer to the block to free.
- * */
-void ts_free(void* block);
-
-/**
- * Attempts to reallocate a block previously allocated with ts_malloc.
- * Identical to ANSI C's realloc except that it is thread safe (or reentrant).
- * @param ptr the pointer to the buffer to reallocate.
- * @param size the new desired size.
- * @return NULL if the new buffer could not be allocated or the pointer to the
- * new block of the desired size with the bytes from the original block copied
- * to it.
- * */
-void* ts_realloc(void* ptr, size_t size);
 
 #if OUTPUT_ERRORS // If errors should be displayed.
 
@@ -472,7 +521,7 @@ namespace Debug
 	void println(uint32_t value, uint8_t base);
 }
 
-#else // No outputting is required, bland the macros.
+#else // No outputting is required, blank the macros.
 
 #define DEBUG_PRINT(a)
 #define DEBUG_NPRINT(a, l)

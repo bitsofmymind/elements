@@ -41,7 +41,7 @@ void ESerial::receive(uint8_t c)
 	if(index >= buffer_size) // If we have overrun the buffer.
 	{
 		// Allocate a new larger buffer.
-		char* new_buffer = (char*)ts_malloc(buffer_size + MESSAGE_BUFFER_INCREMENT_SIZE);
+		char* new_buffer = (char*)malloc(buffer_size + MESSAGE_BUFFER_INCREMENT_SIZE);
 
 		if(new_buffer != NULL) // If allocation succeeded.
 		{
@@ -49,7 +49,7 @@ void ESerial::receive(uint8_t c)
 			{
 				// Copy the old buffer over to the new buffer.
 				memcpy(new_buffer, buffer, buffer_size);
-				ts_free(buffer); // Free the old buffer.
+				free(buffer); // Free the old buffer.
 			}
 			// Increase the size of the buffer.
 			buffer_size += MESSAGE_BUFFER_INCREMENT_SIZE;
@@ -59,7 +59,7 @@ void ESerial::receive(uint8_t c)
 		{
 			if(buffer) // if there is a currently allocated buffer.
 			{
-				ts_free(buffer); // Free it.
+				free(buffer); // Free it.
 				buffer = NULL;
 			}
 
@@ -108,7 +108,7 @@ void ESerial::run(void)
 
 	if(!request) // If there is not enough memory for the request.
 	{
-		ts_free(buf); // Free the message buffer.
+		free(buf); // Free the message buffer.
 
 		return; // Not enough memory to transform the message into a request.
 	}
@@ -125,7 +125,7 @@ void ESerial::run(void)
 	// Parse the message.
 	Message::PARSER_RESULT res = request->parse(buf, len);
 
-	ts_free(buf); // Done parsing that part of the message.
+	free(buf); // Done parsing that part of the message.
 
 	switch(res)
 	{

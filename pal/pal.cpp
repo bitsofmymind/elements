@@ -24,7 +24,6 @@
 
 }*/
 
-
 #if TIME_KEEPING
 
 	uint64_t system_time = 0;
@@ -67,7 +66,6 @@ void increase_uptime(uptime_t time)
 /*This is the Interrupt handling function for time keeping, it should be vectored to every millisecond.*/
 
 
-
 void* ts_malloc(size_t size)
 {
 	void* block;
@@ -83,33 +81,6 @@ void* ts_malloc(size_t size)
 	{
 		//This should be optimized away by the compiler when ERROR_OUTPUT is defined to 0.
 		ERROR_PRINTLN("Malloc failed!");
-	}
-
-	return block;
-}
-
-void ts_free(void* block)
-{
-	if(block != NULL) // Makes sure we are not freeing a NULL pointer.
-	{
-		/* To prevent corruption of the heap due to concurrent access between two
-		 * threads or by an interrupt routine, this call is made atomic.*/
-		ATOMIC
-		{
-			free(block);
-		}
-	}
-}
-
-void* ts_realloc(void* ptr, size_t size)
-{
-	void* block;
-
-	/* To prevent corruption of the heap due to concurrent access between two
-	 * threads or by an interrupt routine, this call is made atomic.*/
-	ATOMIC
-	{
-		block = realloc(ptr, size);
 	}
 
 	return block;

@@ -23,6 +23,7 @@
 #include <platforms/avr/avr_pal.h>
 #include <platforms/avr/serial/eserial.h>
 #include <avr/io.h>
+
 /**
  * This program creates a simple system that blinks the onboard led on an
  * arduino development board and provides serial access to itself.

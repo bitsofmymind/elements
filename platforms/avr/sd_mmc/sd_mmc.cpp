@@ -73,7 +73,7 @@ Response::status_code SDMMC::process(Request* request, Response* response)
 
 	// Allocate memory for a string to store the path. + 1 for null character.
 	/// TODO null character is not needed because a space for the / was added previously.
-	char* path = (char*)ts_malloc(len + 1);
+	char* path = (char*)malloc(len + 1);
 
 	if(!path) // If the string could not be allocated.
 	{
@@ -105,7 +105,7 @@ Response::status_code SDMMC::process(Request* request, Response* response)
 		 * processing a path when there is no disk. */
 
 		//No disk present, disk not initialized of failed to initialize.
-		ts_free(path);
+		free(path);
 
 		/* The path requested was not found because there is no accessible disk.
 		 * However, it might become available in the future. */
@@ -124,7 +124,7 @@ Response::status_code SDMMC::process(Request* request, Response* response)
 		{
 			// Not enough resources to process the request.
 			sc = Response::SERVICE_UNAVAILABLE_503;
-			ts_free(path);
+			free(path);
 		}
 		// If the file was successfully fetched.
 		else if(file->last_op_result == FR_OK)

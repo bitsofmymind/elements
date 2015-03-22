@@ -240,4 +240,11 @@
 	#define LOCATION 1
 #endif
 
+/// Enable the HTTP TRACE method.
+/**
+ * The HTTP TRACE method echoes back the received request to the sender. Set to
+ * 1 to enable this method for every resource in the framework.
+ * */
+#define ENABLE_HTTP_TRACE 1
+
 #endif /* CONFIGURATION_H_ */

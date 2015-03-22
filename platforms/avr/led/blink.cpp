@@ -96,7 +96,7 @@ File* Blinker::http_get(void)
 	t->add_narg(_interval);
 
 	// Allocate a buffer containing the stated of the LED.
-	char* c = (char*)ts_malloc(strlen("checked=\"checked\"") + 1);
+	char* c = (char*)malloc(strlen("checked=\"checked\"") + 1);
 	memcpy(c, "checked=\"checked\"", strlen("checked=\"checked\"") + 1);
 
 	if(!state) // If blinking is off.

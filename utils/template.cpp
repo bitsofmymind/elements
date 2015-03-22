@@ -58,7 +58,7 @@ void Template::add_arg(char* arg)
 void Template::skip_argument(void)
 {
 	// Allocate space for an empty string.
-	char* empty_argument = (char*)ts_malloc(sizeof(char));
+	char* empty_argument = (char*)malloc(sizeof(char));
 
 	if(empty_argument) // If allocation was a success.
 	{
@@ -72,7 +72,7 @@ void Template::add_narg(uint8_t arg)
 	///todo simplify this method using by making the size of the argument configurable.
 
 	// Allocate a buffer to contain the string representation of the argument.
-	char* string = (char*)ts_malloc(4);
+	char* string = (char*)malloc(4);
 
 	if(string) // If allocation was successful.
 	{
@@ -91,7 +91,7 @@ void Template::add_narg(uint16_t arg)
 	///todo simplify this method using by making the size of the argument configurable.
 
 	// Allocate a buffer to contain the string representation of the argument.
-	char* string = (char*)ts_malloc(6);
+	char* string = (char*)malloc(6);
 
 	if(string) // If allocation was successful.
 	{
@@ -111,7 +111,7 @@ void Template::add_narg(uint32_t arg)
 	///todo simplify this method using by making the size of the argument configurable.
 
 	// Allocate a buffer to contain the string representation of the argument.
-	char* string = (char*)ts_malloc(11);
+	char* string = (char*)malloc(11);
 
 	if(string) // If allocation was successful.
 	{

@@ -31,7 +31,7 @@ FATFile::FATFile(char* name):
 FATFile::~FATFile()
 {
 	f_close(&file); // Close the open file.
-	ts_free(name); // The path string to the file is no longer needed.
+	free(name); // The path string to the file is no longer needed.
 }
 
 size_t FATFile::read(char* buffer, size_t length)
