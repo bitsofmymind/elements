@@ -180,6 +180,108 @@ bool test_response_parsing(void)
 
 	//######################################################
 
+	std::cout << "   > incomplete response ... ";
+
+	error |= test_parsing(
+		new Response(Response::NONE_0, NULL),
+		"HTTP/1.0 200 OK\r\nContent-Length: 8\r\n",
+		Message::PARSING_SUCESSFUL
+	);
+
+	//######################################################
+
+	std::cout << "   > empty response ... ";
+
+	error |= test_parsing(
+		new Response(Response::NONE_0, NULL),
+		"",
+		Message::SIZE_IS_0
+	);
+
+	//######################################################
+
+	std::cout << "   > reusing same response object ... ";
+
+	response = new Response(Response::NONE_0, NULL);
+	const char* message = "HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123456";
+
+	if(response->parse(message, strlen(message)) != Message::PARSING_COMPLETE)
+	{
+		std::cout << "(error)" << std::endl;
+		error = true;
+	}
+	else
+	{
+		/* The extra data is automatically added to the body of the message.
+		 * Once we have gone beyond the allocated size of the body, a BODY_OVERFLOW
+		 * ERROR should be returned. */
+		if(response->parse(message, strlen(message)) != Message::BODY_OVERFLOW)
+		{
+			std::cout << "(error)" << std::endl;
+			error = true;
+		}
+		else
+		{
+			std::cout << "(done)" << std::endl;
+		}
+	}
+
+	delete response;
+
+	//######################################################
+
+	std::cout << "   > null character in response ... ";
+
+	error |= test_parsing(
+		new Response(Response::NONE_0, NULL),
+		"HTTP/1.1 200 OK\r\0\nContent-Length: 6\r\n\r\n123456",
+		Message::PARSING_SUCESSFUL
+	);
+
+	//######################################################
+
+	std::cout << "   > buffer size mismatch ... ";
+
+	error |= test_parsing(
+		new Response(Response::NONE_0, NULL),
+		"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123456",
+		Message::PARSING_COMPLETE,
+		200
+	);
+
+	//######################################################
+
+	std::cout << "   > non null terminated buffer ... ";
+
+	error |= test_parsing(
+		new Response(Response::NONE_0, NULL),
+		"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123456",
+		Message::PARSING_SUCESSFUL,
+		20
+	);
+
+	//######################################################
+
+	std::cout << "   > incorrectly terminated lines (\\r) ... ";
+
+	error |= test_parsing(
+		new Response(Response::NONE_0, NULL),
+		"HTTP/1.1 200 OK\rContent-Length: 6\r123456",
+		Message::LINE_MALFORMED
+	);
+
+	//######################################################
+
+	std::cout << "   > incorrectly terminated lines (\\n) ... ";
+
+	error |= test_parsing(
+		new Response(Response::NONE_0, NULL),
+		"HTTP/1.1 200 OK\nContent-Length: 6\r\n123456",
+		Message::PARSING_SUCESSFUL // Interpreted as an incomplete buffer.
+	);
+
+	//######################################################
+
 	std::cout << "   > parsing a request ... ";
 
 	error |= test_parsing(

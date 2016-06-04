@@ -29,7 +29,14 @@ bool test_request_parsing(void);
  * @param message the object that will parse the data.
  * @param data the data to parse.
  * @param expected_result the expected result of the parsing.
+ * @param data_length force a different length for data, if left to 0
+ * strlen() will be used.
  * @return if there were errors.*/
-bool test_parsing(Message* message, const char* data, Message::PARSER_RESULT expected_result);
+bool test_parsing(
+	Message* message,
+	const char* data,
+	Message::PARSER_RESULT expected_result,
+	size_t data_length = 0
+);
 
 #endif //TEST_REQUEST_PARSING_H_

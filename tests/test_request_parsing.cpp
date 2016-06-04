@@ -22,12 +22,17 @@
 #include <utils/utils.h>
 #include <utils/memfile.h>
 
-bool test_parsing(Message* message, const char* data, Message::PARSER_RESULT expected_result)
+bool test_parsing(
+	Message* message,
+	const char* data,
+	Message::PARSER_RESULT expected_result,
+	size_t data_length = 0
+)
 {
 	bool error = false;
 
 	// If parsing the message failed.
-	if(message->parse(data, strlen(data)) != expected_result)
+	if(message->parse(data, data_length ? data_length : strlen(data)) != expected_result)
 	{
 		std::cout << "(error)" << std::endl;
 		error = true;
@@ -249,6 +254,16 @@ bool test_request_parsing(void)
 
 	//######################################################
 
+	std::cout << "   > special characters in body ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 10\r\n\r\n123\r\n\r\n456",
+		Message::PARSING_COMPLETE
+	);
+
+	//######################################################
+
 	std::cout << "   > invalid field name ... ";
 	"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nCo\rntent-Le\nngth: 6\r\n123456",
 	error |= test_parsing(
@@ -280,6 +295,16 @@ bool test_request_parsing(void)
 
 	//######################################################
 
+	std::cout << "   > No Content-Length but body present ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\n\r\n123456",
+		Message::PARSING_COMPLETE // Body should be ignored.
+	);
+
+	//######################################################
+
 	std::cout << "   > Content-Length too large ... ";
 
 	error |= test_parsing(
@@ -296,6 +321,132 @@ bool test_request_parsing(void)
 		new Request(),
 		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 4\r\n\r\n123456",
 		Message::BODY_OVERFLOW
+	);
+
+	//######################################################
+
+	std::cout << "   > incomplete request ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nConte",
+		Message::PARSING_SUCESSFUL
+	);
+
+	//######################################################
+
+	std::cout << "   > empty request ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"",
+		Message::SIZE_IS_0
+	);
+
+	//######################################################
+
+	std::cout << "   > reusing same request object ... ";
+
+	request = new Request();
+	const char* message = "GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456";
+
+	if(request->parse(message, strlen(message)) != Message::PARSING_COMPLETE)
+	{
+		std::cout << "(error)" << std::endl;
+		error = true;
+	}
+	else
+	{
+		/* The extra data is automatically added to the body of the message.
+		 * Once we have gone beyond the allocated size of the body, a BODY_OVERFLOW
+		 * ERROR should be returned. */
+		if(request->parse(message, strlen(message)) != Message::BODY_OVERFLOW)
+		{
+			std::cout << "(error)" << std::endl;
+			error = true;
+		}
+		else
+		{
+			std::cout << "(done)" << std::endl;
+		}
+	}
+
+	delete request;
+
+	//######################################################
+
+	std::cout << "   > null character in request ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd\0 HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
+		Message::PARSING_SUCESSFUL
+	);
+
+	//######################################################
+
+	std::cout << "   > buffer size mismatch ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
+		Message::PARSING_COMPLETE,
+		200
+	);
+
+	//######################################################
+
+	std::cout << "   > non null terminated buffer ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
+		Message::PARSING_SUCESSFUL,
+		20
+	);
+
+	//######################################################
+
+	std::cout << "   > incorrectly terminated lines (\\r) ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\rContent-Length: 6\r\r123456",
+		Message::LINE_MALFORMED
+	);
+
+	//######################################################
+
+	std::cout << "   > incorrectly terminated header (\\r) ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 6\r\n\r123456",
+		Message::LINE_MALFORMED
+	);
+
+	//######################################################
+
+	std::cout << "   > incorrectly terminated header (\\n) ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 6\r\n\n123456",
+		Message::PARSING_SUCESSFUL
+		// Should be seen as a (invalid) field name in an incomplete message.
+	);
+
+	//######################################################
+
+	std::cout << "   > incorrectly terminated lines (\\n) ... ";
+
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\nContent-Length: 6\r\n\r\n123456",
+		Message::PARSING_COMPLETE
+		/* For now, what comes after the URL (like the HTTP version) is not
+		 * parsed and ignored. Hence, Content-Length will be ignored and
+		 * the body as well.*/
 	);
 
 	//######################################################
