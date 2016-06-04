@@ -134,7 +134,7 @@ bool test_response_parsing(void)
 
 	error |= test_parsing(
 		new Response(Response::NONE_0, NULL),
-		"HTTP/1.1 SERVER ERROR\r\nTo-Url\r\n\r\n",
+		"HTTP/1.1 500 SERVER ERROR\r\nTo-Url\r\n\r\n",
 		Message::LINE_MALFORMED
 	);
 

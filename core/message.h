@@ -251,12 +251,12 @@ class Message
 		 */
 		Message::PARSER_RESULT store_body(const char* buffer, size_t size);
 
-		/** Extract the field value from a header.
-		 * @param name the name of the field (MUST BE LOWER CASE).
-		 * @param line the line
-		 * @return the field.
+		/** Extract values from a header field line.
+		 * @param line the line containing the field
+		 * @param field the name of the field in position 0 and the value in position 1
+		 * @return bool if extraction was successful
 		 * */
-		char* extract_field_value(const char* name, char* line) const;
+		bool extract_field(char* line, char* field[2]) const;
 };
 
 #endif /* MESSAGE_H_ */

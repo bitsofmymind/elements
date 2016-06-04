@@ -66,6 +66,22 @@ void Message::print() const
 	{
 		DEBUG_PRINTLN('0'); //Else Content-Length is 0
 	}
+
+	if(to_url)
+	{
+		DEBUG_PRINT("to-url");
+		DEBUG_PRINT(": ");
+		to_url->print();
+		DEBUG_PRINTLN();
+	}
+
+	if(from_url)
+	{
+		DEBUG_PRINT("from-url");
+		DEBUG_PRINT(": ");
+		from_url->print();
+		DEBUG_PRINTLN();
+	}
 }
 
 size_t Message::serialize(char* buffer, bool write) const
@@ -330,16 +346,21 @@ void Message::previous(void)
 
 Message::PARSER_RESULT Message::parse_header(char* line)
 {
-	char* field_value;
+	char* field[2];
+
+	if(!extract_field(line, field))
+	{
+		return LINE_MALFORMED;
+	}
 
 	/*The content length line gets special treatment because it gives the
 	 * size of the body, for the rest of the fields, we should proceed normally
 	 * and store them in their structure.*/
 	//If the header line is "content-length".
-	if(!body && (field_value = extract_field_value("content-length", line)))
+	if(!body && !strcmp(field[0], "content-length"))
 	{
 		// Get the content length by converting from its textual representation.
-		size_t content_length = atoi(field_value);
+		size_t content_length = atoi(field[1]);
 
 		// Create a buffer to hold the body.
 		char* buffer = (char*)malloc(content_length);
@@ -360,22 +381,41 @@ Message::PARSER_RESULT Message::parse_header(char* line)
 			return OUT_OF_MEMORY; // Return the appropriate error.
 		}
 	}
-
-	/* If the From-Url is present, this means the message comes from another
+	/* If the from-url is present, this means the message comes from another
 	 * resource.*/
-	else if((field_value = extract_field_value("from-url", line)))
+	else if(!strcmp(field[0], "from-url"))
 	{
 		if(!from_url)
 		{
 			from_url = new URL();
+
+			if(!from_url) // If no memory could be allocated.
+			{
+				return OUT_OF_MEMORY;
+			}
 		}
 
-		if(!from_url) // If no memory could be allocated.
+		if(from_url->parse(field[1]) != URL::VALID)
 		{
-			return OUT_OF_MEMORY;
+			// Do not delete the allocated url string, it is now owned by the URL.
+			return LINE_MALFORMED;
+		}
+	}
+	/* If the To-Url is present, this means the message comes from another
+	 * resource.*/
+	else if(!strcmp(field[0], "to-url"))
+	{
+		if(!to_url)
+		{
+			to_url = new URL();
+
+			if(!to_url) // If no memory could be allocated.
+			{
+				return OUT_OF_MEMORY;
+			}
 		}
 
-		if(from_url->parse(field_value) != URL::VALID)
+		if(to_url->parse(field[1]) != URL::VALID)
 		{
 			// Do not delete the allocated url string, it is now owned by the URL.
 			return LINE_MALFORMED;
@@ -384,47 +424,52 @@ Message::PARSER_RESULT Message::parse_header(char* line)
 
 	//Store fields in buffers
 
-	return PARSING_SUCESSFUL; //Parsing that line was successful.
+	return PARSING_SUCESSFUL; // Parsing that line was successful.
 }
 
-char* Message::extract_field_value(const char* name, char* line) const
+bool Message::extract_field(char* line, char* field[2]) const
 {
-	for(uint8_t i = 0; ; i++)
+	size_t field_body_start = false;
+
+	for(size_t i = 0; i < SIZE_MAX; i++)
 	{
-		char c = line[i]; // This is not the field we are looking for.
+		char c = line[i];
 
-		if(c == '\0') // If the line terminated prematurely.
+		if(field_body_start)
 		{
-			return NULL; // It is invalid.
-		}
-
-		if(name[i] == '\0') // If the name is terminated.
-		{
-			// If the end of the wanted name and field name have been reached.
-			if(c == ':')
+			if(c == '\0')
 			{
-				line += i; // There is a match.
-				break;
+				field[1] = line + field_body_start;
+				return true;
 			}
 
-			return NULL;
+			continue;
+		}
+
+		if(c == ':') // End of field-name found.
+		{
+			field[0] = line;
+			line[i] = '\0';
+
+			while(line[i++ + 1] == ' '); // Skip all the white spaces.
+
+			field_body_start = i; // field-name has been parsed.
+			continue;
+		}
+
+		if(c < 32) // If the character is a control code.
+		{
+			return false; // Field is invalid.
 		}
 
 		// If a letter in the field_name is upper case.
 		if(c >= 'A' && c <= 'Z')
 		{
-			c += 32; // Change it to lower case.
-		}
-
-		if(name[i] != c) // If the two letters don't match.
-		{
-			return NULL; // This is not the field we are looking for.
+			line[i] += 32; // Change it to lower case.
 		}
 	}
 
-	while(*++line == ' '); // Skip all spaces.
-
-	return line;
+	return false; // The field's format is incorrect.
 }
 
 Message::PARSER_RESULT Message::store_body(const char* buffer, size_t size)

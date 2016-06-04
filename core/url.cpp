@@ -408,7 +408,7 @@ URL::PARSING_RESULT URL::parse(const char* str)
 		&& !authority // If there was no authority.
 #endif
 #if URL_ARGUMENTS
-		&& !arguments->get_item_count() // If there are no arguments.
+		&& (arguments && !arguments->get_item_count()) // If there are no arguments.
 #endif
 #if URL_FRAGMENT
 		&& !fragment // If there is no fragment.

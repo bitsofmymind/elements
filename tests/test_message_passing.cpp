@@ -149,6 +149,9 @@ class TestInterface: public Authority
 				return 1;
 			}
 
+			// std::cout << std::endl << "receiving message" << std::endl;
+			//message->print();
+
 			message_queue.queue(message); // Queue the message for processing.
 
 			free(data);
@@ -266,6 +269,9 @@ class TestInterface: public Authority
 			message->serialize(data, true);
 
 			data[message_size] = '\0'; // Terminate the message.
+
+			//std::cout << std::endl << "sending message" << std::endl;
+			//message->print();
 
 			_interface->receive(data); // Send the message to the other interface.
 

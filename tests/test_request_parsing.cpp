@@ -249,12 +249,22 @@ bool test_request_parsing(void)
 
 	//######################################################
 
-	std::cout << "   > malformed header ... ";
-
+	std::cout << "   > invalid field name ... ";
+	"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nCo\rntent-Le\nngth: 6\r\n123456",
 	error |= test_parsing(
 		new Request(),
 		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent \r\nLength: 6\r\n\r\n123456",
-		Message::HEADER_MALFORMED
+		Message::LINE_MALFORMED
+	);
+
+
+	//######################################################
+
+	std::cout << "   > empty header field-body ... ";
+	error |= test_parsing(
+		new Request(),
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent\r\nLength: 6\r\n\r\n123456",
+		Message::LINE_MALFORMED
 	);
 
 	//######################################################

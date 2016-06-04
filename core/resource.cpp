@@ -249,8 +249,14 @@ void Resource::dispatch(Message* message)
 					}
 				}
 
-				dispatch(response); //Dispatch it.
+				dispatch(response);
+
 				return; //Done.
+			}
+			else // The message is a response.
+			{
+				// Errors can only be returned for Requests.
+				delete response;
 			}
 			//TODO what if the response code for a resource was not within the accepted range?
 			break;

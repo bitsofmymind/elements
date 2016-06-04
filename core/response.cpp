@@ -74,8 +74,6 @@ void Response::print(void) const
 #if RESPONSE_DESERIALIZATION
 Message::PARSER_RESULT Response::parse_header(char* line)
 {
-	char* field_value;
-
 	if(!_response_code_int) //If this is the first time we received a header line.
 	{
 		char* space = strchr(line, ' '); // Find the first space.
@@ -100,25 +98,6 @@ Message::PARSER_RESULT Response::parse_header(char* line)
 		// The reason phrase is not important.
 
 		return PARSING_SUCESSFUL;
-	}
-
-	//Here we parse for headers we want to keep.
-
-	/* If the To-Url is present, this means the message comes from another
-	 * resource.*/
-	else if(!to_url && (field_value = extract_field_value("to-url", line)))
-	{
-		to_url = new URL();
-
-		if(!to_url) // If no memory could be allocated.
-		{
-			return OUT_OF_MEMORY;
-		}
-
-		if(to_url->parse(field_value) != URL::VALID)
-		{
-			return LINE_MALFORMED;
-		}
 	}
 
 	 // Calls the parent to parse other headers.
