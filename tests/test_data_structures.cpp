@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include "string.h"
 
+using namespace Utils;
+
 bool test_data_structures(void)
 {
 	bool error = false;

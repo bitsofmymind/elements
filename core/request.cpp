@@ -243,5 +243,5 @@ uint8_t Request::find_arg(const char* key, char* value, uint8_t max_size) const
 
 bool Request::is_method(const char* m) const
 {
-	return !strcmp(method, m);
+	return method && !strcmp(method, m);
 }

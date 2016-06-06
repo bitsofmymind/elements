@@ -40,6 +40,7 @@ on the Atmel AVR 8-bit architecture.
 
 STRUCTURE
 ----------- 
+    bindings/           bindings to scripting languages (python, php etc.)
     core/               core classes of the framework
     demos/              demos
     pal/                platform abstraction functions

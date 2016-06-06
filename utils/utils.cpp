@@ -22,6 +22,7 @@
 #include "utils.h"
 #include <string.h>
 
+using namespace Utils;
 
 GenericList::GenericList(void):
 	items(0)

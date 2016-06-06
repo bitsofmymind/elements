@@ -30,16 +30,22 @@ typedef uint8_t list_type;
 /** The maximum size the list can have.*/
 #define MAX_SIZE 255
 
-/** A structure representing the different results an operation on a data
- * structure can have.*/
-enum OPERATION_RESULT
+namespace Utils
 {
-	SUCCESS = 0,
-	POSITION_INVALID,
-	STRUCTURE_FULL,
-	ITEM_INVALID,
-	OUT_OF_MEMORY
-};
+	/* Since SUCCESS is pretty generic enum entry,
+	 * a namespace is used to prevent conflicts when user other code bases.*/
+
+	/** A structure representing the different results an operation on a data
+	 * structure can have.*/
+	enum OPERATION_RESULT
+	{
+		SUCCESS = 0,
+		POSITION_INVALID,
+		STRUCTURE_FULL,
+		ITEM_INVALID,
+		OUT_OF_MEMORY
+	};
+}
 
 /**
  * A generic list. Only to be used as a base class for a template class.
@@ -79,7 +85,7 @@ class GenericList
 		 * @param item the item to append.
 		 * @return the result of the operation.
 		 * */
-		inline OPERATION_RESULT append(void* item)
+		inline Utils::OPERATION_RESULT append(void* item)
 		{
 			return insert(item, get_item_count());
 		}
@@ -90,7 +96,7 @@ class GenericList
 		 * @param position the position to insert the item at.
 		 * @return the result of the operation.
 		 * */
-		OPERATION_RESULT insert(void* item, list_type position);
+		Utils::OPERATION_RESULT insert(void* item, list_type position);
 
         /**
          * Removes a given item from the list.
@@ -134,7 +140,7 @@ class GenericList
 		 * Grow the list.
 		 * @return the result of the operation.
 		 * */
-		OPERATION_RESULT _grow(void);
+		Utils::OPERATION_RESULT _grow(void);
 #endif
 };
 
@@ -147,7 +153,7 @@ template<class T> class List: public GenericList
 		 * @param item the item to append.
 		 * @return the result of the operation.
 		 * */
-		inline OPERATION_RESULT append(T item)
+		inline Utils::OPERATION_RESULT append(T item)
 		{
 			return GenericList::append((void*)item);
 		}
@@ -158,7 +164,7 @@ template<class T> class List: public GenericList
 		 * @param position the position to insert the item at.
 		 * @return the result of the operation.
 		 * */
-        inline OPERATION_RESULT insert(T item, list_type position)
+        inline Utils::OPERATION_RESULT insert(T item, list_type position)
         {
             return GenericList::insert((void*)item, position);
         }
@@ -252,7 +258,7 @@ class GenericDictionary: protected List<key_value_pair<void*>* >
 		 * @param value the value of the entry.
 		 * @return the result of the operation.
 		 * */
-		OPERATION_RESULT add(const char* key, void* value);
+		Utils::OPERATION_RESULT add(const char* key, void* value);
 
 		/**
 		 * Removes an entry.
@@ -308,7 +314,7 @@ template< class T> class Dictionary: public GenericDictionary
 		 * @param value the value of the entry.
 		 * @return the result of the operation.
 		 * */
-		inline OPERATION_RESULT add(const char* key, T value)
+		inline Utils::OPERATION_RESULT add(const char* key, T value)
 		{
 			return GenericDictionary::add(key, (void*)value);
 		}
@@ -408,7 +414,7 @@ template< class T > class Queue: public List<T>
 		 * @param object the object.
 		 * @return the result of the operation.
 		 * */
-		inline OPERATION_RESULT queue(T object)
+		inline Utils::OPERATION_RESULT queue(T object)
 		{
 			return List<T>::append(object);
 		}
@@ -460,7 +466,7 @@ class GenericLinkedList
 		 * @param item the item.
 		 * @return the result of the operation.
 		 * */
-		OPERATION_RESULT append( void* item );
+		Utils::OPERATION_RESULT append( void* item );
 
 		/**
 		 * Adds an item a given position.
@@ -468,7 +474,7 @@ class GenericLinkedList
 		 * @param position the position.
 		 * @return the result of the operation.
 		 * */
-		OPERATION_RESULT insert(void* item, list_type position);
+		Utils::OPERATION_RESULT insert(void* item, list_type position);
 
         /**
          * Removes the item at a given position.
@@ -495,7 +501,7 @@ template<class T> class LinkedList: public GenericLinkedList
 	 * @param item the item.
 	 * @return the result of the operation.
 	 * */
-	inline OPERATION_RESULT append(T item)
+	inline Utils::OPERATION_RESULT append(T item)
 	{
 		return this->GenericLinkedList::append((void*)item);
 	}
@@ -506,7 +512,7 @@ template<class T> class LinkedList: public GenericLinkedList
 	 * @param position the position.
 	 * @return the result of the operation.
 	 * */
-	inline OPERATION_RESULT insert(T item, list_type position)
+	inline Utils::OPERATION_RESULT insert(T item, list_type position)
 	{
 		return this->GenericLinkedList::insert( (void*)item, position );
 	}

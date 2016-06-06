@@ -32,14 +32,6 @@ class Request: public Message
 
 	public:
 
-		///HTTP METHODS
-		///HTTP GET request method.
-		static const char GET[];
-		///HTTP POST request method.
-		static const char POST[];
-		///HTTP DELETE request method.
-		static const char DELETE[];
-
 		/// Class constructor.
 		Request();
 
