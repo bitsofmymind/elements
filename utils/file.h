@@ -56,6 +56,15 @@ class File
 		 * @return the number of bytes that have been read. */
 		virtual size_t read(char* buffer, size_t length) = 0;
 
+		/// Reads bytes into a buffer.
+		/**
+		 * Note: this overload has been created to satisfy SWIG's cstring.i.
+		 * @param buffer the buffer to transfer the read bytes into.
+		 * @param length the number of bytes to read. On return, this
+		 * value will contain the actual number of bytes read.
+		 * @return the number of bytes that have been read. */
+		size_t read(char* buffer, size_t* length);
+
 		/// Extracts the whole file into a buffer.
 		/** @param buffer the buffer to transfer the data to.
 		 * @return the number of bytes that have been transfered. */
@@ -88,7 +97,7 @@ class File
 
 	protected:
 
-		/** @return size the size of the file. */
+		/** @param size the size of the file. */
 		inline void set_size(size_t size) { _size = size; }
 };
 

@@ -6,14 +6,19 @@ all:
 	make clean
 	swig -php -c++ base.i
 	mv base.php elements/
-	$(CC) $(FLAGS) $(INCLUDES) ../../pal/*.cpp ../../utils/*.cpp base_wrap.cpp php.cpp ../../core/*.cpp
+	swig -php -c++ -outcurrentdir ../python/utils.i
+	mv utils.php elements/
+	$(CC) $(FLAGS) $(INCLUDES) ../../utils/*.cpp utils_wrap.cpp
+	$(CC) -shared *.o -o elements/_utils.so
+	rm utils_wrap.o
+	$(CC) $(FLAGS) $(INCLUDES) ../../pal/*.cpp base_wrap.cpp php.cpp ../../core/*.cpp
 	$(CC) -shared *.o -o elements/_base.so
-	rm -f base_wrap.cpp
+	rm -f php_*.h
 	rm -f *.so *.d *.o *_wrap.*
 	
 clean:
-	rm -f elements/base.php*
-	rm -f elements/_base.so
-	rm -f base_wrap.cpp
-	rm -f php_base.h
+	rm -f elements/*.php
+	rm -f elements/*.so
+	rm -f *_wrap.cpp
+	rm -f php_*.h
 	rm -f *.so *.d *.o *_wrap.* 

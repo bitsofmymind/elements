@@ -89,7 +89,9 @@ Message::PARSER_RESULT Response::parse_header(char* line)
 		// Save the response code.
 		_response_code_int = atoi(space + 1);
 
-		// If there was no response code or the response code overflowed.
+		/* If there was no response code or the response code overflowed.
+		 * Response code will overflow if the string represents a larger number
+		 * than what can be held by _response_code_int. */
 		if(_response_code_int == NONE_0 || _response_code_int == MAXIMUM_65535)
 		{
 			return HEADER_MALFORMED;

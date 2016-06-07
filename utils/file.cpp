@@ -42,11 +42,16 @@ void File::print(void)
 }
 #endif
 
-
 size_t File::extract(char* buffer)
 {
 	_cursor = 0; // Moves the cursor to the beginning of the file.
 	return read(buffer, _size); // Read the whole file.
+}
+
+size_t File::read(char* buffer, size_t* length)
+{
+	*length = read(buffer, *length);
+	return *length;
 }
 
 void File::set_cursor(size_t val)

@@ -27,6 +27,14 @@ MemFile::MemFile(char* data, bool is_const = false ):
 	set_size(strlen(data) + 1); // Find the end of the buffer.
 }
 
+// Note: is_const is not pre assigned to prevent a mixup with the other constructor.
+MemFile::MemFile(char* data, size_t length, bool is_const):
+	File(length),
+	is_const(is_const),
+	data(data)
+{
+}
+
 MemFile::MemFile(const char* const_data):
 	File(0),
 	is_const(false)
@@ -44,12 +52,19 @@ MemFile::MemFile(const char* const_data):
 	}
 }
 
-// Note: is_const is not pre assigned to prevent a mixup with the other constructor.
-MemFile::MemFile(char* data, size_t length, bool is_const):
+MemFile::MemFile(const char* const_data, size_t length):
 	File(length),
-	is_const(is_const),
-	data(data)
+	is_const(false)
 {
+	data = (char*)malloc(length);
+	if(!data) // If space for the data could not be allocated.
+	{
+		set_size(0);
+	}
+	else
+	{
+		memcpy(data, const_data, length);
+	}
 }
 
 MemFile::~MemFile(void)

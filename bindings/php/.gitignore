@@ -1,0 +1,4 @@
+php_*.h
+*_wrap.cpp
+*.o
+*.d

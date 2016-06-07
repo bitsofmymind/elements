@@ -138,7 +138,7 @@ class Response: public Message
 		 * @param _orginial_request the request that triggered this response; NULL
 		 * 	if there is none.
 		 * */
-		Response(const status_code code, Request* request);
+		Response(const status_code code = NONE_0, Request* request = NULL);
 
 		///Class destructor.
 		virtual ~Response();
