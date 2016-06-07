@@ -4,9 +4,9 @@ INCLUDES = -I. -I../.. `php-config --includes`
 
 all:
 	make clean
-	swig -php -c++ base.i
+	swig -php -dirprot -c++ base.i
 	mv base.php elements/
-	swig -php -c++ -outcurrentdir ../python/utils.i
+	swig -php -c++ -dirprot -outcurrentdir ../python/utils.i
 	mv utils.php elements/
 	$(CC) $(FLAGS) $(INCLUDES) ../../utils/*.cpp utils_wrap.cpp
 	$(CC) -shared *.o -o elements/_utils.so

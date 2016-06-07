@@ -29,6 +29,7 @@
 class Template: public File
 {
 	protected:
+
 		/** The encapsulated file. */
 		File* file;
 
@@ -42,7 +43,9 @@ class Template: public File
 		/** The content of the argument currently being substituted. */
 		const char* current;
 
-		/** The internal state of the templated renderer.*/
+	public:
+
+		/** The internal state of the template renderer.*/
 		enum STATE {ARG, TEXT, SKIP} state;
 
 	public:

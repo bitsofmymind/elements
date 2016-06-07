@@ -348,6 +348,33 @@ bool test_message_passing(void)
 
 	std::cout << "*** testing message passing..." << std::endl;
 
+	Authority* root = new Authority();
+	Processing* processing = new Processing(NULL);
+	Resource* resource1 = new Resource();
+	Resource* resource2 = new Resource();
+	TestResource* test = new TestResource();
+	TestInterface* interface = new TestInterface();
+
+	resource1->add_child("resource2", resource2);
+	root->add_child("resource1", resource1);
+	root->add_child("test", test);
+	root->add_child("processing1", processing);
+	root->add_child("interface1", interface);
+
+	//######################################################
+
+	std::cout << "   > HTTP TRACE request (no authority) ... ";
+
+	error |= test_passing(
+		test,
+		processing,
+		NULL,
+		"TRACE /resource1/resource2 HTTP/1.1\r\n\r\n",
+		Response::OK_200
+	);
+
+	//######################################################
+
 	// Build the resource tree.
 	Authority* root1 = new Authority();
 	Processing* processing1 = new Processing(NULL);
@@ -361,8 +388,6 @@ bool test_message_passing(void)
 	root1->add_child("test1", test1);
 	root1->add_child("processing1", processing1);
 	root1->add_child("interface1", interface1);
-
-	//######################################################
 
 	std::cout << "   > HTTP TRACE request ... ";
 

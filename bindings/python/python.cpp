@@ -19,6 +19,8 @@
 #include <pal/pal.h>
 
 // Platform function implementations.
+void init() {}
+void terminate() {}
 void processing_wake(){}
 void processing_sleep(uint64_t time){}
 void heart_beat(){}

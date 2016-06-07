@@ -4,11 +4,15 @@ INCLUDES = -I/usr/include/python2.7 -I. -I../..
 
 all:
 	make clean
-	swig -python -c++ core.i
+	swig -python -dirprot -c++ core.i
 	mv core.py elements/
-	swig -python -c++ utils.i
+	swig -python -dirprot -c++ utils.i
 	mv utils.py elements/
-	$(CC) $(FLAGS) $(INCLUDES) ../../utils/*.cpp utils_wrap.cxx
+	swig -python -dirprot -c++ pal.i
+	mv pal.py elements/
+	$(CC) $(FLAGS) $(INCLUDES) ../../pal/*.cpp python.cpp pal_wrap.cxx
+	$(CC) -shared *.o -o elements/_pal.so
+	$(CC) $(FLAGS) $(INCLUDES) ../../utils/*.cpp python.cpp utils_wrap.cxx
 	$(CC) -shared *.o -o elements/_utils.so
 	$(CC) $(FLAGS) $(INCLUDES) ../../pal/*.cpp  core_wrap.cxx python.cpp ../../core/*.cpp
 	$(CC) -shared *.o -o elements/_core.so
@@ -16,8 +20,8 @@ all:
 	
 clean:
 	rm -f elements/core.py*
-	rm -f elements/_core.so
+	rm -f elements/pal.py*
 	rm -f elements/utils.py*
-	rm -f elements/_utils.so
+	rm -f elements/_*.so
 	rm -f *.cxx
 	rm -f *.so *.d *.o *_wrap.* *.pyc

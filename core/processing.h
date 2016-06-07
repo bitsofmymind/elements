@@ -68,7 +68,7 @@
 		 * Class constructor.
 		 * @param bound a pointer to the resource processing should not pass.
 		 * */
-		Processing(Resource* bound);
+		Processing(Resource* bound = NULL);
 
 		/// Steps trough a processing run.
 		/** A processing run consists of running the current Resource and
