@@ -35,7 +35,7 @@ bool test_response_parsing(void)
 
 	error |= test_parsing(
 		new Response(Response::NONE_0, NULL),
-		"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123456",
+		"HTTP/1.1 200 OK\r\nContent-Length: 6\r\nSome-Field: 12\r\nOther-Field: example\r\n\r\n123456",
 		Message::PARSING_COMPLETE
 	);
 

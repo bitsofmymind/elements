@@ -55,7 +55,13 @@ class TestResource: public Resource
 				return Resource::process(response);
 			}
 
-			last_response = response;
+			/* If the response came from another instance of the framework
+			 * it must carry the original request's id.
+			 * */
+			if(response->get_request() || (response->get_field("id") && !strcmp(response->get_field("id"), "123456")))
+			{
+				last_response = response;
+			}
 
 			// Normally, we would return a DONE_207, but this gets the resource deleted.
 			return Response::OK_200;
@@ -76,9 +82,27 @@ class TestResource: public Resource
 				return false;
 			}
 
+			message->add_field("id", "123456"); // Add a field to track the message.
+
 			dispatch(message);
 
 			return true;
+		}
+
+		/**
+		 * Override of parent implementation to echo back the id field.
+		 * */
+		virtual Response::status_code process(const Request* request, Response* response)
+		{
+			if(!request->to_destination())
+			{
+				if(request->get_field("id"))
+				{
+					response->add_field("id", request->get_field("id"));
+				}
+			}
+
+			return Resource::process(request, response);
 		}
 };
 
@@ -348,10 +372,10 @@ bool test_message_passing(void)
 
 	std::cout << "*** testing message passing..." << std::endl;
 
-	Authority* root = new Authority();
+	Resource* root = new Resource();
 	Processing* processing = new Processing(NULL);
-	Resource* resource1 = new Resource();
-	Resource* resource2 = new Resource();
+	TestResource* resource1 = new TestResource();
+	TestResource* resource2 = new TestResource();
 	TestResource* test = new TestResource();
 	TestInterface* interface = new TestInterface();
 
@@ -373,13 +397,15 @@ bool test_message_passing(void)
 		Response::OK_200
 	);
 
+	delete root;
+
 	//######################################################
 
 	// Build the resource tree.
 	Authority* root1 = new Authority();
 	Processing* processing1 = new Processing(NULL);
-	Resource* resource1_0 = new Resource();
-	Resource* resource1_1 = new Resource();
+	TestResource* resource1_0 = new TestResource();
+	TestResource* resource1_1 = new TestResource();
 	TestResource* test1 = new TestResource();
 	TestInterface* interface1 = new TestInterface();
 
@@ -462,8 +488,8 @@ bool test_message_passing(void)
 	// Build another resource tree to communicate with.
 	Authority* root2 = new Authority();
 	Processing* processing2 = new Processing(NULL);
-	Resource* resource2_0 = new Resource();
-	Resource* resource2_1 = new Resource();
+	TestResource* resource2_0 = new TestResource();
+	TestResource* resource2_1 = new TestResource();
 	TestResource* test2 = new TestResource();
 	TestInterface* interface2 = new TestInterface();
 

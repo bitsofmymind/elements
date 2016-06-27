@@ -39,7 +39,8 @@ Message::Message():
 	from_url_cursor(0),
 	to_url(NULL),
 	from_url(NULL),
-	content_type(NULL)
+	content_type(NULL),
+	fields(NULL)
 {
 }
 
@@ -48,6 +49,12 @@ Message::~Message()
 	if(body) //If a File object for a body was created.
 	{
 		delete body;
+	}
+
+	if(fields)
+	{
+		fields->free_all(true);
+		delete fields;
 	}
 
 	free(_current_line);
@@ -176,6 +183,40 @@ size_t Message::serialize(char* buffer, bool write) const
 			*( buffer + 1 ) = '\n';
 		}
 		buffer += 2;
+	}
+
+	if(fields) // If message fields were defined.
+	{
+		for(uint8_t i = 0; i < fields->get_item_count(); i++) // Copy every field to the buffer.
+		{
+			const key_value_pair<const char*>* entry = (*fields)[i];
+
+			if(write)
+			{
+				strcpy(buffer, entry->key);
+			}
+			buffer += strlen(entry->key);
+
+			if(write)
+			{
+				*buffer = ':';
+				*( buffer + 1 ) = ' ';
+			}
+			buffer += 2;
+
+			if(write)
+			{
+				strcpy(buffer, entry->value);
+			}
+			buffer += strlen(entry->value);
+
+			if(write)
+			{
+				*buffer = '\r';
+				*( buffer + 1 ) = '\n';
+			}
+			buffer += 2;
+		}
 	}
 
 	//CRLF BETWEEN FIELDS AND BODY
@@ -344,6 +385,79 @@ void Message::previous(void)
 	}
 }
 
+
+Utils::OPERATION_RESULT Message::add_field(const char* name, const char* value, bool copy_name, bool copy_value)
+{
+	if(!fields)
+	{
+		fields = new Dictionary<const char*>();
+
+		if(!fields) // If no memory could be allocated for fields.
+		{
+			return Utils::OUT_OF_MEMORY;
+		}
+
+		fields->case_sensitive_keys = false;
+	}
+	else if(get_field(name))
+	{
+		return Utils::ITEM_EXISTS;
+	}
+
+	if(copy_name)
+	{
+		name = strdup(name);
+		if(!name) // If no memory could be allocated.
+		{
+			return Utils::OUT_OF_MEMORY;
+		}
+	}
+
+	if(copy_value)
+	{
+		value = strdup(value);
+		if(!value) // If no memory could be allocated.
+		{
+			free((void*)name);
+			return Utils::OUT_OF_MEMORY;
+		}
+	}
+
+	return fields->add(name, value);
+}
+
+const char* Message::get_field(const char* name) const
+{
+	if(!fields)
+	{
+		return NULL;
+	}
+
+	return fields->find(name);
+}
+
+Utils::OPERATION_RESULT Message::remove_field(const char* name, bool free_name, bool free_value)
+{
+	if(!fields)
+	{
+		return Utils::ITEM_INVALID;
+	}
+
+	const char* value = fields->remove(name, free_name);
+
+	if(!value)
+	{
+		return Utils::ITEM_INVALID;
+	}
+
+	if(free_value)
+	{
+		free((void*)value);
+	}
+
+	return Utils::SUCCESS;
+}
+
 Message::PARSER_RESULT Message::parse_header(char* line)
 {
 	char* field[2];
@@ -421,8 +535,11 @@ Message::PARSER_RESULT Message::parse_header(char* line)
 			return LINE_MALFORMED;
 		}
 	}
-
-	//Store fields in buffers
+	else
+	{
+		// Store fields.
+		add_field(field[0], field[1]);
+	}
 
 	return PARSING_SUCESSFUL; // Parsing that line was successful.
 }

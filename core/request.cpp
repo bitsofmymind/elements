@@ -65,8 +65,11 @@ size_t Request::serialize(char* buffer, bool write) const
 	//HTTP REQUEST HEADER SERIALIZATION
 
 	//Serialize the method.
-	if( write ){ strcpy(buffer, method); }
-	buffer += strlen(method);
+	if(method)
+	{
+		if( write ){ strcpy(buffer, method); }
+		buffer += strlen(method);
+	}
 
 	///TODO merge with method write.
 	if( write ){ *buffer = ' '; }

@@ -43,6 +43,7 @@ namespace Utils
 		POSITION_INVALID,
 		STRUCTURE_FULL,
 		ITEM_INVALID,
+		ITEM_EXISTS,
 		OUT_OF_MEMORY
 	};
 }
@@ -253,6 +254,11 @@ class GenericDictionary: protected List<key_value_pair<void*>* >
 	public:
 
 		/**
+		 * If keys should be case sensitive.
+		 * */
+		bool case_sensitive_keys = true;
+
+		/**
 		 * Adds an entry in the dictionary.
 		 * @param key the name or key of the entry.
 		 * @param value the value of the entry.
@@ -361,7 +367,7 @@ template< class T> class Dictionary: public GenericDictionary
 
 		/** Remove all items from the dictionary and delete them.
 		 * Only call this method if the dictionary contains values
-		 * allocated using the malloc operator.
+		 * allocated using the new operator.
 		 * @param free_keys, if keys should be freed as well. */
 		inline void delete_all(bool free_keys) { _purge(false, free_keys); }
 

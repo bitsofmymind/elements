@@ -254,6 +254,20 @@ bool test_data_structures(void)
 
 	//######################################################
 
+	std::cout << "   > adding an existing item to the dictionary ... ";
+
+	if(dictionary->add("key10", "value10") == Utils::ITEM_EXISTS)
+	{
+		std::cout << "(done)" << std::endl;
+	}
+	else
+	{
+		error = true;
+		std::cout << "(error)" << std::endl;
+	}
+
+	//######################################################
+
 	std::cout << "   > finding an item by key from the dictionary ... ";
 
 	if(dictionary->find("key45"))
@@ -265,6 +279,24 @@ bool test_data_structures(void)
 		error = true;
 		std::cout << "(error)" << std::endl;
 	}
+
+	//######################################################
+
+	std::cout << "   > finding an item by non case sensitive key from the dictionary ... ";
+
+	dictionary->case_sensitive_keys = false;
+
+	if(dictionary->find("KeY45"))
+	{
+		std::cout << "(done)" << std::endl;
+	}
+	else
+	{
+		error = true;
+		std::cout << "(error)" << std::endl;
+	}
+
+	dictionary->case_sensitive_keys = true;
 
 	//######################################################
 

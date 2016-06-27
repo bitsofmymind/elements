@@ -59,7 +59,7 @@ bool test_request_parsing(void)
 
 	error |= test_parsing(
 		new Request(),
-		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
+		"GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 6\r\nSome-Field: 12\r\nOther-Field: example\r\n\r\n123456",
 		Message::PARSING_COMPLETE
 	);
 
@@ -458,6 +458,69 @@ bool test_request_parsing(void)
 		"HTTP/1.1 200 OK\r\nContent \r\nLength: 6\r\n\r\n123456",
 		Message::HEADER_MALFORMED
 	);
+
+	//######################################################
+
+	request = new Request();
+
+	std::cout << "   > adding fields ... ";
+
+	if(request->add_field("name1", "value1"))
+	{
+		std::cout << "(error)" << std::endl;
+		error = true;
+	}
+	else
+	{
+		if(request->add_field("name2", "value2"))
+		{
+			std::cout << "(error)" << std::endl;
+			error = true;
+		}
+		else
+		{
+			std::cout << "(done)" << std::endl;
+		}
+	}
+
+	std::cout << "   > adding existing fields ... ";
+
+	if(request->add_field("name2", "value2") == Utils::ITEM_EXISTS)
+	{
+		std::cout << "(done)" << std::endl;
+	}
+	else
+	{
+		error = true;
+		std::cout << "(error)" << std::endl;
+	}
+
+	std::cout << "   > removing field ... ";
+
+	// Fields names are not case sensitive.
+	if(request->remove_field("nAmE1") == Utils::SUCCESS)
+	{
+		std::cout << "(done)" << std::endl;
+	}
+	else
+	{
+		error = true;
+		std::cout << "(error)" << std::endl;
+	}
+
+	std::cout << "   > removing non-existing field ... ";
+
+	if(request->remove_field("name9") == Utils::ITEM_INVALID)
+	{
+		std::cout << "(done)" << std::endl;
+	}
+	else
+	{
+		error = true;
+		std::cout << "(error)" << std::endl;
+	}
+
+	delete request;
 
 	std::cout << "*** tested request parsing" << std::endl;
 

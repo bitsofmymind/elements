@@ -234,9 +234,7 @@ OPERATION_RESULT GenericDictionary::add(const char* key, void* value)
 	}
 	else // The entry already exists.
 	{
-		/**todo thats dangerous and could lead to memory leaks. A method
-		 * for replacing values should be created instead.*/
-		kv->value = value;
+		return ITEM_EXISTS;
 	}
 
 	return SUCCESS;
@@ -300,7 +298,8 @@ key_value_pair<void*>* GenericDictionary::get(const char* key) const
 	{
 		kv = (key_value_pair<void*>*)list[i];
 
-		if(!strcmp(kv->key, key)) // If the two keys match.
+		// If the two keys match.
+		if(!(case_sensitive_keys ? strcmp(kv->key, key): strcasecmp(kv->key, key)))
 		{
 			return kv; // Return the key_value pair.
 		}

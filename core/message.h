@@ -112,6 +112,8 @@ class Message
 		 * field because is it very often needed.*/
 		const char* content_type;
 
+		Dictionary<const char*>* fields;
+
 	public:
 
 		/// Class constructor.
@@ -217,11 +219,46 @@ class Message
 		void previous(void);
 
 		/// Returns the resource name pointed by the destination url cursor.
-		/** The resource name currently pointed to by the destination url
-		 *  cursor is the resource name the framework is routing the message
-		 *  to next.
-		 *  @return name of the resource pointed by the destination url cursor.*/
-		inline const char* current(void) const { return (*(to_url->get_resources()))[to_url_cursor];	}
+		/**
+		 * The resource name currently pointed to by the destination url
+		 * cursor is the resource name the framework is routing the message
+		 * to next.
+		 * @return name of the resource pointed by the destination url cursor.
+		 * */
+		inline const char* current(void) const { return (*(to_url->get_resources()))[to_url_cursor]; }
+
+		/// Adds a field to the message.
+		/**
+		 * @param name the name of the field. This parameter is not case-sensitive.
+		 * @param value the value of the field.
+		 * @param copy_name if the name string should be copied to memory.
+		 *   Use this option carefully, when the message is deleted every field
+		 *   name/value pair is automatically freed.
+		 * @param copy_value if the value string should be copied to memory.
+		 *   Use this option carefully, when the message is deleted every field
+		 *   name/value pair is automatically freed.
+		 * @return the result of the operation.
+		 * */
+		Utils::OPERATION_RESULT add_field(const char* name, const char* value, bool copy_name = true, bool copy_value = true);
+
+		/// Gets a field from the message.
+		/**
+		 * @param name the name of the field to get. This parameter is not case-sensitive.
+		 * @return the value of the field or NULL is the field does not exist.
+		 * */
+		const char* get_field(const char* name) const;
+
+		/// Removes a field from the message.
+		/**
+		 * @param name the name of field to remove.
+		 * @param free_name if the name string should be freed. Set this option
+		 *   to false if the field was added with copy_name set to false. This
+		 *   parameter is not case-sensitive.
+		 * @param free_value if the value string should be freed. Set this option
+		 *   to false if the field was added with copy_value set to false.
+		 * @return the result of the operation.
+		 * */
+		Utils::OPERATION_RESULT remove_field(const char* name, bool free_name = true, bool free_value = true);
 
 	protected:
 
