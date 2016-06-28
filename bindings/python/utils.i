@@ -14,6 +14,14 @@
 
 %include "cstring.i"
 %cstring_output_withsize(char* buffer, size_t* length);
+%extend File
+{
+    size_t read(char* buffer, size_t* length)
+    {
+        *length = $self->read(buffer, *length);
+        return *length;
+    }
+}
 /* Since there is no obvious (safe) mapping for those functions, they are excluded.
  * Use Filed::read() instead.  */
 %ignore File::extract(char* buffer);

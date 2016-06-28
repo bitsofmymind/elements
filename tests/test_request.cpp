@@ -1,4 +1,4 @@
-/* test_request_parsing.cpp - Source file for the Request parsing unit tests.
+/* test_request.cpp - Source file for the Request parsing unit tests.
  * Copyright (C) 2015 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ bool test_parsing(
 	return error;
 }
 
-bool test_request_parsing(void)
+bool test_request(void)
 {
 	bool error = false;
 
@@ -523,6 +523,38 @@ bool test_request_parsing(void)
 	delete request;
 
 	std::cout << "*** tested request parsing" << std::endl;
+
+	std::cout << "*** testing request serializing..." << std::endl;
+
+	std::cout << "   > serializing valid request ... ";
+
+	request = new Request();
+	message = "get /res2/echo2/?v=r&b=y#asd HTTP/1.0\r\ncontent-length: 6\r\nsome-field: 12\r\nother-field: example\r\n\r\n123456";
+
+	if(!request->parse(message, strlen(message)))
+	{
+		char* buffer = (char*)alloca(strlen(message) + 1);
+		request->serialize(buffer, true);
+		buffer[strlen(message)] = '\0';
+
+		if(strcmp(buffer, message))
+		{
+			error = true;
+			std::cout << "(error)" << std::endl;
+		}
+		else
+		{
+			std::cout << "(done)" << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "(error)" << std::endl;
+	}
+
+	delete request;
+
+	std::cout << "*** tested request serializing" << std::endl;
 
 	return error;
 }

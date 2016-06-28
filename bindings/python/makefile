@@ -1,21 +1,22 @@
+SWIG_FLAGS = -python -dirprot -c++
 CC = g++
-FLAGS =  -O0 -g3 -c -fmessage-length=0 -MMD -MP 
+FLAGS = -O0 -g3 -c -fmessage-length=0 -MMD -MP 
 INCLUDES = -I/usr/include/python2.7 -I. -I../..
 
 all:
 	make clean
-	swig -python -dirprot -c++ core.i
+	swig $(SWIG_FLAGS) core.i
 	mv core.py elements/
-	swig -python -dirprot -c++ utils.i
+	swig $(SWIG_FLAGS) utils.i
 	mv utils.py elements/
-	swig -python -dirprot -c++ pal.i
+	swig $(SWIG_FLAGS) pal.i
 	mv pal.py elements/
 	$(CC) $(FLAGS) $(INCLUDES) ../../pal/*.cpp python.cpp pal_wrap.cxx
 	$(CC) -shared *.o -o elements/_pal.so
 	$(CC) $(FLAGS) $(INCLUDES) ../../utils/*.cpp python.cpp utils_wrap.cxx
-	$(CC) -shared *.o -o elements/_utils.so
+	$(CC) -shared $(PWD)/elements/_pal.so *.o -o elements/_utils.so
 	$(CC) $(FLAGS) $(INCLUDES) ../../pal/*.cpp  core_wrap.cxx python.cpp ../../core/*.cpp
-	$(CC) -shared *.o -o elements/_core.so
+	$(CC) -shared $(PWD)/elements/_pal.so $(PWD)/elements/_utils.so *.o -o elements/_core.so
 	rm -f *.so *.d *.o *_wrap.* *.pyc
 	
 clean:

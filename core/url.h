@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include "../utils/utils.h"
 #include <configuration.h>
+#include <string.h>
 
 ///TODO: Useless, delete.
 #define NUMBER_OF_AUTHORITES 10
@@ -112,6 +113,13 @@ class URL
 		 * @param length the length of the name.
 		 * @return boolean if there was enough memory to complete the operation.*/
 		bool append_resource(const char* name, int8_t length);
+
+		/** Append a resource to the url by copying the name into the internal
+		 * resources list.
+		 * @param name the resource to add.
+		 * @return boolean if there was enough memory to complete the operation.
+		 * */
+		inline bool append_resource(const char* name) { return append_resource(name, strlen(name)); }
 
 		/** Append a resource to the url by copying the name into the internal
 		 * resources list.

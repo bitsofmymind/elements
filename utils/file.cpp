@@ -48,12 +48,6 @@ size_t File::extract(char* buffer)
 	return read(buffer, _size); // Read the whole file.
 }
 
-size_t File::read(char* buffer, size_t* length)
-{
-	*length = read(buffer, *length);
-	return *length;
-}
-
 void File::set_cursor(size_t val)
 {
 	/// TODO prevent the cursor from getting set past the size of the file.

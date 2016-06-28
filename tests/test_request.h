@@ -1,4 +1,4 @@
-/* test_request_parsing.h - Header file for the Request parsing unit tests.
+/* test_request.h - Header file for the Request parsing unit tests.
  * Copyright (C) 2015 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,15 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TEST_REQUEST_PARSING_H_
-#define TEST_REQUEST_PARSING_H_
+#ifndef TEST_REQUEST_H_
+#define TEST_REQUEST_H_
 
 #include <core/message.h>
 
-/** Request parsing testing function.
+/** Request class testing function.
 * @return if the test passed.
 */
-bool test_request_parsing(void);
+bool test_request(void);
 
 /** Test the parsing of data.
  * @param message the object that will parse the data.
@@ -39,4 +39,4 @@ bool test_parsing(
 	size_t data_length = 0
 );
 
-#endif //TEST_REQUEST_PARSING_H_
+#endif //TEST_REQUEST_H_

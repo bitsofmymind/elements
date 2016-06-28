@@ -1,4 +1,4 @@
-/* test_response_parsing.cpp - Header file for the Response parsing unit tests.
+/* test_response.cpp - Header file for the Response parsing unit tests.
  * Copyright (C) 2015 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,11 +19,11 @@
 #include <stdlib.h>
 #include "string.h"
 #include <core/response.h>
+#include <test_request.h>
 #include <utils/utils.h>
 #include <utils/memfile.h>
-#include "test_request_parsing.h"
 
-bool test_response_parsing(void)
+bool test_response(void)
 {
 	bool error = false;
 
@@ -301,6 +301,38 @@ bool test_response_parsing(void)
 	);
 
 	std::cout << "*** tested response parsing" << std::endl;
+
+	std::cout << "*** testing response serializing..." << std::endl;
+
+	std::cout << "   > serializing valid response ... ";
+
+	response = new Response();
+	message = "HTTP/1.0 200\r\ncontent-length: 6\r\nsome-field: 12\r\nother-field: example\r\n\r\n123456";
+
+	if(!response->parse(message, strlen(message)))
+	{
+		char* buffer = (char*)alloca(strlen(message) + 1);
+		response->serialize(buffer, true);
+		buffer[strlen(message)] = '\0';
+
+		if(strcmp(buffer, message))
+		{
+			error = true;
+			std::cout << "(error)" << std::endl;
+		}
+		else
+		{
+			std::cout << "(done)" << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "(error)" << std::endl;
+	}
+
+	delete response;
+
+	std::cout << "*** tested request serializing" << std::endl;
 
 	return error;
 }

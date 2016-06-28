@@ -19,6 +19,13 @@
 
 from elements import utils
 
+# Define functions needed by the framework.
+def init(): pass
+def terminate(): pass
+def processing_wake(): pass
+def processing_sleep(time): pass
+def heart_beat(): pass
+
 ########################### Test data structures #########################
 
 # Note: data structures contained in utils/utils.cpp have not been defined
@@ -63,11 +70,15 @@ def parse_message(message, data, expected):
 print "*** testing Request ..."
 
 print " > valid request parsing ... ",
-parse_message(
-    core.Request(),
-    "GET /res2/echo2/?v=r&b=y#asd HTTP/1.1\r\nContent-Length: 6\r\n\r\n123456",
-    core.Message.PARSING_COMPLETE
-)    
+request = core.Request()
+message = "get /res2/echo2/?v=r&b=y#asd HTTP/1.0\r\ncontent-length: 6\r\nfield: data\r\n\r\n123456"
+parse_message(request, message, core.Message.PARSING_COMPLETE) 
+
+print " > request serializing ... ",
+if request.serialize() != message:
+    print '(error)'
+else:
+    print '(done)'
 
 print "   > invalid request parsing ... ",
 parse_message(
@@ -83,11 +94,15 @@ print "*** (done)"
 print "*** testing Response ... "
 
 print "   > valid response parsing ... ",
-parse_message(
-    core.Response(),
-    "HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123456",
-    core.Message.PARSING_COMPLETE
-)
+response = core.Response()
+message = "HTTP/1.0 200\r\ncontent-length: 6\r\nfield: data\r\n\r\n123456"
+parse_message(response, message, core.Message.PARSING_COMPLETE)
+
+print " > response serializing ... ",
+if response.serialize() != message:
+    print '(error)'
+else:
+    print '(done)'
 
 print "   > invalid response parsing ... ",
 parse_message(

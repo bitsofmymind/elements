@@ -19,10 +19,10 @@
 #include <pal/pal.h>
 #include <iostream>
 #include <stdlib.h>
+#include <test_request.h>
+#include <test_response.h>
 #include "string.h"
 #include "test_data_structures.h"
-#include "test_request_parsing.h"
-#include "test_response_parsing.h"
 #include "test_file_manipulation.h"
 #include "test_message_passing.h"
 
@@ -41,8 +41,8 @@ int main()
 	std::cout << "Starting unit tests..." << std::endl;
 
 	error |= test_data_structures();
-	error |= test_request_parsing();
-	error |= test_response_parsing();
+	error |= test_request();
+	error |= test_response();
 	error |= test_file_manipulation();
 	error |= test_message_passing();
 

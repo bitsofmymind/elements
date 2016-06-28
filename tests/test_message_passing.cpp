@@ -64,7 +64,7 @@ class TestResource: public Resource
 			}
 
 			// Normally, we would return a DONE_207, but this gets the resource deleted.
-			return Response::OK_200;
+			return Response::RESPONSE_DELAYED_102;
 		}
 
 		/**
@@ -354,7 +354,11 @@ bool test_passing(TestResource* tr, Processing* p1, Processing* p2, const char* 
 			std::cout << "(error)" << std::endl;
 		}
 
-		delete tr->last_response;
+		if(tr->last_response)
+		{
+			delete tr->last_response;
+		}
+
 		tr->last_response = NULL;
 	}
 	else

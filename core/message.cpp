@@ -164,7 +164,9 @@ size_t Message::serialize(char* buffer, bool write) const
 	}
 
 	//FROM-URL FIELD SERIALIZATION
-	if(from_url) // If the message came from another url.
+	if(from_url &&
+		from_url->serialize(buffer, false) // If the url is not empty.
+	)
 	{
 		if(write) { strcpy(buffer, "from-url"); }
 		buffer += 8; // Equivalent to strlen("From-Url");
@@ -227,8 +229,18 @@ size_t Message::serialize(char* buffer, bool write) const
 	}
 	buffer += 2;
 
-	/*Since the start of the buffer was saved, the difference between the two
-	 * gives us the length of the serialize message.*/
+	if(body)
+	{
+		if(write)
+		{
+			body->extract(buffer);
+		}
+
+		buffer += body->get_size();
+	}
+
+	/* Since the start of the buffer was saved, the difference between the two
+	 * gives us the length of the serialized message.*/
 	return buffer - start;
 }
 
@@ -384,7 +396,6 @@ void Message::previous(void)
 		to_url_cursor--; //Decrement the cursor.
 	}
 }
-
 
 Utils::OPERATION_RESULT Message::add_field(const char* name, const char* value, bool copy_name, bool copy_value)
 {

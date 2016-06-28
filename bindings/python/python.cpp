@@ -17,11 +17,18 @@
 
 // INCLUDES
 #include <pal/pal.h>
+#include <Python.h>
+#include <stdio.h>
 
 // Platform function implementations.
-void init() {}
-void terminate() {}
-void processing_wake(){}
-void processing_sleep(uint64_t time){}
-void heart_beat(){}
+void init() {  PyRun_SimpleString("init()"); }
+void terminate() { PyRun_SimpleString("terminate()"); }
+void processing_wake(){ PyRun_SimpleString("processing_wake()"); }
+void processing_sleep(uint64_t time)
+{
+	char function[256];
+	sprintf(function, "processing_sleep(%d)", time);
+	PyRun_SimpleString(function);
+}
+void heart_beat(){ PyRun_SimpleString("heart_beat()"); }
 

@@ -1,6 +1,7 @@
 .csettings
 .settings
 .cproject
+.pydevproject
 .dep.inc
 .project
 nbproject

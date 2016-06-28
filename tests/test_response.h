@@ -1,4 +1,4 @@
-/* test_response_parsing.h - Header file for the Response parsing unit tests.
+/* test_response.h - Header file for the Response parsing unit tests.
  * Copyright (C) 2015 Antoine Mercier-Linteau
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TEST_RESPONSE_PARSING_H_
-#define TEST_RESPONSE_PARSING_H_
+#ifndef TEST_RESPONSE_H_
+#define TEST_RESPONSE_H_
 
-/** Response parsing testing function.
+/** Response class testing function.
 * @return if the test passed.
 */
-bool test_response_parsing(void);
+bool test_response(void);
 
-#endif //TEST_RESPONSE_PARSING_H_
+#endif //TEST_RESPONSE_H_

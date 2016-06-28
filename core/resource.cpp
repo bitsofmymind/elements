@@ -257,6 +257,7 @@ void Resource::dispatch(Message* message)
 			{
 				// Errors can only be returned for Requests.
 				delete response;
+				delete message;
 			}
 			//TODO what if the response code for a resource was not within the accepted range?
 			break;
