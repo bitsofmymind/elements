@@ -127,7 +127,7 @@
 #define BODY_ARGS_PARSING 1
 
 /// If debug messages should be displayed.
-#define OUTPUT_DEBUG 0
+#define OUTPUT_DEBUG 1
 
 /// If framework errors should be displayed.
 #define OUTPUT_ERRORS 0

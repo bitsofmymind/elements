@@ -19,16 +19,34 @@
 #include <pal/pal.h>
 #include <Python.h>
 #include <stdio.h>
+#include <iostream>
 
 // Platform function implementations.
+
 void init() {  PyRun_SimpleString("init()"); }
+
 void terminate() { PyRun_SimpleString("terminate()"); }
+
 void processing_wake(){ PyRun_SimpleString("processing_wake()"); }
-void processing_sleep(uint64_t time)
+
+void processing_sleep(uptime_t time)
 {
 	char function[256];
-	sprintf(function, "processing_sleep(%d)", time);
+	/* Call processing_sleep defined in python with time converted
+	 * into a python long integer. */
+	sprintf(function, "processing_sleep(%uL)", time);
 	PyRun_SimpleString(function);
 }
+
 void heart_beat(){ PyRun_SimpleString("heart_beat()"); }
+
+void Debug::print_char(char character)
+{
+	std::cout << character;
+}
+
+void Debug::println()
+{
+	std::cout << std::endl;
+}
 
