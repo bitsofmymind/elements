@@ -106,21 +106,22 @@
 		{
 			for(;;)
 			{
-				step(); //Step through a resource.
+				step(); // Step through a resource.
 
 				if(_current->_parent == _bound) //If the bound has been reached.
 				{
-					/*The sleep clock for the current resource gives us the next
+					/* The sleep clock for the current resource gives us the next
 					 * time processing will be needed again.
 					 * Since the sleep clock is an uptime, is is substracted with
-					 * the uptime to get the actual amount of time.*/
-					uptime_t sleep_amount = _current->get_sleep_clock() - get_uptime();
+					 * the uptime to get the actual amount of time to sleep.*/
+					uptime_t sleep_clock = _current->get_sleep_clock();
+					uptime_t sleep_amount = sleep_clock <= get_uptime() ? 0 : sleep_clock - get_uptime();
 
 					/*TODO: Since uptime_t are unsigned int, sleep amount will
 					alway be positive. See #181. */
-					if(sleep_amount > 0) //If that amount is more than 0.
+					if(sleep_amount > 0)
 					{
-						//Make that processing element sleep.
+						// Make that processing element sleep.
 						processing_sleep(sleep_amount);
 					}
 				}
